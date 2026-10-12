@@ -13,6 +13,18 @@ permissions:
   sess.reload:
     description: Erlaubt /sessentials reload
     default: op
+  sess.vanish:
+    description: Erlaubt /vanish
+    default: op
+  sess.vanish.auto:
+    description: Beim Joinen automatisch unsichtbar
+    default: false
+  sess.vanish.bypass:
+    description: Erlaubt /vanish bypass (Schutzregeln im Vanish aufheben)
+    default: op
+  sess.vanish.see:
+    description: Sieht versteckte Spieler
+    default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op

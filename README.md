@@ -69,6 +69,11 @@ mit `SEssentials-1.0.1.jar` und automatisch generierten Release Notes (Tab *Rele
 | `/softrestart cancel` | `sess.softrestart` | Geplanten Neustart abbrechen |
 | `/softrestart status` | `sess.softrestart` | Restzeit anzeigen |
 | `/sessentials reload` | `sess.reload` | Config neu laden (Alias `/sess`) |
+| `/vanish` | `sess.vanish` | Unsichtbar ein/aus (Alias `/v`), bleibt über Relogs erhalten |
+| `/vanish silent` | `sess.vanish` | Wie `/vanish`, aber ohne Fake-Join/Leave-Nachricht |
+| `/vanish bypass` | `sess.vanish.bypass` | Schutzregeln im Vanish aufheben/wieder aktivieren (bis zum Verlassen) |
+| – | `sess.vanish.auto` | Beim Joinen automatisch unsichtbar (Standard: niemand) |
+| – | `sess.vanish.see` | Sieht versteckte Spieler und bekommt Join/Leave-Hinweise |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
 
@@ -79,6 +84,23 @@ Spieler speichern → alle Spieler mit `kick`-Nachricht kicken → Welten speich
 
 > `restart` startet nur neu, wenn in `spigot.yml` ein `restart-script` gesetzt ist
 > (bzw. dein Host einen Auto-Restart hat). Sonst fährt der Server nur herunter.
+
+## Join- / Leave-Nachrichten
+Unter `join-quit` in der `config.yml` (`join`, `quit`). Alle Platzhalter unten sind nutzbar.
+Leerer Text blendet die Nachricht aus, `enabled: false` lässt die Vanilla-Nachrichten unverändert.
+
+## Vanish
+Versteckte Spieler sind für alle ohne `sess.vanish.see` unsichtbar: in der Welt, im TAB,
+in Tab-Completion und `/list`, in Spielerzahl und Spielerliste der Serverliste und in `<online>`.
+Commands mit einem versteckten Spieler als erstem Argument (z.B. `/msg Name`) melden „Spieler nicht gefunden“.
+Im Vanish sind Chat, Bauen, Abbauen, Schlagen (auch mit Projektilen) und Einsammeln blockiert.
+Einzeln abschaltbar unter `vanish.protections`, pro Spieler aufhebbar mit `/vanish bypass`.
+
+Beim Ein-/Ausblenden kommt eine Fake-Leave/Join-Nachricht (Texte aus `join-quit`).
+Global abschaltbar mit `vanish.fake-messages: false`, einzeln mit `/vanish silent`.
+Echtes Joinen/Verlassen im Vanish ist immer ohne Nachricht.
+`vanish.fake-message-cooldown` begrenzt diese pro Spieler. Innerhalb des Cooldowns wird nichts gesendet.
+Später wird nur gesendet, wenn sich der für andere sichtbare Status wirklich ändert.
 
 ## Platzhalter
 `<player>`, `<displayname>`, `<world>`, `<online>`, `<max_players>`, `<prefix>`,

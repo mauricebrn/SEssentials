@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntSupplier;
 
 /**
  * Wandelt konfigurierte Texte in Components um – mit MiniMessage, &-Farbcodes,
@@ -23,11 +24,14 @@ public final class TextService {
 
     private final PermissionInfo perms;
     private final boolean papi;
+    private final IntSupplier onlineCount;
     private volatile String prefix = "";
 
-    public TextService(PermissionInfo perms, boolean papi) {
+    /** @param onlineCount Wert für {@code <online>} (z.B. ohne versteckte Spieler) */
+    public TextService(PermissionInfo perms, boolean papi, IntSupplier onlineCount) {
         this.perms = perms;
         this.papi = papi;
+        this.onlineCount = onlineCount;
     }
 
     public void setPrefix(String prefix) {
@@ -54,7 +58,7 @@ public final class TextService {
 
         List<TagResolver> resolvers = new ArrayList<>();
         resolvers.add(Placeholder.component("prefix", parse(prefix)));
-        resolvers.add(Placeholder.unparsed("online", String.valueOf(Bukkit.getOnlinePlayers().size())));
+        resolvers.add(Placeholder.unparsed("online", String.valueOf(onlineCount.getAsInt())));
         resolvers.add(Placeholder.unparsed("max_players", String.valueOf(Bukkit.getMaxPlayers())));
         if (player != null) {
             resolvers.add(Placeholder.unparsed("player", player.getName()));

@@ -63,6 +63,47 @@ chat:
     # vip: "<gold>[VIP] <player> <dark_gray>»</dark_gray> <yellow><message>"
 
 # ------------------------------------------------------------
+# Join- / Leave-Nachrichten
+# Leer lassen (""), um die Nachricht komplett auszublenden.
+# enabled: false = Vanilla-Nachrichten bleiben unverändert.
+# ------------------------------------------------------------
+join-quit:
+  enabled: true
+  join: "<dark_gray>[<green>+</green>]</dark_gray> <lp_prefix><gray><player></gray>"
+  quit: "<dark_gray>[<red>-</red>]</dark_gray> <lp_prefix><gray><player></gray>"
+
+# ------------------------------------------------------------
+# Vanish (/vanish, Alias /v)
+# Versteckte Spieler sind für alle ohne sess.vanish.see unsichtbar (Welt, TAB, Commands,
+# Serverliste, <online>). Sie können nicht chatten, bauen, abbauen, schlagen oder einsammeln.
+# Beim Ein-/Ausblenden wird eine Fake-Leave/Join-Nachricht (Texte aus join-quit) gesendet.
+# ------------------------------------------------------------
+vanish:
+  # false = beim Ein-/Ausblenden nie Fake-Nachrichten senden
+  # Einzeln im Spiel: /vanish silent schaltet ohne Fake-Nachricht um
+  fake-messages: true
+  # Mindestabstand in Sekunden zwischen zwei Fake-Nachrichten eines Spielers (gegen Spam)
+  fake-message-cooldown: 60
+  # Was im Vanish blockiert wird (true = blockiert).
+  # Einzeln im Spiel: /vanish bypass (Recht sess.vanish.bypass) hebt alle Schutzregeln auf
+  protections:
+    pickup: true
+    chat: true
+    break: true
+    place: true
+    damage: true
+  messages:
+    enabled: "<prefix><gray>Du bist jetzt <green>unsichtbar</green>."
+    disabled: "<prefix><gray>Du bist jetzt wieder <red>sichtbar</red>."
+    join-vanished: "<prefix><gray>Du bist <green>unsichtbar</green> beigetreten."
+    cooldown: "<prefix><gray>Keine Fake-Nachricht gesendet (Cooldown)."
+    blocked: "<red>Im Vanish nicht möglich."
+    bypass-on: "<prefix><gray>Schutz-Bypass <green>aktiv</green> – du kannst chatten, bauen, abbauen, schlagen und einsammeln."
+    bypass-off: "<prefix><gray>Schutz-Bypass <red>aus</red>."
+    staff-join: "<prefix><gray><player> ist unsichtbar beigetreten."
+    staff-quit: "<prefix><gray><player> hat den Server unsichtbar verlassen."
+
+# ------------------------------------------------------------
 # TAB-Liste
 # ------------------------------------------------------------
 tab:
