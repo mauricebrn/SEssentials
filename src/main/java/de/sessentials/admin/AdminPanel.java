@@ -25,6 +25,7 @@ public final class AdminPanel {
     public enum Category {
         MODERATION("Moderation", Material.RED_STAINED_GLASS_PANE, NamedTextColor.RED),
         PLAYERS("Spieler & Teleport", Material.LIME_STAINED_GLASS_PANE, NamedTextColor.GREEN),
+        ECONOMY("Wirtschaft", Material.YELLOW_STAINED_GLASS_PANE, NamedTextColor.YELLOW),
         SERVER("Server", Material.ORANGE_STAINED_GLASS_PANE, NamedTextColor.GOLD),
         SETTINGS("Einstellungen", Material.LIGHT_BLUE_STAINED_GLASS_PANE, NamedTextColor.AQUA);
 

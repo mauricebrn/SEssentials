@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.sessentials.SEssentials;
 import de.sessentials.text.TextService;
-import de.sessentials.cost.ItemCost;
+import de.sessentials.cost.Cost;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
@@ -36,7 +36,7 @@ public final class TpaManager implements Listener {
     /** Ziel → (Anfragender → Ablaufzeit in ms), in Eingangsreihenfolge. */
     private final Map<UUID, LinkedHashMap<UUID, Long>> requests = new HashMap<>();
 
-    private volatile ItemCost cost;
+    private volatile Cost cost;
     private volatile long expireMillis;
 
     public TpaManager(SEssentials plugin) {
@@ -46,7 +46,7 @@ public final class TpaManager implements Listener {
 
     /** Ohne explizite Defaults lesen: fehlende Keys in älteren Configs fallen auf die config.yml im JAR zurück. */
     public void reload() {
-        cost = ItemCost.fromConfig(plugin.getConfig(), "tpa.cost", plugin.getLogger());
+        cost = Cost.fromConfig(plugin.getConfig(), "tpa.cost", plugin.bank(), plugin.getLogger());
         expireMillis = Math.max(1L, plugin.getConfig().getLong("tpa.expire-seconds")) * 1000L;
     }
 
@@ -148,7 +148,7 @@ public final class TpaManager implements Listener {
 
     private void accept(Player target, Player requester) {
         TagResolver tags = tags(requester, target);
-        ItemCost cost = this.cost;
+        Cost cost = this.cost;
         boolean pays = pays(requester);
         if (pays && !cost.take(requester)) {
             requester.sendMessage(msg("not-enough", requester, tags));

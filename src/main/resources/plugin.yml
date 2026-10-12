@@ -4,7 +4,7 @@ main: de.sessentials.SEssentials
 api-version: '26.2'
 description: Softrestart, Chatformat, TAB, Nametags, Join/Leave, Vanish und Spieler-Befehle mit MiniMessage & LuckPerms
 author: Moritz
-softdepend: [LuckPerms, PlaceholderAPI]
+softdepend: [LuckPerms, PlaceholderAPI, Vault]
 
 permissions:
   sess.softrestart:
@@ -87,6 +87,15 @@ permissions:
     default: op
   sess.news.admin:
     description: Erlaubt /newsadmin (News verwalten) und das Lesen unveröffentlichter News
+    default: op
+  sess.bank:
+    description: Erlaubt /bank (Einzahlen, Auszahlen)
+    default: true
+  sess.bank.pay:
+    description: Erlaubt /pay
+    default: true
+  sess.bank.admin:
+    description: Erlaubt /eco und die Konten-Verwaltung im Admin-Panel
     default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten

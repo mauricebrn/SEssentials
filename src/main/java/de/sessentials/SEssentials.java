@@ -3,6 +3,11 @@ package de.sessentials;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.sessentials.admin.AdminPanel;
+import de.sessentials.bank.BankCommands;
+import de.sessentials.bank.BankExchange;
+import de.sessentials.bank.BankManager;
+import de.sessentials.bank.BankMenu;
+import de.sessentials.bank.VaultEconomy;
 import de.sessentials.admin.AdminPanel.Category;
 import de.sessentials.admin.ChatPrompt;
 import de.sessentials.admin.Menu;
@@ -54,6 +59,10 @@ public final class SEssentials extends JavaPlugin {
     private HelpCommand help;
     private TpaManager tpa;
     private ChatPrompt chatPrompt;
+    private BankManager bank;
+    private BankExchange bankExchange;
+    private BankMenu bankMenu;
+    private BankCommands bankCommands;
     private NewsManager news;
 
     @Override
@@ -73,6 +82,16 @@ public final class SEssentials extends JavaPlugin {
         vanish = new VanishManager(this);
         text = new TextService(perms, papi, vanish::visibleCount);
         text.setPrefix(getConfig().getString("prefix", ""));
+
+        // Bank vor allem, was Kosten hat (/spawn, /tpa)
+        bank = new BankManager(this);
+        bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
+        bankMenu = new BankMenu(this, bank);
+        bankCommands = new BankCommands(this, bank, bankMenu);
+        if (getServer().getPluginManager().isPluginEnabled("Vault")) {
+            VaultEconomy.register(this, bank);
+            getLogger().info("Vault gefunden – Bank als Economy angemeldet.");
+        }
 
         softRestart = new SoftRestartManager(this);
         chat = new ChatListener(this);
@@ -103,6 +122,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tpa, this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
         getServer().getPluginManager().registerEvents(news, this);
+        getServer().getPluginManager().registerEvents(bank, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -114,6 +134,7 @@ public final class SEssentials extends JavaPlugin {
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
+        if (bank != null) bank.shutdown();
     }
 
     public void reloadAll() {
@@ -123,6 +144,7 @@ public final class SEssentials extends JavaPlugin {
         joinQuit.reload();
         vanish.reload();
         detector.reload();
+        bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         spawn.reload();
         help.reload();
         tpa.reload();
@@ -153,6 +175,14 @@ public final class SEssentials extends JavaPlugin {
         return chatPrompt;
     }
 
+    public BankManager bank() {
+        return bank;
+    }
+
+    public BankExchange bankExchange() {
+        return bankExchange;
+    }
+
     /** Kacheln im Admin-Panel. Reihenfolge innerhalb einer Kategorie = Position in der Zeile. */
     private void registerAdminApps() {
         // Moderation
@@ -170,6 +200,13 @@ public final class SEssentials extends JavaPlugin {
                         Component.text("Fly, God, Heal, Feed", NamedTextColor.GRAY),
                         Component.text("Spawn, Nether, End", NamedTextColor.GRAY)),
                 this::openCommandsMenu);
+
+        // Wirtschaft
+        adminPanel.addApp(Category.ECONOMY, "sess.bank.admin",
+                p -> Menu.icon(Material.GOLD_BLOCK, Component.text("Bank", NamedTextColor.GOLD),
+                        Component.text("Im Umlauf: " + bank.format(bank.total()), NamedTextColor.GRAY),
+                        Component.text("Konten ansehen und ändern", NamedTextColor.GRAY)),
+                bankMenu::openAdmin);
 
         // Server
         adminPanel.addApp(Category.SERVER, "sess.news.admin",
@@ -351,6 +388,7 @@ public final class SEssentials extends JavaPlugin {
             help.register(commands);
             tpa.register(commands);
             news.register(commands);
+            bankCommands.register(commands);
 
             commands.register(
                     Commands.literal("admin")

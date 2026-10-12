@@ -143,6 +143,8 @@ help:
   pages:
     - - "<click:suggest_command:'/spawn'><gold>/spawn</gold></click> <gray>– Zum Spawn teleportieren"
       - "<click:suggest_command:'/news'><gold>/news</gold></click> <gray>– Aktuelle Neuigkeiten"
+      - "<click:suggest_command:'/bank'><gold>/bank</gold></click> <gray>– Items einzahlen, Kontostand, Auszahlen"
+      - "<click:suggest_command:'/pay '><gold>/pay <spieler> <betrag></gold></click> <gray>– Geld überweisen"
       - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
       - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
       - "<click:suggest_command:'/help 2'><gold>/help <seite></gold></click> <gray>– Weitere Seiten"
@@ -160,44 +162,97 @@ help:
 
 # ------------------------------------------------------------
 # Spawn (/spawn, /setspawn)
-# Mit sess.spawn ist /spawn kostenlos, sonst kostet es die Items unten.
+# Mit sess.spawn ist /spawn kostenlos, sonst kostet es den Betrag unten (Konto oder Items).
+# Platzhalter in den Kosten-Texten: <price>, <amount>, <item>
 # Neue Spieler und Respawns ohne Bett/Anker landen exakt am gesetzten Spawn.
 # ------------------------------------------------------------
 spawn:
   cost:
-    item: DIAMOND     # Item-Name, z.B. DIAMOND, EMERALD, GOLD_INGOT
-    amount: 5         # 0 = kostenlos für alle
+    type: money       # money = vom Bankkonto, item = in Items
+    amount: 500       # Betrag bzw. Anzahl Items; 0 = kostenlos für alle
+    item: DIAMOND     # nur bei type: item, z.B. DIAMOND, EMERALD, GOLD_INGOT
   messages:
     set: "<prefix><green>Spawn auf deine Position gesetzt."
     teleported: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert."
-    teleported-paid: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert. <dark_gray>(-<amount>x <item>)"
-    not-enough: "<prefix><red>Du brauchst <white><amount>x <item></white>, um dich zum Spawn zu teleportieren."
+    teleported-paid: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert. <dark_gray>(-<price>)"
+    not-enough: "<prefix><red>Du brauchst <white><price></white>, um dich zum Spawn zu teleportieren."
     failed: "<prefix><red>Teleport fehlgeschlagen."
+
+# ------------------------------------------------------------
+# Bank (/bank, /balance, /pay, /baltop, /eco)
+# Spieler zahlen Items auf ein digitales Konto ein und bezahlen damit Befehle, andere Spieler
+# und – mit Vault – andere Plugins (Shops usw.). Beträge sind ganze Einheiten.
+# Platzhalter: <amount>, <balance>, <target>, <sender>, <rank>, <name>
+# ------------------------------------------------------------
+bank:
+  currency:
+    singular: "Taler"
+    plural: "Taler"
+  start-balance: 0
+  # Einzahlbare Materialien mit Wert pro Item. Das erste ist das Basis-Material.
+  materials:
+    DIAMOND: 100
+    NETHERITE_INGOT: 1000
+    EMERALD: 50
+    IRON_INGOT: 5
+  # false = nur das Basis-Material (erstes oben) zählt
+  multiple-materials: true
+  # true = auch die Blöcke (z.B. Diamantblock = 9 Diamanten) ein- und auszahlen
+  allow-blocks: true
+  withdraw:
+    enabled: true
+    # original = in den Materialien oben (größte Werte zuerst), base = nur im Basis-Material
+    mode: original
+    # Schnell-Buttons im /bank-Menü
+    presets: [100, 1000, 6400]
+  messages:
+    balance: "<prefix><gray>Kontostand: <gold><balance>"
+    balance-other: "<prefix><gray>Kontostand von <white><target></white>: <gold><balance>"
+    deposited: "<prefix><green>+<amount></green> <gray>eingezahlt. Kontostand: <gold><balance>"
+    nothing-to-deposit: "<prefix><red>Du hast nichts Einzahlbares im Inventar."
+    nothing-in-hand: "<prefix><red>Das Item in deiner Hand kann nicht eingezahlt werden."
+    withdrawn: "<prefix><gray><amount> ausgezahlt. Kontostand: <gold><balance>"
+    withdrawn-partial: "<prefix><gray><amount> ausgezahlt – der Rest ist kleiner als die kleinste Einheit und bleibt auf dem Konto. Kontostand: <gold><balance>"
+    withdraw-disabled: "<prefix><red>Auszahlen ist auf diesem Server deaktiviert."
+    withdraw-too-small: "<prefix><red>Der kleinste auszahlbare Betrag ist <amount>."
+    not-enough: "<prefix><red>Dein Kontostand reicht nicht für <amount> (<balance>)."
+    paid: "<prefix><gray>Du hast <white><target></white> <gold><amount></gold> überwiesen."
+    received: "<prefix><white><sender></white> <gray>hat dir <gold><amount></gold> überwiesen."
+    pay-self: "<prefix><red>Du kannst dir nicht selbst Geld überweisen."
+    unknown-player: "<prefix><red>Der Spieler <white><target></white> war noch nie auf dem Server."
+    invalid-amount: "<prefix><red>Ungültiger Betrag."
+    cancelled: "<prefix><gray>Eingabe abgebrochen."
+    prompt-withdraw: "<prefix><gray>Wie viel möchtest du auszahlen? Betrag im Chat eingeben. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    prompt-admin: "<prefix><gray>Kontostand von <white><target></white> ändern: <white>+100</white>, <white>-50</white> oder <white>=200</white>. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    admin-updated: "<prefix><gray>Kontostand von <white><target></white>: <gold><balance>"
+    baltop-header: "<dark_gray>────── <gold><bold>Reichste Spieler</bold></gold> ──────"
+    baltop-entry: "<gray><rank>. <white><name></white> <dark_gray>»</dark_gray> <gold><balance>"
 
 # ------------------------------------------------------------
 # Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])
 # Der Anfragende zahlt erst, wenn die Anfrage angenommen wird. Mit sess.tpa.free kostenlos.
-# Platzhalter: <requester>, <target>, <seconds>, <amount>, <item>
+# Platzhalter: <requester>, <target>, <seconds>, <price> (z.B. "500 Taler" oder "5x Diamant"), <amount>, <item>
 # ------------------------------------------------------------
 tpa:
   expire-seconds: 60
   cost:
-    item: DIAMOND     # Item-Name, z.B. DIAMOND, EMERALD, GOLD_INGOT
-    amount: 5         # 0 = kostenlos für alle
+    type: money       # money = vom Bankkonto, item = in Items
+    amount: 500       # Betrag bzw. Anzahl Items; 0 = kostenlos für alle
+    item: DIAMOND     # nur bei type: item
   messages:
     sent: "<prefix><gray>Anfrage an <white><target></white> gesendet. Sie verfällt in <seconds> Sekunden."
-    sent-paid: "<prefix><gray>Anfrage an <white><target></white> gesendet. <dark_gray>(Kosten bei Annahme: <amount>x <item>)"
+    sent-paid: "<prefix><gray>Anfrage an <white><target></white> gesendet. <dark_gray>(Kosten bei Annahme: <price>)"
     received: "<prefix><white><requester></white><gray> möchte sich zu dir teleportieren. <click:run_command:'/tpaccept <requester>'><hover:show_text:'<green>Annehmen'><green>[Annehmen]</green></hover></click> <click:run_command:'/tpdeny <requester>'><hover:show_text:'<red>Ablehnen'><red>[Ablehnen]</red></hover></click>"
     accepted: "<prefix><green><target> hat deine Anfrage angenommen."
-    accepted-paid: "<prefix><green><target> hat deine Anfrage angenommen. <dark_gray>(-<amount>x <item>)"
+    accepted-paid: "<prefix><green><target> hat deine Anfrage angenommen. <dark_gray>(-<price>)"
     accepted-target: "<prefix><green>Anfrage von <white><requester></white> angenommen."
     denied: "<prefix><red><target> hat deine Anfrage abgelehnt."
     denied-target: "<prefix><gray>Anfrage von <white><requester></white> abgelehnt."
     no-request: "<prefix><red>Keine offene Teleport-Anfrage."
     not-found: "<prefix><red><target> ist nicht online."
     self: "<prefix><red>Du kannst dir selbst keine Anfrage schicken."
-    not-enough: "<prefix><red>Du brauchst <white><amount>x <item></white> für eine Teleport-Anfrage."
-    requester-cannot-pay: "<prefix><red><requester> hat nicht mehr genug <item> – Teleport abgebrochen."
+    not-enough: "<prefix><red>Du brauchst <white><price></white> für eine Teleport-Anfrage."
+    requester-cannot-pay: "<prefix><red><requester> kann <price> nicht mehr bezahlen – Teleport abgebrochen."
     failed: "<prefix><red>Teleport fehlgeschlagen."
 
 # ------------------------------------------------------------

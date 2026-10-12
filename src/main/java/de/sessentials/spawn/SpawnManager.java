@@ -2,7 +2,7 @@ package de.sessentials.spawn;
 
 import com.mojang.brigadier.Command;
 import de.sessentials.SEssentials;
-import de.sessentials.cost.ItemCost;
+import de.sessentials.cost.Cost;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -34,7 +34,7 @@ public final class SpawnManager implements Listener {
     private final File file;
     private Location spawn;
 
-    private volatile ItemCost cost;
+    private volatile Cost cost;
 
     public SpawnManager(SEssentials plugin) {
         this.plugin = plugin;
@@ -45,7 +45,7 @@ public final class SpawnManager implements Listener {
 
     /** Ohne explizite Defaults lesen: fehlende Keys in älteren Configs fallen auf die config.yml im JAR zurück. */
     public void reload() {
-        cost = ItemCost.fromConfig(plugin.getConfig(), "spawn.cost", plugin.getLogger());
+        cost = Cost.fromConfig(plugin.getConfig(), "spawn.cost", plugin.bank(), plugin.getLogger());
     }
 
     /** Gesetzter Spawn, sonst der Spawn der Hauptwelt. */
@@ -70,7 +70,7 @@ public final class SpawnManager implements Listener {
 
     /** /spawn: mit sess.spawn kostenlos, sonst gegen die konfigurierten Items. */
     public void teleport(Player player) {
-        ItemCost cost = this.cost;
+        Cost cost = this.cost;
         boolean pays = !player.hasPermission(PERM_FREE) && !cost.isFree();
         // vorher abziehen, damit niemand die Items während des Teleports weglegen kann
         if (pays && !cost.take(player)) {

@@ -10,9 +10,10 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Vanish mit Schutzregeln, Fake-Nachrichten und gefälschter Serverliste
 - `/fly`, `/heal`, `/feed`, `/god`
 - `/nether` und `/end` zum Wechseln zwischen den Dimensionen
-- Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst gegen Items)
+- Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst vom Konto oder gegen Items)
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
 - Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
+- Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
@@ -32,7 +33,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.report` und `sess.tpa` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.bank` und `sess.bank.pay` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -55,8 +56,15 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report` und `sess.tpa` (alle
 | `/heal [spieler]` | `sess.heal` / `sess.heal.others` | Volle Gesundheit, Feuer aus |
 | `/feed [spieler]` | `sess.feed` / `sess.feed.others` | Hunger und Sättigung auffüllen |
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
-| `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` gegen Items (Standard 5 Diamanten) |
-| `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` gegen Items (Standard 5 Diamanten) |
+| `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` kostenpflichtig (Standard 500 Taler vom Konto) |
+| `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` kostenpflichtig (Standard 500 Taler) |
+| `/bank` | `sess.bank` | Bank-Menü: Kontostand, Einzahlen, Auszahlen, Kurse |
+| `/bank einzahlen [hand]` | `sess.bank` | Alle passenden Items bzw. den Stack in der Hand einzahlen |
+| `/bank auszahlen <betrag>` | `sess.bank` | Betrag in Items auszahlen (falls erlaubt) |
+| `/balance [spieler]` | – | Kontostand (Aliase `/bal`, `/money`, `/geld`, `/kontostand`) |
+| `/pay <spieler> <betrag>` | `sess.bank.pay` | Geld überweisen (Alias `/zahlen`) |
+| `/baltop` | – | Die 10 reichsten Spieler |
+| `/eco give\|take\|set <spieler> <betrag>` | `sess.bank.admin` | Konten verwalten |
 | `/tpaccept [spieler]` | – | Anfrage annehmen (ohne Namen: neueste) |
 | `/tpdeny [spieler]` | – | Anfrage ablehnen (ohne Namen: neueste) |
 | `/setspawn` | `sess.setspawn` | Server-Spawn auf die eigene Position setzen |
@@ -146,6 +154,7 @@ nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorie
 |---|---|
 | Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht) |
 | Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
+| Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern) |
 | Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |
 | Einstellungen | **Benachrichtigungen** (Report-Meldungen an/aus, Client-Detector-Stufe) |
 
@@ -165,9 +174,8 @@ Kopf-, Fußzeile und Blätter-Buttons sind unter `help` einstellbar (Platzhalter
 `/setspawn` speichert die eigene Position (inkl. Blickrichtung) in `plugins/SEssentials/spawn.yml`
 und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den Spawn der Hauptwelt.
 
-`/spawn` kann jeder nutzen. Mit `sess.spawn` ist es kostenlos, sonst kostet es `spawn.cost.amount` × `spawn.cost.item`
-(Standard 5 Diamanten, `amount: 0` = für alle kostenlos). Die Items werden vor dem Teleport abgezogen und
-bei einem fehlgeschlagenen Teleport zurückgegeben. Umbenannte oder verzauberte Items zählen nicht.
+`/spawn` kann jeder nutzen. Mit `sess.spawn` ist es kostenlos, sonst kostet es `spawn.cost` – siehe [Kosten](#kosten)
+(Standard 500 Taler vom Konto). Die Kosten werden vor dem Teleport abgezogen und bei einem fehlgeschlagenen Teleport erstattet.
 
 Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
 
@@ -185,10 +193,39 @@ Mit `news.show-on-join` erscheint die Übersicht beim Join (nach `join-delay-sec
 Inhalt: MiniMessage oder &-Farbcodes, `[Text](/befehl)` für klickbare Befehle, `\n` für Zeilenumbrüche.
 News liegen in `plugins/SEssentials/news.yml`; Design und Prioritäten unter `news` in der Config.
 
+## Bank
+Spieler zahlen Items auf ein digitales Konto ein und bezahlen damit Befehle, andere Spieler (`/pay`) und –
+wenn [Vault](https://www.spigotmc.org/resources/vault.34315/) installiert ist – andere Plugins wie Shops.
+Beträge sind ganze Einheiten (`bank.currency`), Konten liegen in `plugins/SEssentials/bank.yml`.
+
+| Einstellung (`bank.`) | Wirkung |
+|---|---|
+| `materials` | Einzahlbare Materialien mit Wert pro Item. Das erste ist das Basis-Material. |
+| `multiple-materials` | `false` = nur das Basis-Material zählt (eine Währung, z.B. nur Diamanten) |
+| `allow-blocks` | `true` = auch Blöcke (Diamantblock = 9 Diamanten) ein- und auszahlen |
+| `withdraw.enabled` | Ob man wieder auszahlen kann |
+| `withdraw.mode` | `original` = in den eingestellten Materialien, größte Werte zuerst; `base` = nur im Basis-Material |
+| `withdraw.presets` | Schnell-Buttons zum Auszahlen im `/bank`-Menü |
+| `start-balance` | Startguthaben neuer Konten |
+
+Nur unveränderte Items zählen (keine umbenannten oder verzauberten). Auszahlungen, die nicht genau in Items aufgehen,
+zahlen den größtmöglichen Teil aus; der Rest bleibt auf dem Konto. Volles Inventar: Der Rest fällt vor die Füße.
+
+## Kosten
+`spawn.cost` und `tpa.cost` haben dasselbe Format:
+```yaml
+cost:
+  type: money   # money = vom Bankkonto, item = in Items
+  amount: 500   # Betrag bzw. Anzahl Items; 0 = kostenlos
+  item: DIAMOND # nur bei type: item
+```
+In den Texten steht `<price>` für den Preis („500 Taler“ bzw. „5x Diamant“).
+Ältere Configs ohne `type`, aber mit `item`, bleiben bei Item-Kosten.
+
 ## Teleport-Anfragen
 `/tpa <spieler>` schickt eine Anfrage mit klickbarem **[Annehmen]** / **[Ablehnen]**. Sie verfällt nach `tpa.expire-seconds`.
-Der Anfragende zahlt `tpa.cost` (Standard 5 Diamanten) erst bei Annahme; mit `sess.tpa.free` oder `amount: 0` kostenlos.
-Hat er bei Annahme nicht mehr genug Items, wird der Teleport abgebrochen. Bei einem fehlgeschlagenen Teleport gibt es die Items zurück.
+Der Anfragende zahlt `tpa.cost` (siehe [Kosten](#kosten), Standard 500 Taler) erst bei Annahme; mit `sess.tpa.free` kostenlos.
+Kann er bei Annahme nicht mehr bezahlen, wird der Teleport abgebrochen. Bei einem fehlgeschlagenen Teleport wird erstattet.
 Versteckte Spieler (Vanish) können nicht angefragt werden. Eine neue Anfrage an denselben Spieler ersetzt die alte.
 
 ## Dimensionen

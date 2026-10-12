@@ -84,17 +84,20 @@ public final class Menu implements InventoryHolder {
 
     /**
      * Menü mit einer Zeile pro Abschnitt (Beschriftung in Spalte 0, Kacheln ab Spalte 2, bei Bedarf
-     * umgebrochen), Rahmen oben und unten und optionalem Button unten in der Mitte.
-     * Abschnitte ohne Kacheln werden ausgelassen; mehr als 4 Zeilen Inhalt werden abgeschnitten.
+     * umgebrochen), Rahmen oben (sofern Platz) und unten und optionalem Button unten in der Mitte.
+     * Abschnitte ohne Kacheln werden ausgelassen; mehr als 5 Zeilen Inhalt werden abgeschnitten.
      */
     public static Menu sectioned(Component title, List<Section> sections, Entry footer) {
         List<Section> visible = sections.stream().filter(s -> !s.entries().isEmpty()).toList();
         int perRow = 9 - FIRST_ENTRY_COLUMN;
         int contentRows = visible.stream().mapToInt(s -> (s.entries().size() + perRow - 1) / perRow).sum();
-        int rows = Math.min(6, 2 + Math.max(1, contentRows));
+        contentRows = Math.max(1, contentRows);
+        // oberer Rahmen nur, wenn er noch in 6 Reihen passt
+        int top = contentRows + 2 <= 6 ? 1 : 0;
+        int rows = Math.min(6, contentRows + 1 + top);
         Menu menu = new Menu(rows, title);
 
-        int row = 1;
+        int row = top;
         for (Section section : visible) {
             if (row >= rows - 1) break;
             menu.inventory.setItem(row * 9, section.label());
