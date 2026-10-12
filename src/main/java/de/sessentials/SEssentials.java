@@ -12,6 +12,7 @@ import de.sessentials.admin.AdminPanel.Category;
 import de.sessentials.admin.ChatPrompt;
 import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
+import de.sessentials.chestshop.ChestShopManager;
 import de.sessentials.detector.ClientDetector;
 import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.help.HelpCommand;
@@ -68,6 +69,7 @@ public final class SEssentials extends JavaPlugin {
     private BankCommands bankCommands;
     private ItemTracker tracker;
     private EnderChestCommand enderChest;
+    private ChestShopManager chestShops;
     private TrackerMenu trackerMenu;
     private NewsManager news;
 
@@ -112,6 +114,7 @@ public final class SEssentials extends JavaPlugin {
         help = new HelpCommand(this);
         tpa = new TpaManager(this);
         enderChest = new EnderChestCommand(this);
+        chestShops = new ChestShopManager(this);
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
         notifications = new Notifications(this);
@@ -134,6 +137,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(news, this);
         getServer().getPluginManager().registerEvents(bank, this);
         getServer().getPluginManager().registerEvents(tracker, this);
+        getServer().getPluginManager().registerEvents(chestShops, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -146,6 +150,7 @@ public final class SEssentials extends JavaPlugin {
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
         if (tracker != null) tracker.shutdown();
+        if (chestShops != null) chestShops.shutdown();
         if (bank != null) bank.shutdown();
     }
 

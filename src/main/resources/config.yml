@@ -145,6 +145,7 @@ help:
       - "<click:suggest_command:'/news'><gold>/news</gold></click> <gray>– Aktuelle Neuigkeiten"
       - "<click:suggest_command:'/bank'><gold>/bank</gold></click> <gray>– Items einzahlen, Kontostand, Auszahlen"
       - "<click:suggest_command:'/pay '><gold>/pay <spieler> <betrag></gold></click> <gray>– Geld überweisen"
+      - "<gold>Shop</gold> <gray>– Schild an Kiste: <white>[Shop]</white>, Menge, <white>K 100 V 80</white>, Item"
       - "<click:suggest_command:'/ec'><gold>/ec</gold></click> <gray>– Enderchest öffnen"
       - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
       - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
@@ -270,6 +271,42 @@ enderchest:
   messages:
     opened-paid: "<prefix><gray>Enderchest geöffnet. <dark_gray>(-<price>)"
     not-enough: "<prefix><red>Du brauchst <white><price></white>, um deine Enderchest zu öffnen."
+
+# ------------------------------------------------------------
+# Chestshops – Schild an eine Kiste/ein Fass (Wandschild oder obendrauf):
+#   Zeile 1: [Shop]        (Admin-Shop mit unbegrenztem Bestand: [AdminShop], Recht sess.chestshop.admin)
+#   Zeile 2: Menge pro Handel, z.B. 16
+#   Zeile 3: Preise in Talern: K 100 (Spieler kauft) und/oder V 80 (Spieler verkauft)
+#   Zeile 4: leer = erstes Item in der Kiste (sonst Item in der Hand) oder Item-Name, z.B. DIAMOND
+# Rechtsklick aufs Schild = kaufen, Linksklick = verkaufen. Besitzer bauen mit Sneak + Linksklick ab.
+# Platzhalter: <owner>, <amount>, <item>, <buy>, <sell>, <stock>, <price>, <customer>
+# ------------------------------------------------------------
+chestshop:
+  messages:
+    created: "<prefix><green>Shop erstellt: <white><amount>x <item></white> – Kaufen <gold><buy></gold>, Verkaufen <gold><sell></gold>."
+    created-admin: "<prefix><green>Admin-Shop erstellt: <white><amount>x <item></white> – Kaufen <gold><buy></gold>, Verkaufen <gold><sell></gold>."
+    no-permission: "<prefix><red>Du darfst diesen Shop-Typ nicht erstellen."
+    no-container: "<prefix><red>Das Schild muss an einer Kiste oder einem Fass hängen bzw. darauf stehen."
+    container-taken: "<prefix><red>Diese Kiste gehört schon zum Shop von <white><owner></white>."
+    invalid-amount: "<prefix><red>Zeile 2: Menge zwischen 1 und 2304 angeben."
+    invalid-price: "<prefix><red>Zeile 3: Preis angeben, z.B. <white>K 100</white>, <white>V 80</white> oder <white>K 100 V 80</white>."
+    no-item: "<prefix><red>Zeile 4: unbekanntes Item – oder leer lassen und das Item in die Kiste bzw. in die Hand nehmen."
+    bought: "<prefix><gray>Du hast <white><amount>x <item></white> für <gold><price></gold> gekauft."
+    sold: "<prefix><gray>Du hast <white><amount>x <item></white> für <gold><price></gold> verkauft."
+    owner-bought: "<prefix><white><customer></white> <gray>hat <white><amount>x <item></white> für <gold><price></gold> in deinem Shop gekauft."
+    owner-sold: "<prefix><white><customer></white> <gray>hat dir <white><amount>x <item></white> für <gold><price></gold> verkauft."
+    no-buy: "<prefix><red>Dieser Shop verkauft nichts."
+    no-sell: "<prefix><red>Dieser Shop kauft nichts an."
+    out-of-stock: "<prefix><red>Der Shop ist ausverkauft."
+    shop-full: "<prefix><red>Die Kiste des Shops ist voll."
+    inventory-full: "<prefix><red>Dein Inventar ist zu voll."
+    not-enough-money: "<prefix><red>Du brauchst <gold><price></gold>."
+    owner-not-enough-money: "<prefix><red>Der Besitzer kann <gold><price></gold> gerade nicht bezahlen."
+    not-enough-items: "<prefix><red>Du hast keine <white><amount>x <item></white>."
+    info: "<prefix><gray>Shop von <white><owner></white>: <white><amount>x <item></white> – Kaufen <gold><buy></gold>, Verkaufen <gold><sell></gold>, Bestand <white><stock></white>."
+    owner-hint: "<prefix><dark_gray>Zum Abbauen: Sneak + Linksklick."
+    protected: "<prefix><red>Diese Kiste gehört zum Shop von <white><owner></white>."
+    removed: "<prefix><gray>Shop entfernt."
 
 # ------------------------------------------------------------
 # Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])

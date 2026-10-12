@@ -15,6 +15,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
 - `/enderchest` (`/ec`) mit einstellbaren Kosten
 - Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
+- Chestshops: Items aus Kisten für Taler kaufen und verkaufen
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
@@ -35,7 +36,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank` und `sess.bank.pay` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -78,6 +79,8 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.e
 | – | `sess.report.notify` | Benachrichtigung (mit Sound) bei neuen Reports |
 | – | `sess.detector.notify` | Meldungen vom Client-Detector |
 | – | `sess.report.bypasscooldown` | Ignoriert den Cooldown von `/report` |
+| – | `sess.chestshop.create` | Chestshops erstellen |
+| – | `sess.chestshop.admin` | Admin-Shops erstellen, alle Shops öffnen und abbauen |
 | – | `sess.tracker` | Item-Tracker im Admin-Panel |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
@@ -214,6 +217,24 @@ Beträge sind ganze Einheiten (`bank.currency`), Konten liegen in `plugins/SEsse
 
 Nur unveränderte Items zählen (keine umbenannten oder verzauberten). Auszahlungen, die nicht genau in Items aufgehen,
 zahlen den größtmöglichen Teil aus; der Rest bleibt auf dem Konto. Volles Inventar: Der Rest fällt vor die Füße.
+
+## Chestshops
+Schild an eine Kiste, Truhe oder ein Fass setzen (Wandschild oder obendrauf):
+
+| Zeile | Inhalt |
+|---|---|
+| 1 | `[Shop]` – oder `[AdminShop]` (unbegrenzter Bestand, Taler vom/an den Server; Recht `sess.chestshop.admin`) |
+| 2 | Menge pro Handel, z.B. `16` |
+| 3 | Preise in Talern: `K 100` (Spieler kauft), `V 80` (Spieler verkauft) oder beides |
+| 4 | leer = erstes Item in der Kiste (sonst Item in der Hand), oder ein Item-Name wie `DIAMOND` |
+
+**Rechtsklick** aufs Schild kauft, **Linksklick** verkauft. Bezahlt wird über die Bank direkt zwischen Kunde und Besitzer;
+der Besitzer wird benachrichtigt, wenn er online ist. Es zählen nur Items, die exakt dem Shop-Item entsprechen
+(gleiche Verzauberungen, Namen usw.).
+
+Schutz: Kiste und Schild können nur der Besitzer und Admins öffnen bzw. abbauen (Besitzer: Sneak + Linksklick aufs Schild),
+Trichter ziehen nichts heraus (Auffüllen per Trichter geht), Explosionen zerstören keine Shops.
+Shops liegen in `plugins/SEssentials/shops.yml`, Texte unter `chestshop.messages`.
 
 ## Item-Tracker
 Zählt die Items aus `tracker.items` im Inventar und in der Enderchest jedes Spielers, auf Wunsch inkl. Shulkerkisten

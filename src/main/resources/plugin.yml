@@ -106,6 +106,12 @@ permissions:
   sess.enderchest.free:
     description: /enderchest ohne Kosten
     default: op
+  sess.chestshop.create:
+    description: Chestshops erstellen
+    default: true
+  sess.chestshop.admin:
+    description: Admin-Shops erstellen, alle Shops öffnen und abbauen
+    default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op
