@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Compile and package
+        run: mvn -B verify
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEssentials
+          path: target/SEssentials-*.jar
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: SEssentials
+
+      # Tag v1.2.3 must match <version>1.2.3</version> in pom.xml,
+      # otherwise the released jar would carry the wrong version.
+      - name: Check tag matches pom version
+        run: |
+          POM_VERSION=$(grep -m1 -oP '(?<=<version>)[^<]+' pom.xml)
+          if [ "v$POM_VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match pom.xml version $POM_VERSION"
+            exit 1
+          fi
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" SEssentials-*.jar --generate-notes
