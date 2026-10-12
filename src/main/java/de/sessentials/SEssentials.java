@@ -2,10 +2,13 @@ package de.sessentials;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import de.sessentials.admin.AdminPanel;
+import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
 import de.sessentials.player.PlayerCommands;
+import de.sessentials.report.ReportManager;
 import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.tab.TabNametagManager;
@@ -13,6 +16,9 @@ import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +33,8 @@ public final class SEssentials extends JavaPlugin {
     private TabNametagManager tab;
     private VanishManager vanish;
     private PlayerCommands playerCommands;
+    private AdminPanel adminPanel;
+    private ReportManager reports;
 
     @Override
     public void onEnable() {
@@ -51,12 +59,17 @@ public final class SEssentials extends JavaPlugin {
         joinQuit = new JoinQuitListener(this);
         tab = new TabNametagManager(this);
         playerCommands = new PlayerCommands(this);
+        reports = new ReportManager(this);
+        adminPanel = new AdminPanel(this);
+        registerAdminApps();
 
         getServer().getPluginManager().registerEvents(softRestart, this);
         getServer().getPluginManager().registerEvents(chat, this);
         getServer().getPluginManager().registerEvents(joinQuit, this);
         getServer().getPluginManager().registerEvents(vanish, this);
         getServer().getPluginManager().registerEvents(playerCommands, this);
+        getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
+        getServer().getPluginManager().registerEvents(reports, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -85,6 +98,86 @@ public final class SEssentials extends JavaPlugin {
 
     public JoinQuitListener joinQuit() {
         return joinQuit;
+    }
+
+    public AdminPanel adminPanel() {
+        return adminPanel;
+    }
+
+    /** Kacheln im Admin-Panel. Reihenfolge = Position im Panel. */
+    private void registerAdminApps() {
+        adminPanel.addApp("sess.vanish",
+                p -> Menu.icon(Material.ENDER_EYE, Component.text("Vanish", NamedTextColor.LIGHT_PURPLE), status(vanish.isVanished(p))),
+                p -> vanish.toggle(p, true));
+        adminPanel.addApp(p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
+                p -> Menu.icon(Material.COMMAND_BLOCK, Component.text("Befehle", NamedTextColor.AQUA),
+                        Component.text("Fly, God, Heal, Feed", NamedTextColor.GRAY)),
+                this::openCommandsMenu);
+        adminPanel.addApp("sess.reports.admin",
+                p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
+                        Component.text("Offen: " + reports.openCount(), NamedTextColor.GRAY)),
+                p -> reports.menu().openList(p, 1));
+        adminPanel.addApp("sess.softrestart",
+                p -> Menu.icon(Material.CLOCK, Component.text("Softrestart", NamedTextColor.RED),
+                        softRestart.isRunning()
+                                ? text.render("<gray>Neustart in <white><time>", softRestart.time(softRestart.remainingSeconds()))
+                                : Component.text("Kein Neustart geplant", NamedTextColor.GRAY)),
+                this::openSoftRestartMenu);
+        adminPanel.addApp("sess.reload",
+                p -> Menu.icon(Material.COMPARATOR, Component.text("Config neu laden", NamedTextColor.GREEN)),
+                p -> {
+                    reloadAll();
+                    p.sendMessage(text.render(getConfig().getString("messages.reloaded", "")));
+                });
+    }
+
+    private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed");
+
+    /** Untermenü mit /fly, /god, /heal, /feed – jede Kachel nur mit ihrem Recht. */
+    private void openCommandsMenu(Player player) {
+        Menu menu = new Menu(1, Component.text("Befehle"));
+        int slot = 0;
+        if (player.hasPermission("sess.fly")) {
+            menu.set(slot++, Menu.icon(Material.FEATHER, Component.text("Fly", NamedTextColor.AQUA), status(player.getAllowFlight())),
+                    p -> playerCommands.execute("fly", p));
+        }
+        if (player.hasPermission("sess.god")) {
+            menu.set(slot++, Menu.icon(Material.TOTEM_OF_UNDYING, Component.text("God", NamedTextColor.GOLD), status(playerCommands.isGod(player))),
+                    p -> playerCommands.execute("god", p));
+        }
+        if (player.hasPermission("sess.heal")) {
+            menu.set(slot++, Menu.icon(Material.GOLDEN_APPLE, Component.text("Heal", NamedTextColor.RED)),
+                    p -> playerCommands.execute("heal", p));
+        }
+        if (player.hasPermission("sess.feed")) {
+            menu.set(slot, Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
+                    p -> playerCommands.execute("feed", p));
+        }
+        menu.set(8, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), adminPanel::open);
+        menu.refreshWith(this::openCommandsMenu);
+        menu.open(player);
+    }
+
+    private static Component status(boolean on) {
+        return on ? Component.text("Status: An", NamedTextColor.GREEN) : Component.text("Status: Aus", NamedTextColor.GRAY);
+    }
+
+    private void openSoftRestartMenu(Player player) {
+        Menu menu = new Menu(1, Component.text("Softrestart"));
+        int[] minutes = {1, 5, 10, 15, 30, 60};
+        for (int i = 0; i < minutes.length; i++) {
+            int m = minutes[i];
+            menu.set(i, Menu.icon(Material.CLOCK, Component.text("In " + m + " Minute(n)", NamedTextColor.YELLOW)), p -> {
+                p.closeInventory();
+                softRestart.start(p, m);
+            });
+        }
+        menu.set(7, Menu.icon(Material.BARRIER, Component.text("Abbrechen", NamedTextColor.RED)), p -> {
+            p.closeInventory();
+            if (!softRestart.cancel()) p.sendMessage(text.render(getConfig().getString("softrestart.messages.not-running", "")));
+        });
+        menu.set(8, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), adminPanel::open);
+        menu.open(player);
     }
 
     private void registerCommands() {
@@ -157,6 +250,18 @@ public final class SEssentials extends JavaPlugin {
                     List.of("v"));
 
             playerCommands.register(commands);
+            reports.register(commands);
+
+            commands.register(
+                    Commands.literal("admin")
+                            .requires(src -> src.getExecutor() instanceof Player p && p.hasPermission("sess.admin"))
+                            .executes(ctx -> {
+                                adminPanel.open((Player) ctx.getSource().getExecutor());
+                                return Command.SINGLE_SUCCESS;
+                            })
+                            .build(),
+                    "Öffnet das Admin-Panel",
+                    List.of());
         });
     }
 }

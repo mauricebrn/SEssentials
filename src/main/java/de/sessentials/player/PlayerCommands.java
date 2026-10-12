@@ -20,7 +20,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,20 +37,35 @@ public final class PlayerCommands implements Listener {
     private final SEssentials plugin;
     // God-Modus gilt nur bis zum Verlassen des Servers
     private final Set<UUID> god = ConcurrentHashMap.newKeySet();
+    /** Befehlsname → Aktion; die Aktion liefert den Nachrichten-Key für den Zielspieler. */
+    private final Map<String, Function<Player, String>> actions = new LinkedHashMap<>();
 
     public PlayerCommands(SEssentials plugin) {
         this.plugin = plugin;
+        actions.put("fly", this::fly);
+        actions.put("heal", this::heal);
+        actions.put("feed", this::feed);
+        actions.put("god", this::god);
     }
 
     public void register(Commands commands) {
-        register(commands, "fly", "Flugmodus ein/aus", this::fly);
-        register(commands, "heal", "Volle Gesundheit", this::heal);
-        register(commands, "feed", "Hunger stillen", this::feed);
-        register(commands, "god", "Unverwundbarkeit ein/aus", this::god);
+        register(commands, "fly", "Flugmodus ein/aus");
+        register(commands, "heal", "Volle Gesundheit");
+        register(commands, "feed", "Hunger stillen");
+        register(commands, "god", "Unverwundbarkeit ein/aus");
     }
 
-    /** {@code action} wendet den Befehl an und liefert den Nachrichten-Key für den Zielspieler. */
-    private void register(Commands commands, String name, String description, Function<Player, String> action) {
+    /** Führt einen Befehl (fly, heal, feed, god) für den Spieler selbst aus, z.B. aus dem Admin-Panel. */
+    public void execute(String name, Player player) {
+        run(player, player, name, actions.get(name));
+    }
+
+    public boolean isGod(Player player) {
+        return god.contains(player.getUniqueId());
+    }
+
+    private void register(Commands commands, String name, String description) {
+        Function<Player, String> action = actions.get(name);
         String perm = "sess." + name;
         commands.register(
                 Commands.literal(name)

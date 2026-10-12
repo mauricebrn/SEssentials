@@ -9,6 +9,8 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Konfigurierbare Join- / Leave-Nachrichten
 - Vanish mit Schutzregeln, Fake-Nachrichten und gefälschter Serverliste
 - `/fly`, `/heal`, `/feed`, `/god`
+- Report-System (`/report`) mit Admin-Übersicht
+- Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
 Alle Texte unterstützen MiniMessage und &-Farbcodes.
 Optional: **LuckPerms** (Prefix/Suffix/Gruppen) und **PlaceholderAPI**.
@@ -24,10 +26,11 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.report` (alle) und `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
+| `/admin` | `sess.admin` | Admin-Panel öffnen |
 | `/sessentials reload` | `sess.reload` | Config neu laden (Alias `/sess`) |
 | `/softrestart <minuten>` | `sess.softrestart` | Neustart nach X Minuten planen (Alias `/srestart`) |
 | `/softrestart cancel` | `sess.softrestart` | Geplanten Neustart abbrechen |
@@ -35,12 +38,17 @@ Alle Rechte sind standardmäßig `op`, außer `sess.vanish.auto` (niemand).
 | `/vanish` | `sess.vanish` | Unsichtbar ein/aus (Alias `/v`), bleibt über Relogs erhalten |
 | `/vanish silent` | `sess.vanish` | Wie `/vanish`, aber ohne Fake-Join/Leave-Nachricht |
 | `/vanish bypass` | `sess.vanish.bypass` | Schutzregeln im Vanish aufheben/wieder aktivieren (bis zum Verlassen) |
+| `/report <spieler> <grund>` | `sess.report` | Spieler melden (Alias `/melden`) |
+| `/reports` | `sess.reports.admin` | Report-Übersicht öffnen (Aliase `/rlist`, `/reportadmin`) |
+| `/clearreports` | `sess.reports.admin` | Alle offenen Reports löschen |
 | `/fly [spieler]` | `sess.fly` / `sess.fly.others` | Flugmodus ein/aus |
 | `/heal [spieler]` | `sess.heal` / `sess.heal.others` | Volle Gesundheit, Feuer aus |
 | `/feed [spieler]` | `sess.feed` / `sess.feed.others` | Hunger und Sättigung auffüllen |
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
 | – | `sess.vanish.auto` | Beim Joinen automatisch unsichtbar |
 | – | `sess.vanish.see` | Sieht versteckte Spieler und bekommt Join/Leave-Hinweise |
+| – | `sess.report.notify` | Benachrichtigung (mit Sound) bei neuen Reports |
+| – | `sess.report.bypasscooldown` | Ignoriert den Cooldown von `/report` |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
 
@@ -80,10 +88,34 @@ Einzeln abschaltbar unter `vanish.protections`, pro Spieler aufhebbar mit `/vani
 **Grenzen:** Selektoren wie `@a` erfassen versteckte Spieler weiterhin. Mobs greifen sie weiter an.
 PAPI-Platzhalter anderer Plugins (z.B. `%server_online%`) zählen sie mit.
 
+## Reports
+`/report <spieler> <grund>` meldet einen Spieler, der schon einmal auf dem Server war.
+Selbst melden geht nicht. Zwischen zwei Meldungen liegt `reports.cooldown` (Sekunden).
+Spieler mit `sess.report.notify` bekommen jede Meldung sofort mit Sound.
+
+`/reports` (oder die Kachel im Admin-Panel) zeigt alle offenen Reports, 45 pro Seite.
+Ein Klick öffnet die Details mit **Teleportieren**, **Als erledigt markieren** und **Löschen**.
+Reports liegen in `plugins/SEssentials/reports.yml`; erledigte bleiben dort mit `status: resolved` erhalten.
+Texte unter `reports.messages`, zusätzlich mit `<id>`, `<target>`, `<reporter>` und `<reason>`.
+
 ## Spieler-Befehle
 `/fly`, `/heal`, `/feed` und `/god` wirken ohne Argument auf dich selbst und mit `<spieler>` auf andere
 (Recht `.others`). Von der Konsole nur mit `<spieler>`.
 Texte unter `player-commands.messages`. In `other` und `player-only` steht zusätzlich `<command>` zur Verfügung.
+
+## Admin-Panel
+`/admin` öffnet ein Kisten-Menü. Jede Anwendung ist eine Kachel und erscheint nur mit ihrem eigenen Recht
+(z.B. Vanish nur mit `sess.vanish`). Aktuell:
+- **Vanish** – umschalten, zeigt den Status
+- **Befehle** – Untermenü mit Fly, God, Heal, Feed (jeweils nur mit dem Recht des Befehls)
+- **Reports** – zeigt die Zahl offener Reports und öffnet die Report-Übersicht
+- **Softrestart** – Untermenü mit Zeiten und Abbrechen
+- **Config neu laden**
+
+Der Titel steht unter `admin.title`.
+
+Neue Anwendungen in `SEssentials#registerAdminApps` mit `adminPanel.addApp(recht, icon, aktion)` einhängen.
+Untermenüs nutzen `de.sessentials.admin.Menu`.
 
 ## Platzhalter
 `<player>`, `<displayname>`, `<world>`, `<online>`, `<max_players>`, `<prefix>`,

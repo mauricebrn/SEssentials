@@ -13,6 +13,21 @@ permissions:
   sess.reload:
     description: Erlaubt /sessentials reload
     default: op
+  sess.admin:
+    description: Erlaubt /admin (Admin-Panel)
+    default: op
+  sess.report:
+    description: Erlaubt /report
+    default: true
+  sess.report.notify:
+    description: Bekommt eine Benachrichtigung bei neuen Reports
+    default: op
+  sess.report.bypasscooldown:
+    description: Ignoriert den Cooldown von /report
+    default: op
+  sess.reports.admin:
+    description: Erlaubt /reports und /clearreports
+    default: op
   sess.vanish:
     description: Erlaubt /vanish
     default: op

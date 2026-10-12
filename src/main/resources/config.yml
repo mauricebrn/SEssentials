@@ -119,6 +119,33 @@ player-commands:
     player-only: "<prefix><red>Nur für Spieler – nutze /<command> <spieler>."
 
 # ------------------------------------------------------------
+# Reports (/report <spieler> <grund>, /reports, /clearreports)
+# Zusätzliche Platzhalter: <id>, <target>, <reporter>, <reason>
+# ------------------------------------------------------------
+reports:
+  # Sekunden zwischen zwei /report eines Spielers (Bypass: sess.report.bypasscooldown)
+  cooldown: 30
+  messages:
+    sent: "<prefix><green>Deine Meldung wurde übermittelt! <gray>(ID #<id>)"
+    self: "<prefix><red>Du kannst dich nicht selbst melden!"
+    unknown-player: "<prefix><red>Der Spieler <white><target></white> war noch nie auf dem Server."
+    cooldown: "<prefix><red>Warte noch <time> Sekunde(n), bevor du erneut meldest."
+    notify: "<prefix><yellow><reporter></yellow><gray> hat <yellow><target></yellow> gemeldet <dark_gray>(#<id>)</dark_gray>: <white><reason>"
+    teleported: "<prefix><green>Du wurdest zu <target> teleportiert."
+    offline: "<prefix><red><target> ist gerade nicht online."
+    resolved: "<prefix><green>Report #<id> wurde als erledigt markiert."
+    deleted: "<prefix><red>Report #<id> wurde gelöscht."
+    gone: "<prefix><red>Dieser Report existiert nicht mehr."
+    cleared: "<prefix><green><count> offene Report(s) wurden gelöscht."
+
+# ------------------------------------------------------------
+# Admin-Panel (/admin)
+# Kacheln erscheinen nur mit dem Recht der jeweiligen Anwendung.
+# ------------------------------------------------------------
+admin:
+  title: "<dark_gray>Admin-Panel"
+
+# ------------------------------------------------------------
 # TAB-Liste
 # ------------------------------------------------------------
 tab:
