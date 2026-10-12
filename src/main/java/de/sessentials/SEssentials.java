@@ -13,6 +13,7 @@ import de.sessentials.admin.ChatPrompt;
 import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
 import de.sessentials.chestshop.ChestShopManager;
+import de.sessentials.chestshop.ShopCreatorMenu;
 import de.sessentials.detector.ClientDetector;
 import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.help.HelpCommand;
@@ -71,6 +72,7 @@ public final class SEssentials extends JavaPlugin {
     private ItemTracker tracker;
     private EnderChestCommand enderChest;
     private ChestShopManager chestShops;
+    private ShopCreatorMenu shopCreator;
     private MessageCommands messages;
     private TrackerMenu trackerMenu;
     private NewsManager news;
@@ -117,6 +119,7 @@ public final class SEssentials extends JavaPlugin {
         tpa = new TpaManager(this);
         enderChest = new EnderChestCommand(this);
         chestShops = new ChestShopManager(this);
+        shopCreator = new ShopCreatorMenu(this, chestShops);
         messages = new MessageCommands(this);
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
@@ -421,6 +424,7 @@ public final class SEssentials extends JavaPlugin {
             tpa.register(commands);
             enderChest.register(commands);
             messages.register(commands);
+            shopCreator.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 

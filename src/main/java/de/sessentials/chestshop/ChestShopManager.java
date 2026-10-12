@@ -44,6 +44,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,8 +106,7 @@ public final class ChestShopManager implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onSignChange(SignChangeEvent event) {
         Player player = event.getPlayer();
-        Shop existing = bySign.get(key(event.getBlock().getLocation()));
-        if (existing != null) {
+        if (bySign.containsKey(key(event.getBlock().getLocation()))) {
             // Shop-Schilder werden nicht umgeschrieben – abbauen und neu erstellen
             event.setCancelled(true);
             return;
@@ -115,80 +115,98 @@ public final class ChestShopManager implements Listener {
         boolean admin = header.equalsIgnoreCase("[adminshop]");
         if (!admin && !header.equalsIgnoreCase("[shop]")) return;
 
-        if (!player.hasPermission(admin ? PERM_ADMIN : PERM_CREATE)) {
-            reject(event, player, "no-permission");
+        String itemLine = plain(event.line(3)).trim();
+        if (FEE_WORDS.contains(itemLine.toLowerCase(Locale.ROOT))) {
+            long price = price(BUY, plain(event.line(2)));
+            if (price < 1) {
+                reject(event, player, "invalid-fee-price");
+                return;
+            }
+            createFromSign(event, player, null, null, 1, price, -1, admin, plain(event.line(1)).trim());
             return;
         }
-        if (FEE_WORDS.contains(plain(event.line(3)).trim().toLowerCase(Locale.ROOT))) {
-            createFee(event, player, admin);
-            return;
-        }
+
         Block containerBlock = attachedContainer(event.getBlock());
         if (containerBlock == null) {
             reject(event, player, "no-container");
             return;
         }
-        Shop other = shopForContainer(containerBlock);
-        if (other != null && !other.owner().equals(player.getUniqueId())) {
-            reject(event, player, "container-taken", TextService.placeholder("owner", other.ownerName()));
-            return;
-        }
-
         int amount;
         try {
             amount = Integer.parseInt(plain(event.line(1)).trim());
         } catch (NumberFormatException e) {
             amount = 0;
         }
-        if (amount < 1 || amount > MAX_AMOUNT) {
-            reject(event, player, "invalid-amount");
-            return;
-        }
-
         String priceLine = plain(event.line(2));
         long buy = price(BUY, priceLine), sell = price(SELL, priceLine);
-        if (buy < 0 && sell < 0) {
-            reject(event, player, "invalid-price");
-            return;
-        }
-
-        ItemStack item = shopItem(plain(event.line(3)).trim(), (Container) containerBlock.getState(), player);
+        ItemStack item = shopItem(itemLine, (Container) containerBlock.getState(), player);
         if (item == null) {
             reject(event, player, "no-item");
             return;
         }
-
-        Shop shop = new Shop(event.getBlock().getLocation(), containerBlock.getLocation(),
-                admin ? new UUID(0, 0) : player.getUniqueId(), admin ? "Server" : player.getName(),
-                item, amount, buy, sell, admin, "");
-        List<Component> lines = signLines(shop);
-        for (int i = 0; i < 4; i++) event.line(i, lines.get(i));
-        add(shop);
-        save();
-        player.sendMessage(msg(admin ? "created-admin" : "created", player, tags(shop)));
+        createFromSign(event, player, containerBlock, item, amount, buy, sell, admin, "");
     }
 
-    /** Gebühren-Shop: braucht keine Kiste, Zeile 2 = Beschreibung, Zeile 3 = K <preis>. */
-    private void createFee(SignChangeEvent event, Player player, boolean admin) {
-        long price = price(BUY, plain(event.line(2)));
-        if (price < 1) {
-            reject(event, player, "invalid-fee-price");
-            return;
-        }
-        String label = plain(event.line(1)).trim();
-        Shop shop = new Shop(event.getBlock().getLocation(), null,
-                admin ? new UUID(0, 0) : player.getUniqueId(), admin ? "Server" : player.getName(),
-                null, 1, price, -1, admin, label.length() > 15 ? label.substring(0, 15) : label);
-        List<Component> lines = signLines(shop);
-        for (int i = 0; i < 4; i++) event.line(i, lines.get(i));
-        add(shop);
-        save();
-        player.sendMessage(msg("created-fee", player, tags(shop), money(price)));
+    private void createFromSign(SignChangeEvent event, Player player, Block container, ItemStack item, int amount,
+                                long buy, long sell, boolean admin, String label) {
+        boolean ok = create(player, event.getBlock(), container, item, amount, buy, sell, admin, label, lines -> {
+            for (int i = 0; i < 4; i++) event.line(i, lines.get(i));
+        });
+        if (!ok) event.line(0, Component.text("[Shop]", NamedTextColor.RED));
     }
 
-    private void reject(SignChangeEvent event, Player player, String key, TagResolver... extra) {
+    private void reject(SignChangeEvent event, Player player, String key) {
         event.line(0, Component.text("[Shop]", NamedTextColor.RED));
-        player.sendMessage(msg(key, player, extra));
+        player.sendMessage(msg(key, player));
+    }
+
+    /**
+     * Prüft und registriert einen Shop – gemeinsam für Schild-Eingabe und GUI-Creator.
+     * Schreibt die Schildzeilen über {@code writeLines}; meldet Fehler und Erfolg selbst.
+     *
+     * @param container Kiste/Fass; {@code null} bei Gebühren-Shops ({@code item == null})
+     * @return {@code true}, wenn der Shop angelegt wurde
+     */
+    boolean create(Player player, Block signBlock, Block container, ItemStack item, int amount, long buy, long sell,
+                   boolean admin, String label, Consumer<List<Component>> writeLines) {
+        if (!player.hasPermission(admin ? PERM_ADMIN : PERM_CREATE)) {
+            player.sendMessage(msg("no-permission", player));
+            return false;
+        }
+        boolean fee = item == null;
+        if (fee && buy < 1) {
+            player.sendMessage(msg("invalid-fee-price", player));
+            return false;
+        }
+        if (!fee) {
+            if (container == null || !isShopContainer(container)) {
+                player.sendMessage(msg("no-container", player));
+                return false;
+            }
+            Shop other = shopForContainer(container);
+            if (other != null && !other.owner().equals(player.getUniqueId())) {
+                player.sendMessage(msg("container-taken", player, TextService.placeholder("owner", other.ownerName())));
+                return false;
+            }
+            if (amount < 1 || amount > MAX_AMOUNT) {
+                player.sendMessage(msg("invalid-amount", player));
+                return false;
+            }
+            if (buy < 0 && sell < 0) {
+                player.sendMessage(msg("invalid-price", player));
+                return false;
+            }
+        }
+        Shop shop = new Shop(signBlock.getLocation(), fee ? null : container.getLocation(),
+                admin ? new UUID(0, 0) : player.getUniqueId(), admin ? "Server" : player.getName(),
+                fee ? null : item.asOne(), fee ? 1 : amount, buy, fee ? -1 : sell, admin,
+                label.length() > 15 ? label.substring(0, 15) : label);
+        writeLines.accept(signLines(shop));
+        add(shop);
+        save();
+        player.sendMessage(fee ? msg("created-fee", player, tags(shop), money(buy))
+                : msg(admin ? "created-admin" : "created", player, tags(shop)));
+        return true;
     }
 
     /** Container, an dem das Schild hängt (Wandschild) bzw. auf dem es steht. */
@@ -198,7 +216,7 @@ public final class ChestShopManager implements Listener {
     }
 
     /** Nur über den Typ – kein Block-State, damit Explosionen und Trichter günstig bleiben. */
-    private static boolean isShopContainer(Block block) {
+    static boolean isShopContainer(Block block) {
         Material type = block.getType();
         return type == Material.CHEST || type == Material.TRAPPED_CHEST || type == Material.BARREL;
     }
@@ -209,7 +227,7 @@ public final class ChestShopManager implements Listener {
     }
 
     /** Item aus Zeile 4, sonst das erste Item in der Kiste, sonst das in der Hand. */
-    private static ItemStack shopItem(String name, Container container, Player player) {
+    static ItemStack shopItem(String name, Container container, Player player) {
         if (!name.isEmpty()) {
             Material m = Material.matchMaterial(name.replace(' ', '_'));
             return m != null && m.isItem() ? new ItemStack(m) : null;

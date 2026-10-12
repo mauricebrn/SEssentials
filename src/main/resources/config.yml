@@ -145,7 +145,7 @@ help:
       - "<click:suggest_command:'/news'><gold>/news</gold></click> <gray>– Aktuelle Neuigkeiten"
       - "<click:suggest_command:'/bank'><gold>/bank</gold></click> <gray>– Items einzahlen, Kontostand, Auszahlen"
       - "<click:suggest_command:'/pay '><gold>/pay <spieler> <betrag></gold></click> <gray>– Geld überweisen"
-      - "<gold>Shop</gold> <gray>– Schild an Kiste: <white>[Shop]</white>, Menge, <white>K 100 V 80</white>, Item"
+      - "<click:suggest_command:'/shop'><gold>/shop</gold></click> <gray>– Chestshop per Menü erstellen (auf eine Kiste schauen)"
       - "<click:suggest_command:'/msg '><gold>/msg <spieler> <text></gold></click> <gray>– Private Nachricht, <gold>/r</gold> antwortet"
       - "<click:suggest_command:'/ec'><gold>/ec</gold></click> <gray>– Enderchest öffnen"
       - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
@@ -281,6 +281,7 @@ enderchest:
 #   Zeile 4: leer = erstes Item in der Kiste (sonst Item in der Hand) oder Item-Name, z.B. DIAMOND
 # Gebühren-Shop (bezahlen ohne Item, z.B. für eine Farm; keine Kiste nötig):
 #   [Shop] / Beschreibung (z.B. Farm) / K 50 / Gebühr   (statt "Gebühr" auch Eintritt, Nutzung, Fee oder -)
+# Oder per Menü: /shop, während man auf die Kiste (bzw. einen Block für Gebühren) schaut.
 # Rechtsklick aufs Schild = kaufen bzw. Gebühr zahlen, Linksklick = verkaufen. Besitzer bauen mit Sneak + Linksklick ab.
 # Platzhalter: <owner>, <amount>, <item>, <buy>, <sell>, <stock>, <price>, <customer>
 # ------------------------------------------------------------
@@ -314,6 +315,14 @@ chestshop:
     invalid-fee-price: "<prefix><red>Zeile 3: Gebühr angeben, z.B. <white>K 50</white>."
     fee-paid: "<prefix><gray>Du hast <gold><price></gold> an <white><owner></white> gezahlt <dark_gray>(<item>)</dark_gray>."
     owner-fee-paid: "<prefix><white><customer></white> <gray>hat <gold><price></gold> gezahlt <dark_gray>(<item>)</dark_gray>."
+    creator-look-at-block: "<prefix><red>Schau auf eine Kiste oder ein Fass (für einen Gebühren-Shop auf einen beliebigen Block), höchstens 5 Blöcke entfernt."
+    creator-sign-blocked: "<prefix><red>An dieser Seite ist kein Platz für ein Schild."
+    creator-no-sign: "<prefix><red>Du brauchst ein Schild im Inventar."
+    creator-place-denied: "<prefix><red>Hier darfst du kein Schild platzieren."
+    creator-prompt-amount: "<prefix><gray>Menge pro Handel im Chat eingeben. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    creator-prompt-price: "<prefix><gray>Preis in Talern im Chat eingeben. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    creator-prompt-label: "<prefix><gray>Beschreibung im Chat eingeben (max. 15 Zeichen), z.B. <white>Farm</white>. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    creator-invalid-number: "<prefix><red>Ungültige Zahl."
     fee-info: "<prefix><gray>Gebühr von <white><owner></white>: <white><item></white> – <gold><price></gold>. Rechtsklick zum Bezahlen."
 
 # ------------------------------------------------------------

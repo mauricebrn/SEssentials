@@ -64,6 +64,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.t
 | `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` kostenpflichtig (Standard 500 Taler) |
 | `/msg <spieler> <text>` | `sess.msg` | Private Nachricht (auch `/tell`, `/w`, `/whisper`); ersetzt Vanilla-`/msg` |
 | `/r <text>` | `sess.msg` | Antwort an den letzten Gesprächspartner (Alias `/reply`) |
+| `/shop` | `sess.chestshop.create` | Chestshop per Menü erstellen (auf eine Kiste schauen) |
 | `/enderchest` | `sess.enderchest` / `sess.enderchest.free` | Eigene Enderchest öffnen (Alias `/ec`). Ohne `.free` kostenpflichtig (Standard 50 Taler) |
 | `/bank` | `sess.bank` | Bank-Menü: Kontostand, Einzahlen, Auszahlen, Kurse |
 | `/bank einzahlen [hand]` | `sess.bank` | Alle passenden Items bzw. den Stack in der Hand einzahlen |
@@ -222,7 +223,13 @@ Nur unveränderte Items zählen (keine umbenannten oder verzauberten). Auszahlun
 zahlen den größtmöglichen Teil aus; der Rest bleibt auf dem Konto. Volles Inventar: Der Rest fällt vor die Füße.
 
 ## Chestshops
-Schild an eine Kiste, Truhe oder ein Fass setzen (Wandschild oder obendrauf):
+**Per Menü:** `/shop` eingeben, während man auf eine Kiste/ein Fass schaut (für einen Gebühren-Shop auf einen
+beliebigen Block). Im Menü Typ (Item-Shop/Gebühr, AdminShop mit Recht), Item (Standard: erstes Item in der Kiste,
+Button übernimmt das Item aus der Hand), Menge, Kauf- und Verkaufspreis per −/+ einstellen; Klick auf den Wert = Chat-Eingabe,
+Rechtsklick auf einen Preis = aus. **Erstellen** setzt das Schild an die angeschaute Seite (verbraucht ein Schild aus dem
+Inventar, nicht im Kreativmodus) und wachst es. Schutz-Plugins können das Platzieren wie gewohnt verhindern.
+
+**Per Schild:** Schild an eine Kiste, Truhe oder ein Fass setzen (Wandschild oder obendrauf):
 
 | Zeile | Inhalt |
 |---|---|
