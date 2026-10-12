@@ -10,6 +10,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Vanish mit Schutzregeln, Fake-Nachrichten und gefälschter Serverliste
 - `/fly`, `/heal`, `/feed`, `/god`
 - Report-System (`/report`) mit Admin-Übersicht
+- Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
 Alle Texte unterstützen MiniMessage und &-Farbcodes.
@@ -48,6 +49,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report` (alle) und `sess.van
 | – | `sess.vanish.auto` | Beim Joinen automatisch unsichtbar |
 | – | `sess.vanish.see` | Sieht versteckte Spieler und bekommt Join/Leave-Hinweise |
 | – | `sess.report.notify` | Benachrichtigung (mit Sound) bei neuen Reports |
+| – | `sess.detector.notify` | Meldungen vom Client-Detector |
 | – | `sess.report.bypasscooldown` | Ignoriert den Cooldown von `/report` |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
@@ -91,12 +93,29 @@ PAPI-Platzhalter anderer Plugins (z.B. `%server_online%`) zählen sie mit.
 ## Reports
 `/report <spieler> <grund>` meldet einen Spieler, der schon einmal auf dem Server war.
 Selbst melden geht nicht. Zwischen zwei Meldungen liegt `reports.cooldown` (Sekunden).
-Spieler mit `sess.report.notify` bekommen jede Meldung sofort mit Sound.
+Spieler mit `sess.report.notify` bekommen jede Meldung sofort mit Sound (abschaltbar unter **Benachrichtigungen** im Admin-Panel).
 
 `/reports` (oder die Kachel im Admin-Panel) zeigt alle offenen Reports, 45 pro Seite.
 Ein Klick öffnet die Details mit **Teleportieren**, **Als erledigt markieren** und **Löschen**.
 Reports liegen in `plugins/SEssentials/reports.yml`; erledigte bleiben dort mit `status: resolved` erhalten.
 Texte unter `reports.messages`, zusätzlich mit `<id>`, `<target>`, `<reporter>` und `<reason>`.
+
+## Client-Detector
+Prüft jeden Spieler kurz nach dem Join (`check-delay-ticks`) anhand von Client-Brand und Plugin-Channels:
+- **Vanilla:** Brand `vanilla` und keine Plugin-Channels
+- **Mod-Client:** alles andere (Fabric, Forge, Lunar, Feather, …, auch „vanilla“ mit Channels)
+- **Hack-Client:** Brand oder ein Channel enthält einen Eintrag aus `hack-signatures`
+
+Bei einem Hack-Client entsteht eine Meldung in der Report-Übersicht (Absender „Client-Detector“, Fernrohr-Symbol)
+mit Brand, Sprache, UUID, Treffer und allen Channels. Pro Spieler und Treffer gibt es höchstens eine offene Meldung.
+Mit `report-modded: true` auch für Mod-Clients.
+
+Wer im Chat benachrichtigt wird, stellt jeder Admin selbst im Admin-Panel unter **Benachrichtigungen** ein:
+Aus, nur Hack-Clients (Standard), alle Mod-Clients oder alle Joins. Voraussetzung ist `sess.detector.notify`.
+
+> Die Erkennung ist bewusst leichtgewichtig (eine Prüfung pro Join, keine Tick-Last).
+> Sie erwischt nur Clients, die sich nicht tarnen. Gute Hack-Clients geben sich als Vanilla oder Fabric aus.
+> Für Verhaltens-Erkennung (Fly, KillAura, Speed, …) ist ein Anti-Cheat wie Grim nötig.
 
 ## Spieler-Befehle
 `/fly`, `/heal`, `/feed` und `/god` wirken ohne Argument auf dich selbst und mit `<spieler>` auf andere
@@ -109,6 +128,7 @@ Texte unter `player-commands.messages`. In `other` und `player-only` steht zusä
 - **Vanish** – umschalten, zeigt den Status
 - **Befehle** – Untermenü mit Fly, God, Heal, Feed (jeweils nur mit dem Recht des Befehls)
 - **Reports** – zeigt die Zahl offener Reports und öffnet die Report-Übersicht
+- **Benachrichtigungen** – persönlich einstellen: Report-Meldungen an/aus und was der Client-Detector meldet
 - **Softrestart** – Untermenü mit Zeiten und Abbrechen
 - **Config neu laden**
 

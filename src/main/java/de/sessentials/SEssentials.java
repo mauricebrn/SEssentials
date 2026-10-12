@@ -5,8 +5,10 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.sessentials.admin.AdminPanel;
 import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
+import de.sessentials.detector.ClientDetector;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
+import de.sessentials.notify.Notifications;
 import de.sessentials.player.PlayerCommands;
 import de.sessentials.report.ReportManager;
 import de.sessentials.hook.PermissionInfo;
@@ -35,6 +37,8 @@ public final class SEssentials extends JavaPlugin {
     private PlayerCommands playerCommands;
     private AdminPanel adminPanel;
     private ReportManager reports;
+    private Notifications notifications;
+    private ClientDetector detector;
 
     @Override
     public void onEnable() {
@@ -59,7 +63,9 @@ public final class SEssentials extends JavaPlugin {
         joinQuit = new JoinQuitListener(this);
         tab = new TabNametagManager(this);
         playerCommands = new PlayerCommands(this);
+        notifications = new Notifications(this);
         reports = new ReportManager(this);
+        detector = new ClientDetector(this);
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -70,6 +76,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(playerCommands, this);
         getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
         getServer().getPluginManager().registerEvents(reports, this);
+        getServer().getPluginManager().registerEvents(detector, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -89,6 +96,7 @@ public final class SEssentials extends JavaPlugin {
         chat.reload();
         joinQuit.reload();
         vanish.reload();
+        detector.reload();
         tab.reload();
     }
 
@@ -104,6 +112,14 @@ public final class SEssentials extends JavaPlugin {
         return adminPanel;
     }
 
+    public ReportManager reports() {
+        return reports;
+    }
+
+    public Notifications notifications() {
+        return notifications;
+    }
+
     /** Kacheln im Admin-Panel. Reihenfolge = Position im Panel. */
     private void registerAdminApps() {
         adminPanel.addApp("sess.vanish",
@@ -117,6 +133,10 @@ public final class SEssentials extends JavaPlugin {
                 p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
                         Component.text("Offen: " + reports.openCount(), NamedTextColor.GRAY)),
                 p -> reports.menu().openList(p, 1));
+        adminPanel.addApp(notifications::canConfigure,
+                p -> Menu.icon(Material.BELL, Component.text("Benachrichtigungen", NamedTextColor.YELLOW),
+                        Component.text("Reports & Client-Detector", NamedTextColor.GRAY)),
+                notifications::openMenu);
         adminPanel.addApp("sess.softrestart",
                 p -> Menu.icon(Material.CLOCK, Component.text("Softrestart", NamedTextColor.RED),
                         softRestart.isRunning()

@@ -139,6 +139,39 @@ reports:
     cleared: "<prefix><green><count> offene Report(s) wurden gelöscht."
 
 # ------------------------------------------------------------
+# Client-Detector
+# Erkennt beim Join den Client über Brand und Plugin-Channels.
+# Hack-Clients nur über Signaturen – getarnte Clients (Brand "vanilla"/"fabric") fallen nicht auf.
+# Wer was gemeldet bekommt, stellt jeder Admin im Admin-Panel unter "Benachrichtigungen" ein.
+# Platzhalter: <client>, <channels>, <match>, <id> (Meldung im Admin-Panel)
+# ------------------------------------------------------------
+client-detector:
+  enabled: true
+  # Wartezeit nach dem Join in Ticks (20 = 1 Sekunde), bis alle Channels registriert sind
+  check-delay-ticks: 40
+  # true = auch für Mod-Clients (Fabric, Forge, Lunar, ...) eine Meldung im Admin-Panel anlegen
+  report-modded: false
+  # Treffer = Hack-Client. Geprüft wird, ob Brand oder ein Channel den Text enthält (Groß-/Kleinschreibung egal).
+  hack-signatures:
+    - wurst
+    - meteor
+    - aristois
+    - liquidbounce
+    - rusherhack
+    - futureclient
+    - inertia
+    - konas
+    - salhack
+    - bleachhack
+    - thunderhack
+    - phobos
+    - 3arthh4ck
+  messages:
+    vanilla: "<prefix><gray><player> ist mit <green>Vanilla</green> gejoint."
+    modded: "<prefix><gray><player> ist mit <yellow><client></yellow> gejoint. <dark_gray>[<hover:show_text:'<gray>Channels:<newline><white><channels>'>Channels</hover>]"
+    hack: "<prefix><red><bold>Hack-Client:</bold></red> <white><player></white> <gray>(<client>, Treffer: <red><match></red><gray>) – Meldung #<id> im Admin-Panel."
+
+# ------------------------------------------------------------
 # Admin-Panel (/admin)
 # Kacheln erscheinen nur mit dem Recht der jeweiligen Anwendung.
 # ------------------------------------------------------------

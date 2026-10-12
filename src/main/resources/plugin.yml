@@ -25,6 +25,9 @@ permissions:
   sess.report.bypasscooldown:
     description: Ignoriert den Cooldown von /report
     default: op
+  sess.detector.notify:
+    description: Bekommt Meldungen vom Client-Detector (einstellbar im Admin-Panel)
+    default: op
   sess.reports.admin:
     description: Erlaubt /reports und /clearreports
     default: op
