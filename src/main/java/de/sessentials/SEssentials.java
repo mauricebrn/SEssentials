@@ -3,6 +3,8 @@ package de.sessentials;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.sessentials.admin.AdminPanel;
+import de.sessentials.admin.AdminPanel.Category;
+import de.sessentials.admin.ChatPrompt;
 import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
 import de.sessentials.detector.ClientDetector;
@@ -10,6 +12,7 @@ import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.help.HelpCommand;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
+import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
 import de.sessentials.player.PlayerCommands;
 import de.sessentials.report.ReportManager;
@@ -24,11 +27,13 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class SEssentials extends JavaPlugin {
@@ -48,6 +53,8 @@ public final class SEssentials extends JavaPlugin {
     private SpawnManager spawn;
     private HelpCommand help;
     private TpaManager tpa;
+    private ChatPrompt chatPrompt;
+    private NewsManager news;
 
     @Override
     public void onEnable() {
@@ -76,6 +83,8 @@ public final class SEssentials extends JavaPlugin {
         spawn = new SpawnManager(this);
         help = new HelpCommand(this);
         tpa = new TpaManager(this);
+        chatPrompt = new ChatPrompt(this);
+        news = new NewsManager(this);
         notifications = new Notifications(this);
         reports = new ReportManager(this);
         detector = new ClientDetector(this);
@@ -92,6 +101,8 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(detector, this);
         getServer().getPluginManager().registerEvents(spawn, this);
         getServer().getPluginManager().registerEvents(tpa, this);
+        getServer().getPluginManager().registerEvents(chatPrompt, this);
+        getServer().getPluginManager().registerEvents(news, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -138,84 +149,105 @@ public final class SEssentials extends JavaPlugin {
         return notifications;
     }
 
-    /** Kacheln im Admin-Panel. Reihenfolge = Position im Panel. */
+    public ChatPrompt chatPrompt() {
+        return chatPrompt;
+    }
+
+    /** Kacheln im Admin-Panel. Reihenfolge innerhalb einer Kategorie = Position in der Zeile. */
     private void registerAdminApps() {
-        adminPanel.addApp("sess.vanish",
+        // Moderation
+        adminPanel.addApp(Category.MODERATION, "sess.vanish",
                 p -> Menu.icon(Material.ENDER_EYE, Component.text("Vanish", NamedTextColor.LIGHT_PURPLE), status(vanish.isVanished(p))),
                 p -> vanish.toggle(p, true));
-        adminPanel.addApp(p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
-                p -> Menu.icon(Material.COMMAND_BLOCK, Component.text("Befehle", NamedTextColor.AQUA),
-                        Component.text("Fly, God, Heal, Feed, Nether, End, Spawn", NamedTextColor.GRAY)),
-                this::openCommandsMenu);
-        adminPanel.addApp("sess.reports.admin",
+        adminPanel.addApp(Category.MODERATION, "sess.reports.admin",
                 p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
                         Component.text("Offen: " + reports.openCount(), NamedTextColor.GRAY)),
                 p -> reports.menu().openList(p, 1));
-        adminPanel.addApp(notifications::canConfigure,
-                p -> Menu.icon(Material.BELL, Component.text("Benachrichtigungen", NamedTextColor.YELLOW),
-                        Component.text("Reports & Client-Detector", NamedTextColor.GRAY)),
-                notifications::openMenu);
-        adminPanel.addApp("sess.softrestart",
+
+        // Spieler & Teleport
+        adminPanel.addApp(Category.PLAYERS, p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
+                p -> Menu.icon(Material.COMMAND_BLOCK, Component.text("Befehle", NamedTextColor.AQUA),
+                        Component.text("Fly, God, Heal, Feed", NamedTextColor.GRAY),
+                        Component.text("Spawn, Nether, End", NamedTextColor.GRAY)),
+                this::openCommandsMenu);
+
+        // Server
+        adminPanel.addApp(Category.SERVER, "sess.news.admin",
+                p -> Menu.icon(Material.OAK_SIGN, Component.text("News", NamedTextColor.GOLD),
+                        Component.text("News erstellen und verwalten", NamedTextColor.GRAY)),
+                p -> news.menu().openPanel(p));
+        adminPanel.addApp(Category.SERVER, "sess.softrestart",
                 p -> Menu.icon(Material.CLOCK, Component.text("Softrestart", NamedTextColor.RED),
                         softRestart.isRunning()
                                 ? text.render("<gray>Neustart in <white><time>", softRestart.time(softRestart.remainingSeconds()))
                                 : Component.text("Kein Neustart geplant", NamedTextColor.GRAY)),
                 this::openSoftRestartMenu);
-        adminPanel.addApp("sess.reload",
+        adminPanel.addApp(Category.SERVER, "sess.reload",
                 p -> Menu.icon(Material.COMPARATOR, Component.text("Config neu laden", NamedTextColor.GREEN)),
                 p -> {
                     reloadAll();
                     p.sendMessage(text.render(getConfig().getString("messages.reloaded", "")));
                 });
+
+        // Einstellungen
+        adminPanel.addApp(Category.SETTINGS, notifications::canConfigure,
+                p -> Menu.icon(Material.BELL, Component.text("Benachrichtigungen", NamedTextColor.YELLOW),
+                        Component.text("Reports & Client-Detector", NamedTextColor.GRAY)),
+                notifications::openMenu);
     }
 
     private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed", "sess.nether", "sess.end", "sess.spawn", "sess.setspawn");
 
-    /** Untermenü mit /fly, /god, /heal, /feed, /nether, /end, /spawn, /setspawn – jede Kachel nur mit ihrem Recht. */
+    /** Untermenü „Befehle“: Spieler- und Teleport-Befehle, jede Kachel nur mit ihrem Recht. */
     private void openCommandsMenu(Player player) {
-        Menu menu = new Menu(1, Component.text("Befehle"));
-        int slot = 0;
+        List<Menu.Entry> self = new ArrayList<>();
         if (player.hasPermission("sess.fly")) {
-            menu.set(slot++, Menu.icon(Material.FEATHER, Component.text("Fly", NamedTextColor.AQUA), status(player.getAllowFlight())),
-                    p -> playerCommands.execute("fly", p));
+            self.add(new Menu.Entry(Menu.icon(Material.FEATHER, Component.text("Fly", NamedTextColor.AQUA), status(player.getAllowFlight())),
+                    p -> playerCommands.execute("fly", p)));
         }
         if (player.hasPermission("sess.god")) {
-            menu.set(slot++, Menu.icon(Material.TOTEM_OF_UNDYING, Component.text("God", NamedTextColor.GOLD), status(playerCommands.isGod(player))),
-                    p -> playerCommands.execute("god", p));
+            self.add(new Menu.Entry(Menu.icon(Material.TOTEM_OF_UNDYING, Component.text("God", NamedTextColor.GOLD), status(playerCommands.isGod(player))),
+                    p -> playerCommands.execute("god", p)));
         }
         if (player.hasPermission("sess.heal")) {
-            menu.set(slot++, Menu.icon(Material.GOLDEN_APPLE, Component.text("Heal", NamedTextColor.RED)),
-                    p -> playerCommands.execute("heal", p));
+            self.add(new Menu.Entry(Menu.icon(Material.GOLDEN_APPLE, Component.text("Heal", NamedTextColor.RED)),
+                    p -> playerCommands.execute("heal", p)));
         }
         if (player.hasPermission("sess.feed")) {
-            menu.set(slot++, Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
-                    p -> playerCommands.execute("feed", p));
+            self.add(new Menu.Entry(Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
+                    p -> playerCommands.execute("feed", p)));
         }
-        if (player.hasPermission("sess.nether")) {
-            menu.set(slot++, Menu.icon(Material.NETHERRACK, Component.text("Nether", NamedTextColor.RED),
-                            Component.text("Im Nether: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
-                p.closeInventory();
-                dimensions.toggle(p, World.Environment.NETHER);
-            });
-        }
-        if (player.hasPermission("sess.end")) {
-            menu.set(slot++, Menu.icon(Material.END_STONE, Component.text("End", NamedTextColor.LIGHT_PURPLE),
-                            Component.text("Im End: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
-                p.closeInventory();
-                dimensions.toggle(p, World.Environment.THE_END);
-            });
-        }
+
+        List<Menu.Entry> teleport = new ArrayList<>();
         if (player.hasPermission("sess.spawn")) {
-            menu.set(slot++, Menu.icon(Material.COMPASS, Component.text("Spawn", NamedTextColor.GREEN)), p -> {
+            teleport.add(new Menu.Entry(Menu.icon(Material.COMPASS, Component.text("Spawn", NamedTextColor.GREEN)), p -> {
                 p.closeInventory();
                 spawn.teleport(p);
-            });
+            }));
         }
-        if (player.hasPermission("sess.setspawn") && slot < 8) {
-            menu.set(slot, Menu.icon(Material.RED_BED, Component.text("Spawn setzen", NamedTextColor.GOLD),
-                            Component.text("Setzt den Spawn auf deine Position", NamedTextColor.GRAY)), spawn::setSpawn);
+        if (player.hasPermission("sess.setspawn")) {
+            teleport.add(new Menu.Entry(Menu.icon(Material.RED_BED, Component.text("Spawn setzen", NamedTextColor.GOLD),
+                    Component.text("Setzt den Spawn auf deine Position", NamedTextColor.GRAY)), spawn::setSpawn));
         }
-        menu.set(8, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), adminPanel::open);
+        if (player.hasPermission("sess.nether")) {
+            teleport.add(new Menu.Entry(Menu.icon(Material.NETHERRACK, Component.text("Nether", NamedTextColor.RED),
+                    Component.text("Im Nether: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
+                p.closeInventory();
+                dimensions.toggle(p, World.Environment.NETHER);
+            }));
+        }
+        if (player.hasPermission("sess.end")) {
+            teleport.add(new Menu.Entry(Menu.icon(Material.END_STONE, Component.text("End", NamedTextColor.LIGHT_PURPLE),
+                    Component.text("Im End: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
+                p.closeInventory();
+                dimensions.toggle(p, World.Environment.THE_END);
+            }));
+        }
+
+        Menu menu = Menu.sectioned(Component.text("Befehle"), List.of(
+                        new Menu.Section(Menu.icon(Material.LIME_STAINED_GLASS_PANE, Component.text("» Spieler", NamedTextColor.GREEN, TextDecoration.BOLD)), self),
+                        new Menu.Section(Menu.icon(Material.LIGHT_BLUE_STAINED_GLASS_PANE, Component.text("» Teleport", NamedTextColor.AQUA, TextDecoration.BOLD)), teleport)),
+                new Menu.Entry(Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), adminPanel::open));
         menu.refreshWith(this::openCommandsMenu);
         menu.open(player);
     }
@@ -239,6 +271,7 @@ public final class SEssentials extends JavaPlugin {
             if (!softRestart.cancel()) p.sendMessage(text.render(getConfig().getString("softrestart.messages.not-running", "")));
         });
         menu.set(8, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), adminPanel::open);
+        menu.fillEmpty();
         menu.open(player);
     }
 
@@ -317,6 +350,7 @@ public final class SEssentials extends JavaPlugin {
             spawn.register(commands);
             help.register(commands);
             tpa.register(commands);
+            news.register(commands);
 
             commands.register(
                     Commands.literal("admin")

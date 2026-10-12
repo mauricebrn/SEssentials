@@ -13,6 +13,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst gegen Items)
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
 - Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
+- News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
@@ -35,6 +36,9 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report` und `sess.tpa` (alle
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
+| `/news` | – | Aktuelle News (Alias `/neuigkeiten`) |
+| `/news read <id>` | – | Ganze Nachricht lesen |
+| `/newsadmin` | `sess.news.admin` | News-Verwaltung öffnen |
 | `/help [seite]` | – | Hilfeseiten aus der Config (Alias `/?`) |
 | `/admin` | `sess.admin` | Admin-Panel öffnen |
 | `/sessentials reload` | `sess.reload` | Config neu laden (Alias `/sess`) |
@@ -135,19 +139,21 @@ Aus, nur Hack-Clients (Standard), alle Mod-Clients oder alle Joins. Voraussetzun
 Texte unter `player-commands.messages`. In `other` und `player-only` steht zusätzlich `<command>` zur Verfügung.
 
 ## Admin-Panel
-`/admin` öffnet ein Kisten-Menü. Jede Anwendung ist eine Kachel und erscheint nur mit ihrem eigenen Recht
-(z.B. Vanish nur mit `sess.vanish`). Aktuell:
-- **Vanish** – umschalten, zeigt den Status
-- **Befehle** – Untermenü mit Fly, God, Heal, Feed, Nether, End, Spawn, Spawn setzen (jeweils nur mit dem Recht des Befehls)
-- **Reports** – zeigt die Zahl offener Reports und öffnet die Report-Übersicht
-- **Benachrichtigungen** – persönlich einstellen: Report-Meldungen an/aus und was der Client-Detector meldet
-- **Softrestart** – Untermenü mit Zeiten und Abbrechen
-- **Config neu laden**
+`/admin` öffnet ein 6-reihiges Menü mit einer Zeile pro Kategorie. Jede Anwendung ist eine Kachel und erscheint
+nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorien werden ausgeblendet.
+
+| Kategorie | Anwendungen |
+|---|---|
+| Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht) |
+| Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
+| Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |
+| Einstellungen | **Benachrichtigungen** (Report-Meldungen an/aus, Client-Detector-Stufe) |
 
 Der Titel steht unter `admin.title`.
 
-Neue Anwendungen in `SEssentials#registerAdminApps` mit `adminPanel.addApp(recht, icon, aktion)` einhängen.
-Untermenüs nutzen `de.sessentials.admin.Menu`.
+Neue Anwendungen in `SEssentials#registerAdminApps` mit `adminPanel.addApp(kategorie, recht, icon, aktion)` einhängen.
+Untermenüs nutzen `de.sessentials.admin.Menu` (`Menu.sectioned` für Kategorie-Layouts),
+Texteingaben im Chat `ChatPrompt`.
 
 ## Hilfe
 `/help [seite]` zeigt die Seiten aus `help.pages` im Chat und ersetzt die Vanilla-Hilfe.
@@ -164,6 +170,20 @@ und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den S
 bei einem fehlgeschlagenen Teleport zurückgegeben. Umbenannte oder verzauberte Items zählen nicht.
 
 Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
+
+## News
+`/news` zeigt alle aktiven News (höchste Priorität zuerst) mit Kurzfassung; ungelesene sind als **NEU** markiert.
+Ein Klick oder `/news read <id>` zeigt die ganze Nachricht und markiert sie als gelesen.
+Mit `news.show-on-join` erscheint die Übersicht beim Join (nach `join-delay-seconds`, nur wenn es News gibt).
+
+**Verwaltung** über `/newsadmin` oder das Admin-Panel (Kategorie Server), Recht `sess.news.admin`:
+- Übersicht aller News mit Status (Entwurf, Geplant, Aktiv, Abgelaufen); Rechtsklick schaltet die Sichtbarkeit um.
+- Editor: Titel, Inhalt ersetzen/ergänzen, Priorität (Info, Normal, Wichtig, DRINGEND), Startzeit, Laufzeit,
+  Veröffentlichen/Entwurf, Vorschau im Chat, Löschen (Shift + Klick).
+- Texte und Zeiten werden im Chat eingegeben (`abbrechen` bricht ab). Zeiten deutsch oder englisch: `2h`, `7 Tage`, `1d 12h`.
+
+Inhalt: MiniMessage oder &-Farbcodes, `[Text](/befehl)` für klickbare Befehle, `\n` für Zeilenumbrüche.
+News liegen in `plugins/SEssentials/news.yml`; Design und Prioritäten unter `news` in der Config.
 
 ## Teleport-Anfragen
 `/tpa <spieler>` schickt eine Anfrage mit klickbarem **[Annehmen]** / **[Ablehnen]**. Sie verfällt nach `tpa.expire-seconds`.

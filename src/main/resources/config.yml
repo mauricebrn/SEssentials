@@ -142,6 +142,7 @@ help:
   empty: "<prefix><gray>Keine Hilfe verfügbar."
   pages:
     - - "<click:suggest_command:'/spawn'><gold>/spawn</gold></click> <gray>– Zum Spawn teleportieren"
+      - "<click:suggest_command:'/news'><gold>/news</gold></click> <gray>– Aktuelle Neuigkeiten"
       - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
       - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
       - "<click:suggest_command:'/help 2'><gold>/help <seite></gold></click> <gray>– Weitere Seiten"
@@ -198,6 +199,44 @@ tpa:
     not-enough: "<prefix><red>Du brauchst <white><amount>x <item></white> für eine Teleport-Anfrage."
     requester-cannot-pay: "<prefix><red><requester> hat nicht mehr genug <item> – Teleport abgebrochen."
     failed: "<prefix><red>Teleport fehlgeschlagen."
+
+# ------------------------------------------------------------
+# News (/news, /news read <id>, /newsadmin – auch im Admin-Panel unter "Server")
+# News selbst werden im Admin-Panel bearbeitet und in news.yml gespeichert.
+# Platzhalter: <id>, <title>, <priority>, <date>, <short>, im Feed zusätzlich <count>, <new>
+# ------------------------------------------------------------
+news:
+  show-on-join: true
+  join-delay-seconds: 3
+  priorities:
+    1: "<gray>Info"
+    2: "<yellow>Normal"
+    3: "<red>Wichtig"
+    4: "<dark_red><bold>DRINGEND</bold>"
+  feed:
+    header: "<dark_gray>────── <gold><bold>✉ News</bold></gold> <gray>(<count>)</gray> <dark_gray>– <gray>Klicke zum Lesen</gray> ──────"
+    entry: "<click:run_command:'/news read <id>'><hover:show_text:'<gray>Klicke, um die ganze Nachricht zu lesen'> <new><dark_gray>[</dark_gray><priority><dark_gray>]</dark_gray> <white><bold><title></bold></white> <dark_gray>»</dark_gray> <gray><short></hover></click>"
+    new: "<green><bold>NEU</bold></green> "
+    footer: "<dark_gray>──────────────────────────────"
+  read:
+    header: "<dark_gray>──────</dark_gray> <priority> <dark_gray>|</dark_gray> <white><bold><title></bold></white>"
+    date: "<gray>Veröffentlicht am <white><date>"
+    footer: "<click:run_command:'/news'><hover:show_text:'<gray>Zurück zur Übersicht'><dark_gray>[<gray>« Alle News</gray>]</dark_gray></hover></click>"
+  messages:
+    none: "<prefix><gray>Aktuell gibt es keine News."
+    not-available: "<prefix><red>Diese News ist nicht verfügbar."
+    not-found: "<prefix><red>Diese News existiert nicht."
+    saved: "<prefix><green>Gespeichert."
+    cancelled: "<prefix><gray>Eingabe abgebrochen."
+    deleted: "<prefix><red>News Nr. <id> wurde gelöscht."
+    delete-hint: "<prefix><gray>Zum Löschen <red>Shift + Klick</red> benutzen."
+    back-to-editor: "<click:run_command:'/newsadmin edit <id>'><hover:show_text:'<gray>Zurück zum Editor'><dark_gray>[<yellow>« Zurück zum Editor</yellow>]</dark_gray></hover></click>"
+    invalid-duration: "<prefix><red>Ungültige Zeitangabe. Beispiele: <white>2h</white>, <white>7 Tage</white>, <white>1d 12h</white>. Versuch es nochmal:"
+    prompt-title: "<prefix><gray>Gib den neuen <white>Titel</white> im Chat ein. <click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click> <dark_gray>(oder <gray>abbrechen</gray> schreiben)"
+    prompt-content: "<prefix><gray>Gib den neuen <white>Inhalt</white> im Chat ein.<newline><dark_gray> - <gray>Klickbarer Befehl: <white>[Alle News](/news)</white><newline><dark_gray> - <gray>Zeilenumbruch: <white>\\n</white> <dark_gray>| <gray>Farben: <white>&-Codes</white> oder <white>MiniMessage</white><newline><click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click> <dark_gray>(oder <gray>abbrechen</gray> schreiben)"
+    prompt-append: "<prefix><gray>Gib den <white>anzuhängenden Text</white> im Chat ein. <click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click> <dark_gray>(oder <gray>abbrechen</gray> schreiben)"
+    prompt-start: "<prefix><gray>In wie viel Zeit soll die News <white>starten</white>? Z.B. <white>2h</white>, <white>1 Tag</white>. <click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click>"
+    prompt-end: "<prefix><gray>Wie lange soll die News <white>laufen</white> (ab Start)? Z.B. <white>7 Tage</white>. <click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click>"
 
 # ------------------------------------------------------------
 # Reports (/report <spieler> <grund>, /reports, /clearreports)

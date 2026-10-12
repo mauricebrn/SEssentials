@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
@@ -15,7 +16,9 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -24,8 +27,15 @@ import java.util.function.Consumer;
  */
 public final class Menu implements InventoryHolder {
 
+    /** Eine Zeile in {@link #sectioned}: Beschriftung links, Kacheln rechts daneben. */
+    public record Section(ItemStack label, List<Entry> entries) {}
+
+    public record Entry(ItemStack icon, Consumer<Player> action) {}
+
+    private static final int FIRST_ENTRY_COLUMN = 2;
+
     private final Inventory inventory;
-    private final Map<Integer, Consumer<Player>> actions = new HashMap<>();
+    private final Map<Integer, BiConsumer<Player, ClickType>> actions = new HashMap<>();
     private Consumer<Player> refresh;
 
     public Menu(int rows, Component title) {
@@ -33,8 +43,22 @@ public final class Menu implements InventoryHolder {
     }
 
     public void set(int slot, ItemStack icon, Consumer<Player> action) {
+        setClick(slot, icon, (player, click) -> action.accept(player));
+    }
+
+    /** Wie {@link #set(int, ItemStack, Consumer)}, aber die Aktion unterscheidet Links-/Rechts-/Shift-Klick. */
+    public void setClick(int slot, ItemStack icon, BiConsumer<Player, ClickType> action) {
         inventory.setItem(slot, icon);
         actions.put(slot, action);
+    }
+
+    /** Füllt alle leeren Slots mit einer Glasscheibe ohne Tooltip. */
+    public void fillEmpty() {
+        ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        filler.editMeta(meta -> meta.setHideTooltip(true));
+        for (int i = 0; i < inventory.getSize(); i++) {
+            if (inventory.getItem(i) == null) inventory.setItem(i, filler);
+        }
     }
 
     /**
@@ -58,6 +82,38 @@ public final class Menu implements InventoryHolder {
         return inventory;
     }
 
+    /**
+     * Menü mit einer Zeile pro Abschnitt (Beschriftung in Spalte 0, Kacheln ab Spalte 2, bei Bedarf
+     * umgebrochen), Rahmen oben und unten und optionalem Button unten in der Mitte.
+     * Abschnitte ohne Kacheln werden ausgelassen; mehr als 4 Zeilen Inhalt werden abgeschnitten.
+     */
+    public static Menu sectioned(Component title, List<Section> sections, Entry footer) {
+        List<Section> visible = sections.stream().filter(s -> !s.entries().isEmpty()).toList();
+        int perRow = 9 - FIRST_ENTRY_COLUMN;
+        int contentRows = visible.stream().mapToInt(s -> (s.entries().size() + perRow - 1) / perRow).sum();
+        int rows = Math.min(6, 2 + Math.max(1, contentRows));
+        Menu menu = new Menu(rows, title);
+
+        int row = 1;
+        for (Section section : visible) {
+            if (row >= rows - 1) break;
+            menu.inventory.setItem(row * 9, section.label());
+            int col = FIRST_ENTRY_COLUMN;
+            for (Entry entry : section.entries()) {
+                if (col > 8) {
+                    row++;
+                    col = FIRST_ENTRY_COLUMN;
+                    if (row >= rows - 1) break;
+                }
+                menu.set(row * 9 + col++, entry.icon(), entry.action());
+            }
+            row++;
+        }
+        if (footer != null) menu.set((rows - 1) * 9 + 4, footer.icon(), footer.action());
+        menu.fillEmpty();
+        return menu;
+    }
+
     /** Item mit Name und Lore, ohne die Standard-Kursivschrift. */
     public static ItemStack icon(Material material, Component name, Component... lore) {
         ItemStack item = new ItemStack(material);
@@ -75,9 +131,9 @@ public final class Menu implements InventoryHolder {
             if (!(event.getView().getTopInventory().getHolder(false) instanceof Menu menu)) return;
             event.setCancelled(true);
             if (event.getClickedInventory() != menu.inventory || !(event.getWhoClicked() instanceof Player player)) return;
-            Consumer<Player> action = menu.actions.get(event.getSlot());
+            BiConsumer<Player, ClickType> action = menu.actions.get(event.getSlot());
             if (action == null) return;
-            action.accept(player);
+            action.accept(player, event.getClick());
             if (menu.refresh != null && player.getOpenInventory().getTopInventory().getHolder(false) == menu) {
                 menu.refresh.accept(player);
             }

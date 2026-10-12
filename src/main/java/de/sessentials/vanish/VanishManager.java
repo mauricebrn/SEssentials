@@ -225,7 +225,8 @@ public final class VanishManager implements Listener {
         if (event.getEntity() instanceof Player player && isProtected(player, protectPickup)) event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    // LOW statt LOWEST: Chat-Eingaben für Admin-Menüs (ChatPrompt, LOWEST) haben Vorrang
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         if (isProtected(event.getPlayer(), protectChat)) block(event, event.getPlayer());
     }
