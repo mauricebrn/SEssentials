@@ -26,6 +26,8 @@ import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.spawn.SpawnManager;
 import de.sessentials.tab.TabNametagManager;
 import de.sessentials.tpa.TpaManager;
+import de.sessentials.tracker.ItemTracker;
+import de.sessentials.tracker.TrackerMenu;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
 import io.papermc.paper.command.brigadier.Commands;
@@ -63,6 +65,8 @@ public final class SEssentials extends JavaPlugin {
     private BankExchange bankExchange;
     private BankMenu bankMenu;
     private BankCommands bankCommands;
+    private ItemTracker tracker;
+    private TrackerMenu trackerMenu;
     private NewsManager news;
 
     @Override
@@ -92,6 +96,9 @@ public final class SEssentials extends JavaPlugin {
             VaultEconomy.register(this, bank);
             getLogger().info("Vault gefunden – Bank als Economy angemeldet.");
         }
+
+        tracker = new ItemTracker(this);
+        trackerMenu = new TrackerMenu(this, tracker);
 
         softRestart = new SoftRestartManager(this);
         chat = new ChatListener(this);
@@ -123,6 +130,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chatPrompt, this);
         getServer().getPluginManager().registerEvents(news, this);
         getServer().getPluginManager().registerEvents(bank, this);
+        getServer().getPluginManager().registerEvents(tracker, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -134,6 +142,7 @@ public final class SEssentials extends JavaPlugin {
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
+        if (tracker != null) tracker.shutdown();
         if (bank != null) bank.shutdown();
     }
 
@@ -145,6 +154,7 @@ public final class SEssentials extends JavaPlugin {
         vanish.reload();
         detector.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
+        tracker.reload();
         spawn.reload();
         help.reload();
         tpa.reload();
@@ -207,6 +217,11 @@ public final class SEssentials extends JavaPlugin {
                         Component.text("Im Umlauf: " + bank.format(bank.total()), NamedTextColor.GRAY),
                         Component.text("Konten ansehen und ändern", NamedTextColor.GRAY)),
                 bankMenu::openAdmin);
+        adminPanel.addApp(Category.ECONOMY, TrackerMenu.PERM,
+                p -> Menu.icon(Material.SPYGLASS, Component.text("Item-Tracker", NamedTextColor.AQUA),
+                        Component.text("Wertvolle Items in Inventar und", NamedTextColor.GRAY),
+                        Component.text("Enderchest, mit Verlauf", NamedTextColor.GRAY)),
+                p -> trackerMenu.openOverview(p, 1));
 
         // Server
         adminPanel.addApp(Category.SERVER, "sess.news.admin",

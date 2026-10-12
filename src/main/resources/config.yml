@@ -229,6 +229,35 @@ bank:
     baltop-entry: "<gray><rank>. <white><name></white> <dark_gray>»</dark_gray> <gold><balance>"
 
 # ------------------------------------------------------------
+# Item-Tracker (Admin-Panel → Wirtschaft → Item-Tracker, Recht sess.tracker)
+# Zählt wertvolle Items in Inventar und Enderchest (inkl. Shulkerkisten darin) beim Join, beim Verlassen
+# und regelmäßig. Verlauf: 24 h vollständig, bis 7 Tage stündlich, danach täglich. Werte nach bank.materials.
+# ------------------------------------------------------------
+tracker:
+  enabled: true
+  interval-minutes: 10
+  history-days: 30
+  include-shulkers: true
+  # Höchstens 18 werden im Menü angezeigt
+  items:
+    - DIAMOND
+    - DIAMOND_BLOCK
+    - NETHERITE_INGOT
+    - NETHERITE_BLOCK
+    - NETHERITE_SCRAP
+    - ANCIENT_DEBRIS
+    - EMERALD
+    - EMERALD_BLOCK
+    - GOLD_INGOT
+    - GOLD_BLOCK
+    - IRON_INGOT
+    - IRON_BLOCK
+    - ENCHANTED_GOLDEN_APPLE
+    - TOTEM_OF_UNDYING
+    - ELYTRA
+    - BEACON
+
+# ------------------------------------------------------------
 # Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])
 # Der Anfragende zahlt erst, wenn die Anfrage angenommen wird. Mit sess.tpa.free kostenlos.
 # Platzhalter: <requester>, <target>, <seconds>, <price> (z.B. "500 Taler" oder "5x Diamant"), <amount>, <item>

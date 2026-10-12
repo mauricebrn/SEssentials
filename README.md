@@ -14,6 +14,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
 - Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
 - Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
+- Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
@@ -75,6 +76,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.b
 | – | `sess.report.notify` | Benachrichtigung (mit Sound) bei neuen Reports |
 | – | `sess.detector.notify` | Meldungen vom Client-Detector |
 | – | `sess.report.bypasscooldown` | Ignoriert den Cooldown von `/report` |
+| – | `sess.tracker` | Item-Tracker im Admin-Panel |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
 
@@ -154,7 +156,7 @@ nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorie
 |---|---|
 | Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht) |
 | Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
-| Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern) |
+| Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern), **Item-Tracker** |
 | Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |
 | Einstellungen | **Benachrichtigungen** (Report-Meldungen an/aus, Client-Detector-Stufe) |
 
@@ -210,6 +212,21 @@ Beträge sind ganze Einheiten (`bank.currency`), Konten liegen in `plugins/SEsse
 
 Nur unveränderte Items zählen (keine umbenannten oder verzauberten). Auszahlungen, die nicht genau in Items aufgehen,
 zahlen den größtmöglichen Teil aus; der Rest bleibt auf dem Konto. Volles Inventar: Der Rest fällt vor die Füße.
+
+## Item-Tracker
+Zählt die Items aus `tracker.items` im Inventar und in der Enderchest jedes Spielers, auf Wunsch inkl. Shulkerkisten
+(`include-shulkers`). Erfasst wird beim Join, beim Verlassen und alle `interval-minutes` für alle Online-Spieler;
+ein neuer Eintrag entsteht nur, wenn sich etwas geändert hat. Offline-Spieler behalten ihren letzten Stand.
+
+Im Admin-Panel (Wirtschaft → **Item-Tracker**, Recht `sess.tracker`):
+- **Server-Bestand** pro Item mit Veränderung seit 24 h und 7 Tagen und Wert nach den Bank-Kursen; Klick zeigt den Verlauf im Chat.
+- **Spieler** nach Wert sortiert, mit Veränderung seit 24 h und Kontostand.
+- **Spieler-Details:** Inventar, Enderchest und Gesamt pro Item mit Trends sowie Wert-Verlauf.
+- **Server-Verlauf** des Gesamtwerts und **Jetzt erfassen**.
+
+Verlauf: letzte 24 h vollständig, bis 7 Tage die letzte Erfassung pro Stunde, danach pro Tag, gelöscht nach `history-days`.
+Gespeichert in `plugins/SEssentials/tracker/`. Werte richten sich nach `bank.materials` (Blöcke = 9 Items);
+Items ohne Kurs werden nur gezählt.
 
 ## Kosten
 `spawn.cost` und `tpa.cost` haben dasselbe Format:

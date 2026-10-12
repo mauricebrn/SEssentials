@@ -44,6 +44,8 @@ public final class BankExchange {
     }
 
     private final Material base;
+    /** Eingestellte Materialien mit Wert pro Item (ohne Blöcke), unabhängig von multiple-materials. */
+    private final Map<Material, Long> rates;
     /** Material → Wert pro Item, inkl. Blöcke falls erlaubt. */
     private final Map<Material, Long> depositValues;
     /** Stückelung für Auszahlungen, größte zuerst. */
@@ -51,9 +53,10 @@ public final class BankExchange {
     private final boolean withdrawEnabled;
     private final WithdrawMode withdrawMode;
 
-    private BankExchange(Material base, Map<Material, Long> depositValues, List<Map.Entry<Material, Long>> payout,
-                         boolean withdrawEnabled, WithdrawMode withdrawMode) {
+    private BankExchange(Material base, Map<Material, Long> rates, Map<Material, Long> depositValues,
+                         List<Map.Entry<Material, Long>> payout, boolean withdrawEnabled, WithdrawMode withdrawMode) {
         this.base = base;
+        this.rates = rates;
         this.depositValues = depositValues;
         this.payout = payout;
         this.withdrawEnabled = withdrawEnabled;
@@ -79,6 +82,7 @@ public final class BankExchange {
             materials.put(Material.DIAMOND, 100L);
         }
         Material base = materials.keySet().iterator().next();
+        Map<Material, Long> rates = Map.copyOf(materials);
         if (!cfg.getBoolean("bank.multiple-materials")) materials.keySet().retainAll(List.of(base));
 
         boolean allowBlocks = cfg.getBoolean("bank.allow-blocks");
@@ -98,7 +102,7 @@ public final class BankExchange {
                 .map(e -> Map.entry(e.getKey(), e.getValue()))
                 .toList();
 
-        return new BankExchange(base, Map.copyOf(values), payout, cfg.getBoolean("bank.withdraw.enabled"), mode);
+        return new BankExchange(base, rates, Map.copyOf(values), payout, cfg.getBoolean("bank.withdraw.enabled"), mode);
     }
 
     public Material base() {
@@ -108,6 +112,19 @@ public final class BankExchange {
     /** Einzahlbare Materialien mit Wert pro Item, für die Anzeige der Kurse. */
     public Map<Material, Long> values() {
         return depositValues;
+    }
+
+    /**
+     * Wert eines Items nach den Bank-Kursen (Blöcke = 9 Items), unabhängig davon, ob es eingezahlt werden kann –
+     * für Auswertungen wie den Item-Tracker. 0 = kein Kurs.
+     */
+    public long worth(Material material) {
+        Long rate = rates.get(material);
+        if (rate != null) return rate;
+        for (Map.Entry<Material, Material> e : BLOCKS.entrySet()) {
+            if (e.getValue() == material && rates.containsKey(e.getKey())) return rates.get(e.getKey()) * ITEMS_PER_BLOCK;
+        }
+        return 0;
     }
 
     public boolean withdrawEnabled() {

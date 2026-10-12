@@ -97,6 +97,9 @@ permissions:
   sess.bank.admin:
     description: Erlaubt /eco und die Konten-Verwaltung im Admin-Panel
     default: op
+  sess.tracker:
+    description: Item-Tracker im Admin-Panel
+    default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op
