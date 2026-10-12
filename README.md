@@ -15,6 +15,35 @@ Für einen reinen 26.3-Build `paper.version` in der `pom.xml` z.B. auf `26.3.bui
 
 Optional: **LuckPerms** (Prefix/Suffix/Gruppen) und **PlaceholderAPI**.
 
+## CI & Releases
+
+Die Pipeline liegt in `.github/workflows/build.yml` (GitHub Actions).
+
+**Build-Check:** Jeder Push auf `main` und jeder Pull Request baut das Plugin mit
+`mvn -B verify` (Temurin JDK 25). Schlägt das Kompilieren fehl, ist der Run rot.
+Das fertige JAR hängt als Artifact `SEssentials` am Run (Tab *Actions* → Run → *Artifacts*).
+
+**Release veröffentlichen:**
+
+1. `<version>` in der `pom.xml` erhöhen, z.B. `1.0.1`.
+2. Änderung committen und pushen:
+   ```bash
+   git commit -am "Release 1.0.1"
+   git push
+   ```
+3. Passenden Tag mit `v`-Präfix setzen und pushen:
+   ```bash
+   git tag v1.0.1
+   git push origin v1.0.1
+   ```
+
+Der Tag startet die Pipeline erneut. Nach erfolgreichem Build erstellt sie ein GitHub Release
+mit `SEssentials-1.0.1.jar` und automatisch generierten Release Notes (Tab *Releases*).
+
+> Der Tag muss exakt zur `pom.xml`-Version passen (`v1.0.1` ↔ `1.0.1`).
+> Sonst bricht der Release-Job ab und es wird nichts veröffentlicht.
+> Dann Tag löschen (`git tag -d v1.0.1 && git push origin :v1.0.1`), Version korrigieren, neu taggen.
+
 ## Befehle & Rechte
 
 | Befehl | Recht | Beschreibung |
