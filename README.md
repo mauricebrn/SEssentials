@@ -9,6 +9,9 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Konfigurierbare Join- / Leave-Nachrichten
 - Vanish mit Schutzregeln, Fake-Nachrichten und gefälschter Serverliste
 - `/fly`, `/heal`, `/feed`, `/god`
+- `/nether` und `/end` zum Wechseln zwischen den Dimensionen
+- Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst gegen Items)
+- Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
 - Report-System (`/report`) mit Admin-Übersicht
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
@@ -31,6 +34,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report` (alle) und `sess.van
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
+| `/help [seite]` | – | Hilfeseiten aus der Config (Alias `/?`) |
 | `/admin` | `sess.admin` | Admin-Panel öffnen |
 | `/sessentials reload` | `sess.reload` | Config neu laden (Alias `/sess`) |
 | `/softrestart <minuten>` | `sess.softrestart` | Neustart nach X Minuten planen (Alias `/srestart`) |
@@ -46,6 +50,10 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report` (alle) und `sess.van
 | `/heal [spieler]` | `sess.heal` / `sess.heal.others` | Volle Gesundheit, Feuer aus |
 | `/feed [spieler]` | `sess.feed` / `sess.feed.others` | Hunger und Sättigung auffüllen |
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
+| `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` gegen Items (Standard 5 Diamanten) |
+| `/setspawn` | `sess.setspawn` | Server-Spawn auf die eigene Position setzen |
+| `/nether` | `sess.nether` | In den Nether; im Nether zurück in die Oberwelt |
+| `/end` | `sess.end` | Ins End; im End zurück in die Oberwelt |
 | – | `sess.vanish.auto` | Beim Joinen automatisch unsichtbar |
 | – | `sess.vanish.see` | Sieht versteckte Spieler und bekommt Join/Leave-Hinweise |
 | – | `sess.report.notify` | Benachrichtigung (mit Sound) bei neuen Reports |
@@ -126,7 +134,7 @@ Texte unter `player-commands.messages`. In `other` und `player-only` steht zusä
 `/admin` öffnet ein Kisten-Menü. Jede Anwendung ist eine Kachel und erscheint nur mit ihrem eigenen Recht
 (z.B. Vanish nur mit `sess.vanish`). Aktuell:
 - **Vanish** – umschalten, zeigt den Status
-- **Befehle** – Untermenü mit Fly, God, Heal, Feed (jeweils nur mit dem Recht des Befehls)
+- **Befehle** – Untermenü mit Fly, God, Heal, Feed, Nether, End, Spawn, Spawn setzen (jeweils nur mit dem Recht des Befehls)
 - **Reports** – zeigt die Zahl offener Reports und öffnet die Report-Übersicht
 - **Benachrichtigungen** – persönlich einstellen: Report-Meldungen an/aus und was der Client-Detector meldet
 - **Softrestart** – Untermenü mit Zeiten und Abbrechen
@@ -136,6 +144,33 @@ Der Titel steht unter `admin.title`.
 
 Neue Anwendungen in `SEssentials#registerAdminApps` mit `adminPanel.addApp(recht, icon, aktion)` einhängen.
 Untermenüs nutzen `de.sessentials.admin.Menu`.
+
+## Hilfe
+`/help [seite]` zeigt die Seiten aus `help.pages` im Chat und ersetzt die Vanilla-Hilfe.
+Jede Zeile ist Text oder `{text: "...", permission: "..."}` – Letztere sieht nur, wer das Recht hat.
+Seiten ohne sichtbare Zeile werden übersprungen, sodass Spieler keine leeren Staff-Seiten sehen.
+Kopf-, Fußzeile und Blätter-Buttons sind unter `help` einstellbar (Platzhalter `<page>`, `<pages>`).
+
+## Spawn
+`/setspawn` speichert die eigene Position (inkl. Blickrichtung) in `plugins/SEssentials/spawn.yml`
+und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den Spawn der Hauptwelt.
+
+`/spawn` kann jeder nutzen. Mit `sess.spawn` ist es kostenlos, sonst kostet es `spawn.cost.amount` × `spawn.cost.item`
+(Standard 5 Diamanten, `amount: 0` = für alle kostenlos). Die Items werden vor dem Teleport abgezogen und
+bei einem fehlgeschlagenen Teleport zurückgegeben. Umbenannte oder verzauberte Items zählen nicht.
+
+Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
+
+## Dimensionen
+`/nether` und `/end` teleportieren wie ein Portal; im Nether bzw. End bringt derselbe Befehl zurück in die Oberwelt.
+- **Oberwelt → Nether:** Koordinaten ÷ 8, sicherer Platz im selben Chunk unterhalb der Decke.
+  Ohne freien Platz entsteht eine kleine Obsidian-Plattform.
+- **Nether → Oberwelt:** Koordinaten × 8, auf der Oberfläche.
+- **→ End:** Obsidian-Plattform bei 100 / 50 / 0, wie beim Betreten über ein Portal.
+- **End → Oberwelt:** Respawn-Punkt (Bett/Anker), sonst Welt-Spawn.
+
+Genutzt wird jeweils die erste geladene Welt der Dimension (Standard: `world`, `world_nether`, `world_the_end`).
+Texte unter `dimensions.messages`.
 
 ## Platzhalter
 `<player>`, `<displayname>`, `<world>`, `<online>`, `<max_players>`, `<prefix>`,

@@ -67,6 +67,18 @@ permissions:
   sess.god.others:
     description: Erlaubt /god <spieler>
     default: op
+  sess.nether:
+    description: Erlaubt /nether
+    default: op
+  sess.end:
+    description: Erlaubt /end
+    default: op
+  sess.spawn:
+    description: /spawn ohne Kosten
+    default: op
+  sess.setspawn:
+    description: Erlaubt /setspawn
+    default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op

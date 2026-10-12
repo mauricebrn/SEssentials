@@ -119,6 +119,60 @@ player-commands:
     player-only: "<prefix><red>Nur für Spieler – nutze /<command> <spieler>."
 
 # ------------------------------------------------------------
+# /nether und /end – im Nether/End führt derselbe Befehl zurück in die Oberwelt
+# ------------------------------------------------------------
+dimensions:
+  messages:
+    nether: "<prefix><gray>Willkommen im <red>Nether</red>."
+    end: "<prefix><gray>Willkommen im <light_purple>End</light_purple>."
+    overworld: "<prefix><gray>Zurück in der <green>Oberwelt</green>."
+    world-missing: "<prefix><red>Diese Dimension ist auf dem Server nicht aktiviert."
+
+# ------------------------------------------------------------
+# Hilfe (/help [seite], Alias /?) – ersetzt die Vanilla-Hilfe
+# Eine Zeile ist entweder Text oder {text: "...", permission: "..."} (nur mit dem Recht sichtbar).
+# Seiten ohne sichtbare Zeile werden übersprungen. In allen Texten: <page>, <pages>.
+# Klickbare Befehle: <click:suggest_command:'/spawn'>...</click> oder <click:run_command:'/spawn'>...</click>
+# ------------------------------------------------------------
+help:
+  header: "<dark_gray>────── <gold>Hilfe</gold> <gray>(<page>/<pages>)</gray> ──────"
+  footer: "<dark_gray>──────</dark_gray> <previous> <next> <dark_gray>──────"
+  previous: "<click:run_command:'/help <target>'><hover:show_text:'<gray>Seite <target>'><yellow>[« Zurück]</yellow></hover></click>"
+  next: "<click:run_command:'/help <target>'><hover:show_text:'<gray>Seite <target>'><yellow>[Weiter »]</yellow></hover></click>"
+  empty: "<prefix><gray>Keine Hilfe verfügbar."
+  pages:
+    - - "<click:suggest_command:'/spawn'><gold>/spawn</gold></click> <gray>– Zum Spawn teleportieren"
+      - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
+      - "<click:suggest_command:'/help 2'><gold>/help <seite></gold></click> <gray>– Weitere Seiten"
+      - "<gray>Discord: <click:open_url:'https://discord.gg/DEIN-LINK'><aqua><u>discord.gg/DEIN-LINK</u></aqua></click>"
+    - - text: "<click:suggest_command:'/admin'><red>/admin</red></click> <gray>– Admin-Panel"
+        permission: sess.admin
+      - text: "<click:suggest_command:'/vanish'><red>/vanish</red></click> <gray>– Unsichtbar ein/aus"
+        permission: sess.vanish
+      - text: "<click:suggest_command:'/reports'><red>/reports</red></click> <gray>– Offene Reports"
+        permission: sess.reports.admin
+      - text: "<click:suggest_command:'/fly'><red>/fly</red></click> <gray>, /god, /heal, /feed – Spieler-Befehle"
+        permission: sess.fly
+      - text: "<click:suggest_command:'/softrestart '><red>/softrestart <minuten></red></click> <gray>– Neustart planen"
+        permission: sess.softrestart
+
+# ------------------------------------------------------------
+# Spawn (/spawn, /setspawn)
+# Mit sess.spawn ist /spawn kostenlos, sonst kostet es die Items unten.
+# Neue Spieler und Respawns ohne Bett/Anker landen exakt am gesetzten Spawn.
+# ------------------------------------------------------------
+spawn:
+  cost:
+    item: DIAMOND     # Item-Name, z.B. DIAMOND, EMERALD, GOLD_INGOT
+    amount: 5         # 0 = kostenlos für alle
+  messages:
+    set: "<prefix><green>Spawn auf deine Position gesetzt."
+    teleported: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert."
+    teleported-paid: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert. <dark_gray>(-<amount>x <item>)"
+    not-enough: "<prefix><red>Du brauchst <white><amount>x <item></white>, um dich zum Spawn zu teleportieren."
+    failed: "<prefix><red>Teleport fehlgeschlagen."
+
+# ------------------------------------------------------------
 # Reports (/report <spieler> <grund>, /reports, /clearreports)
 # Zusätzliche Platzhalter: <id>, <target>, <reporter>, <reason>
 # ------------------------------------------------------------

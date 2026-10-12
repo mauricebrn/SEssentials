@@ -6,6 +6,8 @@ import de.sessentials.admin.AdminPanel;
 import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
 import de.sessentials.detector.ClientDetector;
+import de.sessentials.dimension.DimensionCommands;
+import de.sessentials.help.HelpCommand;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
 import de.sessentials.notify.Notifications;
@@ -13,6 +15,7 @@ import de.sessentials.player.PlayerCommands;
 import de.sessentials.report.ReportManager;
 import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
+import de.sessentials.spawn.SpawnManager;
 import de.sessentials.tab.TabNametagManager;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
@@ -21,6 +24,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -39,6 +43,9 @@ public final class SEssentials extends JavaPlugin {
     private ReportManager reports;
     private Notifications notifications;
     private ClientDetector detector;
+    private DimensionCommands dimensions;
+    private SpawnManager spawn;
+    private HelpCommand help;
 
     @Override
     public void onEnable() {
@@ -63,6 +70,9 @@ public final class SEssentials extends JavaPlugin {
         joinQuit = new JoinQuitListener(this);
         tab = new TabNametagManager(this);
         playerCommands = new PlayerCommands(this);
+        dimensions = new DimensionCommands(this);
+        spawn = new SpawnManager(this);
+        help = new HelpCommand(this);
         notifications = new Notifications(this);
         reports = new ReportManager(this);
         detector = new ClientDetector(this);
@@ -77,6 +87,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
         getServer().getPluginManager().registerEvents(reports, this);
         getServer().getPluginManager().registerEvents(detector, this);
+        getServer().getPluginManager().registerEvents(spawn, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -97,6 +108,8 @@ public final class SEssentials extends JavaPlugin {
         joinQuit.reload();
         vanish.reload();
         detector.reload();
+        spawn.reload();
+        help.reload();
         tab.reload();
     }
 
@@ -127,7 +140,7 @@ public final class SEssentials extends JavaPlugin {
                 p -> vanish.toggle(p, true));
         adminPanel.addApp(p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
                 p -> Menu.icon(Material.COMMAND_BLOCK, Component.text("Befehle", NamedTextColor.AQUA),
-                        Component.text("Fly, God, Heal, Feed", NamedTextColor.GRAY)),
+                        Component.text("Fly, God, Heal, Feed, Nether, End, Spawn", NamedTextColor.GRAY)),
                 this::openCommandsMenu);
         adminPanel.addApp("sess.reports.admin",
                 p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
@@ -151,9 +164,9 @@ public final class SEssentials extends JavaPlugin {
                 });
     }
 
-    private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed");
+    private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed", "sess.nether", "sess.end", "sess.spawn", "sess.setspawn");
 
-    /** Untermenü mit /fly, /god, /heal, /feed – jede Kachel nur mit ihrem Recht. */
+    /** Untermenü mit /fly, /god, /heal, /feed, /nether, /end, /spawn, /setspawn – jede Kachel nur mit ihrem Recht. */
     private void openCommandsMenu(Player player) {
         Menu menu = new Menu(1, Component.text("Befehle"));
         int slot = 0;
@@ -170,8 +183,32 @@ public final class SEssentials extends JavaPlugin {
                     p -> playerCommands.execute("heal", p));
         }
         if (player.hasPermission("sess.feed")) {
-            menu.set(slot, Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
+            menu.set(slot++, Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
                     p -> playerCommands.execute("feed", p));
+        }
+        if (player.hasPermission("sess.nether")) {
+            menu.set(slot++, Menu.icon(Material.NETHERRACK, Component.text("Nether", NamedTextColor.RED),
+                            Component.text("Im Nether: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
+                p.closeInventory();
+                dimensions.toggle(p, World.Environment.NETHER);
+            });
+        }
+        if (player.hasPermission("sess.end")) {
+            menu.set(slot++, Menu.icon(Material.END_STONE, Component.text("End", NamedTextColor.LIGHT_PURPLE),
+                            Component.text("Im End: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
+                p.closeInventory();
+                dimensions.toggle(p, World.Environment.THE_END);
+            });
+        }
+        if (player.hasPermission("sess.spawn")) {
+            menu.set(slot++, Menu.icon(Material.COMPASS, Component.text("Spawn", NamedTextColor.GREEN)), p -> {
+                p.closeInventory();
+                spawn.teleport(p);
+            });
+        }
+        if (player.hasPermission("sess.setspawn") && slot < 8) {
+            menu.set(slot, Menu.icon(Material.RED_BED, Component.text("Spawn setzen", NamedTextColor.GOLD),
+                            Component.text("Setzt den Spawn auf deine Position", NamedTextColor.GRAY)), spawn::setSpawn);
         }
         menu.set(8, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), adminPanel::open);
         menu.refreshWith(this::openCommandsMenu);
@@ -271,6 +308,9 @@ public final class SEssentials extends JavaPlugin {
 
             playerCommands.register(commands);
             reports.register(commands);
+            dimensions.register(commands);
+            spawn.register(commands);
+            help.register(commands);
 
             commands.register(
                     Commands.literal("admin")

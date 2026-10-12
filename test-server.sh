@@ -20,10 +20,19 @@ echo "==> Plugin bauen"
 mkdir -p "$RUN_DIR/plugins"
 
 echo "==> Neuesten Paper-Build für $PAPER_VERSION suchen"
-BUILD_JSON=$(curl -fsS "https://fill.papermc.io/v3/projects/paper/versions/$PAPER_VERSION/builds/latest")
-PAPER_URL=$(echo "$BUILD_JSON" | grep -oE '"url":"[^"]+' | head -1 | cut -d'"' -f4)
-PAPER_SHA=$(echo "$BUILD_JSON" | grep -oE '"sha256":"[^"]+' | head -1 | cut -d'"' -f4)
-PAPER_JAR="$RUN_DIR/${PAPER_URL##*/}"
+if BUILD_JSON=$(curl -fsS --max-time 15 "https://fill.papermc.io/v3/projects/paper/versions/$PAPER_VERSION/builds/latest"); then
+  PAPER_URL=$(echo "$BUILD_JSON" | grep -oE '"url":"[^"]+' | head -1 | cut -d'"' -f4)
+  PAPER_SHA=$(echo "$BUILD_JSON" | grep -oE '"sha256":"[^"]+' | head -1 | cut -d'"' -f4)
+  PAPER_JAR="$RUN_DIR/${PAPER_URL##*/}"
+else
+  # Offline oder API down: neuesten bereits geladenen Build dieser Version nehmen
+  PAPER_JAR=$(ls -t "$RUN_DIR"/paper-"$PAPER_VERSION"-*.jar 2>/dev/null | head -1 || true)
+  if [ -z "$PAPER_JAR" ]; then
+    echo "Paper-API nicht erreichbar und kein lokaler Build für $PAPER_VERSION vorhanden." >&2
+    exit 1
+  fi
+  echo "==> Paper-API nicht erreichbar, nutze lokalen Build ${PAPER_JAR##*/}"
+fi
 
 if [ ! -f "$PAPER_JAR" ]; then
   echo "==> Lade ${PAPER_JAR##*/}"
