@@ -1,0 +1,11 @@
+de/sessentials/tab/TabNametagManager.class
+de/sessentials/SEssentials.class
+de/sessentials/chat/ChatListener.class
+de/sessentials/hook/PapiHook.class
+de/sessentials/hook/PermissionInfo$1.class
+de/sessentials/tab/TabNametagManager$GroupStyle.class
+de/sessentials/softrestart/SoftRestartManager.class
+de/sessentials/hook/PermissionInfo.class
+de/sessentials/text/TextService.class
+de/sessentials/text/Legacy.class
+de/sessentials/hook/LuckPermsHook.class

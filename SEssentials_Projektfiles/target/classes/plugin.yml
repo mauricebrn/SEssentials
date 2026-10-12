@@ -1,0 +1,21 @@
+name: SEssentials
+version: '1.0.0'
+main: de.sessentials.SEssentials
+api-version: '26.2'
+description: Softrestart, Chatformat, TAB und Nametags mit MiniMessage & LuckPerms
+author: Moritz
+softdepend: [LuckPerms, PlaceholderAPI]
+
+permissions:
+  sess.softrestart:
+    description: Erlaubt /softrestart
+    default: op
+  sess.reload:
+    description: Erlaubt /sessentials reload
+    default: op
+  sess.chat.color:
+    description: Erlaubt &-Farbcodes in Chatnachrichten
+    default: op
+  sess.chat.minimessage:
+    description: Erlaubt MiniMessage-Tags in Chatnachrichten
+    default: op
