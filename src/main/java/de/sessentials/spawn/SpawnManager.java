@@ -2,14 +2,12 @@ package de.sessentials.spawn;
 
 import com.mojang.brigadier.Command;
 import de.sessentials.SEssentials;
+import de.sessentials.cost.ItemCost;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,7 +15,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +34,7 @@ public final class SpawnManager implements Listener {
     private final File file;
     private Location spawn;
 
-    private volatile Material costItem;
-    private volatile int costAmount;
+    private volatile ItemCost cost;
 
     public SpawnManager(SEssentials plugin) {
         this.plugin = plugin;
@@ -49,15 +45,7 @@ public final class SpawnManager implements Listener {
 
     /** Ohne explizite Defaults lesen: fehlende Keys in älteren Configs fallen auf die config.yml im JAR zurück. */
     public void reload() {
-        FileConfiguration cfg = plugin.getConfig();
-        String itemName = cfg.getString("spawn.cost.item");
-        Material item = itemName == null ? null : Material.matchMaterial(itemName);
-        if (item == null || !item.isItem()) {
-            plugin.getLogger().warning("spawn.cost.item '" + itemName + "' ist kein Item – nutze DIAMOND.");
-            item = Material.DIAMOND;
-        }
-        costItem = item;
-        costAmount = Math.max(0, cfg.getInt("spawn.cost.amount"));
+        cost = ItemCost.fromConfig(plugin.getConfig(), "spawn.cost", plugin.getLogger());
     }
 
     /** Gesetzter Spawn, sonst der Spawn der Hauptwelt. */
@@ -82,26 +70,20 @@ public final class SpawnManager implements Listener {
 
     /** /spawn: mit sess.spawn kostenlos, sonst gegen die konfigurierten Items. */
     public void teleport(Player player) {
-        ItemStack cost = player.hasPermission(PERM_FREE) || costAmount == 0 ? null : new ItemStack(costItem, costAmount);
-        TagResolver costTags = TagResolver.resolver(
-                Placeholder.unparsed("amount", String.valueOf(costAmount)),
-                Placeholder.component("item", Component.translatable(costItem.translationKey())));
-
-        if (cost != null) {
-            if (!player.getInventory().containsAtLeast(cost, costAmount)) {
-                player.sendMessage(msg("not-enough", player, costTags));
-                return;
-            }
-            // vorher abziehen, damit niemand die Items während des Teleports weglegen kann
-            player.getInventory().removeItem(cost.clone());
+        ItemCost cost = this.cost;
+        boolean pays = !player.hasPermission(PERM_FREE) && !cost.isFree();
+        // vorher abziehen, damit niemand die Items während des Teleports weglegen kann
+        if (pays && !cost.take(player)) {
+            player.sendMessage(msg("not-enough", player, cost.tags()));
+            return;
         }
         player.teleportAsync(spawn()).thenAccept(ok -> {
             if (!ok) {
-                if (cost != null) player.getInventory().addItem(cost).values().forEach(rest -> player.getWorld().dropItem(player.getLocation(), rest));
+                if (pays) cost.refund(player);
                 player.sendMessage(msg("failed", player));
                 return;
             }
-            player.sendMessage(cost == null ? msg("teleported", player) : msg("teleported-paid", player, costTags));
+            player.sendMessage(pays ? msg("teleported-paid", player, cost.tags()) : msg("teleported", player));
         });
     }
 

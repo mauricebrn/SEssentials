@@ -17,6 +17,7 @@ import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.spawn.SpawnManager;
 import de.sessentials.tab.TabNametagManager;
+import de.sessentials.tpa.TpaManager;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
 import io.papermc.paper.command.brigadier.Commands;
@@ -46,6 +47,7 @@ public final class SEssentials extends JavaPlugin {
     private DimensionCommands dimensions;
     private SpawnManager spawn;
     private HelpCommand help;
+    private TpaManager tpa;
 
     @Override
     public void onEnable() {
@@ -73,6 +75,7 @@ public final class SEssentials extends JavaPlugin {
         dimensions = new DimensionCommands(this);
         spawn = new SpawnManager(this);
         help = new HelpCommand(this);
+        tpa = new TpaManager(this);
         notifications = new Notifications(this);
         reports = new ReportManager(this);
         detector = new ClientDetector(this);
@@ -88,6 +91,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(reports, this);
         getServer().getPluginManager().registerEvents(detector, this);
         getServer().getPluginManager().registerEvents(spawn, this);
+        getServer().getPluginManager().registerEvents(tpa, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -110,6 +114,7 @@ public final class SEssentials extends JavaPlugin {
         detector.reload();
         spawn.reload();
         help.reload();
+        tpa.reload();
         tab.reload();
     }
 
@@ -311,6 +316,7 @@ public final class SEssentials extends JavaPlugin {
             dimensions.register(commands);
             spawn.register(commands);
             help.register(commands);
+            tpa.register(commands);
 
             commands.register(
                     Commands.literal("admin")

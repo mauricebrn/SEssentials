@@ -12,6 +12,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - `/nether` und `/end` zum Wechseln zwischen den Dimensionen
 - Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst gegen Items)
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
+- Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
 - Report-System (`/report`) mit Admin-Übersicht
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
@@ -30,7 +31,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.report` (alle) und `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.report` und `sess.tpa` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -51,6 +52,9 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report` (alle) und `sess.van
 | `/feed [spieler]` | `sess.feed` / `sess.feed.others` | Hunger und Sättigung auffüllen |
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
 | `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` gegen Items (Standard 5 Diamanten) |
+| `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` gegen Items (Standard 5 Diamanten) |
+| `/tpaccept [spieler]` | – | Anfrage annehmen (ohne Namen: neueste) |
+| `/tpdeny [spieler]` | – | Anfrage ablehnen (ohne Namen: neueste) |
 | `/setspawn` | `sess.setspawn` | Server-Spawn auf die eigene Position setzen |
 | `/nether` | `sess.nether` | In den Nether; im Nether zurück in die Oberwelt |
 | `/end` | `sess.end` | Ins End; im End zurück in die Oberwelt |
@@ -160,6 +164,12 @@ und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den S
 bei einem fehlgeschlagenen Teleport zurückgegeben. Umbenannte oder verzauberte Items zählen nicht.
 
 Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
+
+## Teleport-Anfragen
+`/tpa <spieler>` schickt eine Anfrage mit klickbarem **[Annehmen]** / **[Ablehnen]**. Sie verfällt nach `tpa.expire-seconds`.
+Der Anfragende zahlt `tpa.cost` (Standard 5 Diamanten) erst bei Annahme; mit `sess.tpa.free` oder `amount: 0` kostenlos.
+Hat er bei Annahme nicht mehr genug Items, wird der Teleport abgebrochen. Bei einem fehlgeschlagenen Teleport gibt es die Items zurück.
+Versteckte Spieler (Vanish) können nicht angefragt werden. Eine neue Anfrage an denselben Spieler ersetzt die alte.
 
 ## Dimensionen
 `/nether` und `/end` teleportieren wie ein Portal; im Nether bzw. End bringt derselbe Befehl zurück in die Oberwelt.

@@ -79,6 +79,12 @@ permissions:
   sess.setspawn:
     description: Erlaubt /setspawn
     default: op
+  sess.tpa:
+    description: Erlaubt /tpa
+    default: true
+  sess.tpa.free:
+    description: /tpa ohne Kosten
+    default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op

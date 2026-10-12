@@ -142,6 +142,7 @@ help:
   empty: "<prefix><gray>Keine Hilfe verfügbar."
   pages:
     - - "<click:suggest_command:'/spawn'><gold>/spawn</gold></click> <gray>– Zum Spawn teleportieren"
+      - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
       - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
       - "<click:suggest_command:'/help 2'><gold>/help <seite></gold></click> <gray>– Weitere Seiten"
       - "<gray>Discord: <click:open_url:'https://discord.gg/DEIN-LINK'><aqua><u>discord.gg/DEIN-LINK</u></aqua></click>"
@@ -170,6 +171,32 @@ spawn:
     teleported: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert."
     teleported-paid: "<prefix><gray>Du wurdest zum <green>Spawn</green> teleportiert. <dark_gray>(-<amount>x <item>)"
     not-enough: "<prefix><red>Du brauchst <white><amount>x <item></white>, um dich zum Spawn zu teleportieren."
+    failed: "<prefix><red>Teleport fehlgeschlagen."
+
+# ------------------------------------------------------------
+# Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])
+# Der Anfragende zahlt erst, wenn die Anfrage angenommen wird. Mit sess.tpa.free kostenlos.
+# Platzhalter: <requester>, <target>, <seconds>, <amount>, <item>
+# ------------------------------------------------------------
+tpa:
+  expire-seconds: 60
+  cost:
+    item: DIAMOND     # Item-Name, z.B. DIAMOND, EMERALD, GOLD_INGOT
+    amount: 5         # 0 = kostenlos für alle
+  messages:
+    sent: "<prefix><gray>Anfrage an <white><target></white> gesendet. Sie verfällt in <seconds> Sekunden."
+    sent-paid: "<prefix><gray>Anfrage an <white><target></white> gesendet. <dark_gray>(Kosten bei Annahme: <amount>x <item>)"
+    received: "<prefix><white><requester></white><gray> möchte sich zu dir teleportieren. <click:run_command:'/tpaccept <requester>'><hover:show_text:'<green>Annehmen'><green>[Annehmen]</green></hover></click> <click:run_command:'/tpdeny <requester>'><hover:show_text:'<red>Ablehnen'><red>[Ablehnen]</red></hover></click>"
+    accepted: "<prefix><green><target> hat deine Anfrage angenommen."
+    accepted-paid: "<prefix><green><target> hat deine Anfrage angenommen. <dark_gray>(-<amount>x <item>)"
+    accepted-target: "<prefix><green>Anfrage von <white><requester></white> angenommen."
+    denied: "<prefix><red><target> hat deine Anfrage abgelehnt."
+    denied-target: "<prefix><gray>Anfrage von <white><requester></white> abgelehnt."
+    no-request: "<prefix><red>Keine offene Teleport-Anfrage."
+    not-found: "<prefix><red><target> ist nicht online."
+    self: "<prefix><red>Du kannst dir selbst keine Anfrage schicken."
+    not-enough: "<prefix><red>Du brauchst <white><amount>x <item></white> für eine Teleport-Anfrage."
+    requester-cannot-pay: "<prefix><red><requester> hat nicht mehr genug <item> – Teleport abgebrochen."
     failed: "<prefix><red>Teleport fehlgeschlagen."
 
 # ------------------------------------------------------------
