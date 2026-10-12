@@ -1,6 +1,7 @@
 package de.sessentials.tracker;
 
 import de.sessentials.SEssentials;
+import de.sessentials.storage.AsyncFileWriter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -19,9 +20,6 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,10 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 /**
  * Erfasst, wie viele wertvolle Items Spieler im Inventar und in der Enderchest haben (inkl. Shulkerkisten darin),
@@ -93,7 +87,7 @@ public final class ItemTracker implements Listener {
     private final Map<UUID, History> players = new HashMap<>();
     /** Server-Gesamtbestand (Summe der letzten Erfassung aller Spieler), im Feld {@code inventory}. */
     private final List<Snapshot> server = new ArrayList<>();
-    private final ExecutorService saver = Executors.newSingleThreadExecutor(r -> new Thread(r, "SEssentials-Tracker-Save"));
+    private final AsyncFileWriter writer;
 
     private volatile boolean enabled;
     private volatile Set<Material> items = Set.of();
@@ -106,6 +100,7 @@ public final class ItemTracker implements Listener {
         this.plugin = plugin;
         this.playerDir = new File(plugin.getDataFolder(), "tracker/players");
         this.serverFile = new File(plugin.getDataFolder(), "tracker/server.yml");
+        this.writer = new AsyncFileWriter("Tracker", plugin.getLogger());
         load();
         reload();
     }
@@ -135,12 +130,7 @@ public final class ItemTracker implements Listener {
     public void shutdown() {
         if (task != null) task.cancel();
         if (enabled) captureAll();
-        saver.shutdown();
-        try {
-            if (!saver.awaitTermination(10, TimeUnit.SECONDS)) plugin.getLogger().warning("Tracker: Speichern hat zu lange gedauert.");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        writer.shutdown();
     }
 
     // ------------------------------------------------------------
@@ -351,26 +341,10 @@ public final class ItemTracker implements Listener {
     }
 
     private void savePlayer(History history) {
-        write(new File(playerDir, history.id + ".yml"), serialize(history.name, history.snapshots));
+        writer.write(new File(playerDir, history.id + ".yml"), serialize(history.name, history.snapshots));
     }
 
     private void saveServer() {
-        write(serverFile, serialize(null, server));
-    }
-
-    /** Asynchron über eine Temp-Datei, damit nie eine halbe Datei entsteht. */
-    private void write(File file, String data) {
-        Runnable job = () -> {
-            try {
-                Files.createDirectories(file.getParentFile().toPath());
-                File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
-                Files.writeString(tmp.toPath(), data);
-                Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE, "Tracker: " + file.getName() + " konnte nicht gespeichert werden", e);
-            }
-        };
-        if (saver.isShutdown()) job.run();
-        else saver.execute(job);
+        writer.write(serverFile, serialize(null, server));
     }
 }

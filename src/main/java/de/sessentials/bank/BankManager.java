@@ -1,6 +1,7 @@
 package de.sessentials.bank;
 
 import de.sessentials.SEssentials;
+import de.sessentials.storage.AsyncFileWriter;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -9,9 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.text.NumberFormat;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,10 +17,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 /**
  * Digitale Konten in ganzen Einheiten der Server-Währung. Thread-sicher, weil Vault-Aufrufe anderer
@@ -36,12 +30,12 @@ public final class BankManager implements Listener {
     private final File file;
     private final Map<UUID, Long> balances = new HashMap<>();
     private final Map<UUID, String> names = new HashMap<>();
-    // eine Schreib-Warteschlange: Speichervorgänge laufen nacheinander, nie parallel
-    private final ExecutorService saver = Executors.newSingleThreadExecutor(r -> new Thread(r, "SEssentials-Bank-Save"));
+    private final AsyncFileWriter writer;
 
     public BankManager(SEssentials plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "bank.yml");
+        this.writer = new AsyncFileWriter("Bank", plugin.getLogger());
         load();
     }
 
@@ -138,39 +132,19 @@ public final class BankManager implements Listener {
         }
     }
 
-    /** Schnappschuss unter Sperre, Schreiben asynchron; über eine Temp-Datei, damit nie eine halbe Datei entsteht. */
+    /** Schnappschuss unter Sperre, Schreiben asynchron. */
     private void save() {
         YamlConfiguration yml = new YamlConfiguration();
         for (Map.Entry<UUID, Long> e : balances.entrySet()) {
             yml.set("accounts." + e.getKey() + ".name", names.get(e.getKey()));
             yml.set("accounts." + e.getKey() + ".balance", e.getValue());
         }
-        String data = yml.saveToString();
-        if (saver.isShutdown()) {
-            write(data);
-        } else {
-            saver.execute(() -> write(data));
-        }
-    }
-
-    private void write(String data) {
-        try {
-            File tmp = new File(file.getParentFile(), "bank.yml.tmp");
-            Files.writeString(tmp.toPath(), data);
-            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "bank.yml konnte nicht gespeichert werden", e);
-        }
+        writer.write(file, yml.saveToString());
     }
 
     /** Wartet auf ausstehende Speichervorgänge (beim Deaktivieren). */
     public void shutdown() {
-        saver.shutdown();
-        try {
-            if (!saver.awaitTermination(10, TimeUnit.SECONDS)) plugin.getLogger().warning("Bank: Speichern hat zu lange gedauert.");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        writer.shutdown();
     }
 
     @EventHandler
