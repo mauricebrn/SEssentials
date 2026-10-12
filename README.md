@@ -14,6 +14,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
 - Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
 - `/enderchest` (`/ec`) mit einstellbaren Kosten
+- Private Nachrichten: `/msg` und `/r` zum schnellen Antworten
 - Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
 - Chestshops: Items aus Kisten für Taler kaufen und verkaufen
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
@@ -36,7 +37,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -61,6 +62,8 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.e
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
 | `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` kostenpflichtig (Standard 500 Taler vom Konto) |
 | `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` kostenpflichtig (Standard 500 Taler) |
+| `/msg <spieler> <text>` | `sess.msg` | Private Nachricht (auch `/tell`, `/w`, `/whisper`); ersetzt Vanilla-`/msg` |
+| `/r <text>` | `sess.msg` | Antwort an den letzten Gesprächspartner (Alias `/reply`) |
 | `/enderchest` | `sess.enderchest` / `sess.enderchest.free` | Eigene Enderchest öffnen (Alias `/ec`). Ohne `.free` kostenpflichtig (Standard 50 Taler) |
 | `/bank` | `sess.bank` | Bank-Menü: Kontostand, Einzahlen, Auszahlen, Kurse |
 | `/bank einzahlen [hand]` | `sess.bank` | Alle passenden Items bzw. den Stack in der Hand einzahlen |
@@ -228,11 +231,15 @@ Schild an eine Kiste, Truhe oder ein Fass setzen (Wandschild oder obendrauf):
 | 3 | Preise in Talern: `K 100` (Spieler kauft), `V 80` (Spieler verkauft) oder beides |
 | 4 | leer = erstes Item in der Kiste (sonst Item in der Hand), oder ein Item-Name wie `DIAMOND` |
 
+**Gebühren-Shop** (bezahlen ohne Item, z.B. für die Nutzung einer Farm): Zeile 2 = Beschreibung (z.B. `Farm`),
+Zeile 3 = `K 50`, Zeile 4 = `Gebühr` (oder `Eintritt`, `Nutzung`, `Fee`, `-`). Braucht keine Kiste; Rechtsklick zahlt.
+Gegen versehentliches Doppelzahlen gilt eine Sperre von 2 Sekunden pro Spieler und Schild.
+
 **Rechtsklick** aufs Schild kauft, **Linksklick** verkauft. Bezahlt wird über die Bank direkt zwischen Kunde und Besitzer;
 der Besitzer wird benachrichtigt, wenn er online ist. Es zählen nur Items, die exakt dem Shop-Item entsprechen
 (gleiche Verzauberungen, Namen usw.).
 
-Schutz: Kiste und Schild können nur der Besitzer und Admins öffnen bzw. abbauen (Besitzer: Sneak + Linksklick aufs Schild),
+Schutz: Kiste und Schild – auch der Block, an dem das Schild hängt – können nur der Besitzer und Admins öffnen bzw. abbauen (Besitzer: Sneak + Linksklick aufs Schild),
 Trichter ziehen nichts heraus (Auffüllen per Trichter geht), Explosionen zerstören keine Shops.
 Shops liegen in `plugins/SEssentials/shops.yml`, Texte unter `chestshop.messages`.
 

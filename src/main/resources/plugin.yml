@@ -112,6 +112,9 @@ permissions:
   sess.chestshop.admin:
     description: Admin-Shops erstellen, alle Shops öffnen und abbauen
     default: op
+  sess.msg:
+    description: Erlaubt /msg und /r
+    default: true
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op

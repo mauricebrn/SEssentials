@@ -40,7 +40,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,18 +60,32 @@ public final class ChestShopManager implements Listener {
     private static final Pattern BUY = Pattern.compile("(?i)\\b[KB]\\s*(\\d+)");
     private static final Pattern SELL = Pattern.compile("(?i)\\b[VS]\\s*(\\d+)");
 
+    /** Zeile 4 bei Gebühren-Shops: Bezahlen ohne Item, z.B. für die Nutzung einer Farm. */
+    private static final Set<String> FEE_WORDS = Set.of("gebühr", "gebuehr", "eintritt", "nutzung", "fee", "-");
+    /** Schutz vor doppelt abgebuchten Gebühren durch Doppelklick. */
+    private static final long FEE_COOLDOWN_MILLIS = 2000;
+
     /**
-     * @param buy  Preis, zu dem Spieler kaufen; -1 = Shop verkauft nicht
-     * @param sell Preis, zu dem Spieler verkaufen; -1 = Shop kauft nicht an
+     * @param container Kiste/Fass; {@code null} bei Gebühren-Shops
+     * @param item      gehandeltes Item; {@code null} = Gebühren-Shop (nur bezahlen, kein Item)
+     * @param buy       Preis, zu dem Spieler kaufen bzw. die Gebühr; -1 = Shop verkauft nicht
+     * @param sell      Preis, zu dem Spieler verkaufen; -1 = Shop kauft nicht an
+     * @param label     Beschreibung eines Gebühren-Shops (z.B. „Farm“), sonst leer
      */
     record Shop(Location sign, Location container, UUID owner, String ownerName, ItemStack item, int amount,
-                long buy, long sell, boolean admin) {}
+                long buy, long sell, boolean admin, String label) {
+
+        boolean isFee() {
+            return item == null;
+        }
+    }
 
     private final SEssentials plugin;
     private final File file;
     private final AsyncFileWriter writer;
     private final Map<String, Shop> bySign = new HashMap<>();
     private final Map<String, Shop> byContainer = new HashMap<>();
+    private final Map<String, Long> lastFee = new HashMap<>();
 
     public ChestShopManager(SEssentials plugin) {
         this.plugin = plugin;
@@ -101,6 +117,10 @@ public final class ChestShopManager implements Listener {
 
         if (!player.hasPermission(admin ? PERM_ADMIN : PERM_CREATE)) {
             reject(event, player, "no-permission");
+            return;
+        }
+        if (FEE_WORDS.contains(plain(event.line(3)).trim().toLowerCase(Locale.ROOT))) {
+            createFee(event, player, admin);
             return;
         }
         Block containerBlock = attachedContainer(event.getBlock());
@@ -140,12 +160,30 @@ public final class ChestShopManager implements Listener {
 
         Shop shop = new Shop(event.getBlock().getLocation(), containerBlock.getLocation(),
                 admin ? new UUID(0, 0) : player.getUniqueId(), admin ? "Server" : player.getName(),
-                item, amount, buy, sell, admin);
+                item, amount, buy, sell, admin, "");
         List<Component> lines = signLines(shop);
         for (int i = 0; i < 4; i++) event.line(i, lines.get(i));
         add(shop);
         save();
         player.sendMessage(msg(admin ? "created-admin" : "created", player, tags(shop)));
+    }
+
+    /** Gebühren-Shop: braucht keine Kiste, Zeile 2 = Beschreibung, Zeile 3 = K <preis>. */
+    private void createFee(SignChangeEvent event, Player player, boolean admin) {
+        long price = price(BUY, plain(event.line(2)));
+        if (price < 1) {
+            reject(event, player, "invalid-fee-price");
+            return;
+        }
+        String label = plain(event.line(1)).trim();
+        Shop shop = new Shop(event.getBlock().getLocation(), null,
+                admin ? new UUID(0, 0) : player.getUniqueId(), admin ? "Server" : player.getName(),
+                null, 1, price, -1, admin, label.length() > 15 ? label.substring(0, 15) : label);
+        List<Component> lines = signLines(shop);
+        for (int i = 0; i < 4; i++) event.line(i, lines.get(i));
+        add(shop);
+        save();
+        player.sendMessage(msg("created-fee", player, tags(shop), money(price)));
     }
 
     private void reject(SignChangeEvent event, Player player, String key, TagResolver... extra) {
@@ -155,9 +193,7 @@ public final class ChestShopManager implements Listener {
 
     /** Container, an dem das Schild hängt (Wandschild) bzw. auf dem es steht. */
     private static Block attachedContainer(Block sign) {
-        Block target = sign.getBlockData() instanceof WallSign wall
-                ? sign.getRelative(wall.getFacing().getOppositeFace())
-                : sign.getRelative(BlockFace.DOWN);
+        Block target = supportOf(sign);
         return isShopContainer(target) ? target : null;
     }
 
@@ -186,11 +222,18 @@ public final class ChestShopManager implements Listener {
     }
 
     private List<Component> signLines(Shop shop) {
+        Component header = Component.text(shop.admin() ? "[AdminShop]" : "[Shop]",
+                shop.admin() ? NamedTextColor.DARK_RED : NamedTextColor.DARK_BLUE, TextDecoration.BOLD);
+        if (shop.isFee()) {
+            return List.of(header,
+                    Component.text(shop.ownerName(), NamedTextColor.BLACK),
+                    Component.text("K " + shop.buy(), NamedTextColor.DARK_GREEN),
+                    Component.text(feeLabel(shop), NamedTextColor.BLACK));
+        }
         List<String> prices = new ArrayList<>();
         if (shop.buy() >= 0) prices.add("K " + shop.buy());
         if (shop.sell() >= 0) prices.add("V " + shop.sell());
-        return List.of(
-                Component.text(shop.admin() ? "[AdminShop]" : "[Shop]", shop.admin() ? NamedTextColor.DARK_RED : NamedTextColor.DARK_BLUE, TextDecoration.BOLD),
+        return List.of(header,
                 Component.text(shop.ownerName(), NamedTextColor.BLACK),
                 Component.text(String.join(" | ", prices), NamedTextColor.DARK_GREEN),
                 Component.text(shop.amount() + "x ", NamedTextColor.BLACK).append(shop.item().effectiveName().color(NamedTextColor.BLACK)));
@@ -213,8 +256,11 @@ public final class ChestShopManager implements Listener {
             if (ownerOrAdmin && player.isSneaking() && event.getAction() == Action.LEFT_CLICK_BLOCK) return;
             event.setCancelled(true);
             if (isOwner(player, shop)) {
-                player.sendMessage(msg("info", player, tags(shop)));
+                player.sendMessage(msg(shop.isFee() ? "fee-info" : "info", player, tags(shop), money(shop.buy())));
                 player.sendMessage(msg("owner-hint", player));
+            } else if (shop.isFee()) {
+                if (event.getAction() == Action.RIGHT_CLICK_BLOCK) payFee(player, shop);
+                else player.sendMessage(msg("fee-info", player, tags(shop), money(shop.buy())));
             } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 buy(player, shop);
             } else if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
@@ -287,15 +333,35 @@ public final class ChestShopManager implements Listener {
         notifyOwner(shop, "owner-sold", player);
     }
 
+    private void payFee(Player player, Shop shop) {
+        String key = player.getUniqueId() + "@" + key(shop.sign());
+        long now = System.currentTimeMillis();
+        Long last = lastFee.get(key);
+        if (last != null && now - last < FEE_COOLDOWN_MILLIS) return;
+        lastFee.values().removeIf(t -> now - t >= FEE_COOLDOWN_MILLIS);
+
+        boolean paid = shop.admin()
+                ? plugin.bank().withdraw(player.getUniqueId(), shop.buy())
+                : plugin.bank().transfer(player.getUniqueId(), shop.owner(), shop.buy());
+        if (!paid) {
+            player.sendMessage(msg("not-enough-money", player, tags(shop), money(shop.buy())));
+            return;
+        }
+        lastFee.put(key, now);
+        player.sendMessage(msg("fee-paid", player, tags(shop), money(shop.buy())));
+        notifyOwner(shop, "owner-fee-paid", player);
+    }
+
     private void notifyOwner(Shop shop, String key, Player customer) {
         if (shop.admin()) return;
         Player owner = Bukkit.getPlayer(shop.owner());
         if (owner == null) return;
-        long price = key.equals("owner-bought") ? shop.buy() : shop.sell();
+        long price = key.equals("owner-sold") ? shop.sell() : shop.buy();
         owner.sendMessage(msg(key, owner, tags(shop), money(price), TextService.placeholder("customer", customer.getName())));
     }
 
     private Inventory inventory(Shop shop) {
+        if (shop.container() == null) return null;
         Block block = shop.container().getBlock();
         return block.getState(false) instanceof Container container ? container.getInventory() : null;
     }
@@ -358,6 +424,7 @@ public final class ChestShopManager implements Listener {
         Block block = event.getBlock();
         Shop shop = bySign.get(key(block.getLocation()));
         if (shop == null && isShopContainer(block)) shop = shopForContainer(block);
+        if (shop == null) shop = signSupportedBy(block);
         if (shop == null) return;
         Player player = event.getPlayer();
         if (!isOwner(player, shop) && !player.hasPermission(PERM_ADMIN)) {
@@ -367,7 +434,8 @@ public final class ChestShopManager implements Listener {
         }
         // Kiste oder Schild abgebaut: alle Shops dieses Containers entfernen
         for (Shop s : List.copyOf(bySign.values())) {
-            if (s == shop || (isShopContainer(block) && sameContainer(s, block))) remove(s);
+            if (s == shop || (isShopContainer(block) && sameContainer(s, block))
+                    || block.equals(supportOf(s.sign().getBlock()))) remove(s);
         }
         save();
         player.sendMessage(msg("removed", player));
@@ -390,7 +458,26 @@ public final class ChestShopManager implements Listener {
     }
 
     private boolean isShopBlock(Block block) {
-        return bySign.containsKey(key(block.getLocation())) || (isShopContainer(block) && shopForContainer(block) != null);
+        return bySign.containsKey(key(block.getLocation())) || (isShopContainer(block) && shopForContainer(block) != null)
+                || signSupportedBy(block) != null;
+    }
+
+    /** Shop-Schild, das an diesem Block hängt bzw. darauf steht – sonst würde es beim Abbau abfallen. */
+    private Shop signSupportedBy(Block block) {
+        if (bySign.isEmpty()) return null;
+        for (BlockFace face : List.of(BlockFace.UP, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST)) {
+            Block neighbour = block.getRelative(face);
+            Shop shop = bySign.get(key(neighbour.getLocation()));
+            if (shop != null && block.equals(supportOf(neighbour))) return shop;
+        }
+        return null;
+    }
+
+    /** Block, an dem ein Schild hängt (Wandschild) bzw. auf dem es steht. */
+    private static Block supportOf(Block sign) {
+        return sign.getBlockData() instanceof WallSign wall
+                ? sign.getRelative(wall.getFacing().getOppositeFace())
+                : sign.getRelative(BlockFace.DOWN);
     }
 
     /** Läuft bei jedem Trichter-Transfer: schneller Ausstieg ohne Shops bzw. ohne Shop an dieser Stelle. */
@@ -418,6 +505,7 @@ public final class ChestShopManager implements Listener {
     }
 
     private boolean sameContainer(Shop shop, Block block) {
+        if (shop.container() == null) return false;
         String shopKey = key(shop.container());
         return halves(block).stream().anyMatch(l -> key(l).equals(shopKey));
     }
@@ -444,10 +532,14 @@ public final class ChestShopManager implements Listener {
         return TagResolver.resolver(
                 TextService.placeholder("owner", shop.ownerName()),
                 TextService.placeholder("amount", String.valueOf(shop.amount())),
-                Placeholder.component("item", shop.item().effectiveName()),
+                Placeholder.component("item", shop.isFee() ? Component.text(feeLabel(shop)) : shop.item().effectiveName()),
                 TextService.placeholder("buy", shop.buy() < 0 ? "–" : plugin.bank().format(shop.buy())),
                 TextService.placeholder("sell", shop.sell() < 0 ? "–" : plugin.bank().format(shop.sell())),
-                TextService.placeholder("stock", shop.admin() ? "∞" : stock(shop)));
+                TextService.placeholder("stock", shop.admin() || shop.isFee() ? "∞" : stock(shop)));
+    }
+
+    private static String feeLabel(Shop shop) {
+        return shop.label().isEmpty() ? "Gebühr" : shop.label();
     }
 
     private String stock(Shop shop) {
@@ -473,15 +565,17 @@ public final class ChestShopManager implements Listener {
 
     private void add(Shop shop) {
         bySign.put(key(shop.sign()), shop);
-        byContainer.put(key(shop.container()), shop);
+        if (shop.container() != null) byContainer.put(key(shop.container()), shop);
     }
 
     private void remove(Shop shop) {
         bySign.remove(key(shop.sign()));
-        byContainer.remove(key(shop.container()), shop);
+        if (shop.container() == null) return;
+        String containerKey = key(shop.container());
+        byContainer.remove(containerKey, shop);
         // weitere Schilder am selben Container bleiben im Index
-        bySign.values().stream().filter(s -> key(s.container()).equals(key(shop.container())))
-                .findFirst().ifPresent(s -> byContainer.put(key(s.container()), s));
+        bySign.values().stream().filter(s -> s.container() != null && key(s.container()).equals(containerKey))
+                .findFirst().ifPresent(s -> byContainer.put(containerKey, s));
     }
 
     private void load() {
@@ -493,12 +587,14 @@ public final class ChestShopManager implements Listener {
             if (s == null) continue;
             Location sign = s.getLocation("sign"), container = s.getLocation("container");
             ItemStack item = s.getItemStack("item");
-            if (sign == null || container == null || item == null) {
+            boolean fee = s.getBoolean("fee");
+            if (sign == null || (!fee && (container == null || item == null))) {
                 plugin.getLogger().warning("Chestshop " + id + " übersprungen (Welt nicht geladen oder Daten fehlen).");
                 continue;
             }
             add(new Shop(sign, container, UUID.fromString(s.getString("owner")), s.getString("owner-name", "?"),
-                    item, s.getInt("amount"), s.getLong("buy", -1), s.getLong("sell", -1), s.getBoolean("admin")));
+                    fee ? null : item, s.getInt("amount"), s.getLong("buy", -1), s.getLong("sell", -1), s.getBoolean("admin"),
+                    s.getString("label", "")));
         }
     }
 
@@ -516,6 +612,8 @@ public final class ChestShopManager implements Listener {
             yml.set(path + "buy", shop.buy());
             yml.set(path + "sell", shop.sell());
             yml.set(path + "admin", shop.admin());
+            yml.set(path + "fee", shop.isFee());
+            yml.set(path + "label", shop.label());
         }
         writer.write(file, yml.saveToString());
     }

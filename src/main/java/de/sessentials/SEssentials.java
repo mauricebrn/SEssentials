@@ -18,6 +18,7 @@ import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.help.HelpCommand;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
+import de.sessentials.msg.MessageCommands;
 import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
 import de.sessentials.player.EnderChestCommand;
@@ -70,6 +71,7 @@ public final class SEssentials extends JavaPlugin {
     private ItemTracker tracker;
     private EnderChestCommand enderChest;
     private ChestShopManager chestShops;
+    private MessageCommands messages;
     private TrackerMenu trackerMenu;
     private NewsManager news;
 
@@ -115,6 +117,7 @@ public final class SEssentials extends JavaPlugin {
         tpa = new TpaManager(this);
         enderChest = new EnderChestCommand(this);
         chestShops = new ChestShopManager(this);
+        messages = new MessageCommands(this);
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
         notifications = new Notifications(this);
@@ -138,6 +141,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(bank, this);
         getServer().getPluginManager().registerEvents(tracker, this);
         getServer().getPluginManager().registerEvents(chestShops, this);
+        getServer().getPluginManager().registerEvents(messages, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -416,6 +420,7 @@ public final class SEssentials extends JavaPlugin {
             help.register(commands);
             tpa.register(commands);
             enderChest.register(commands);
+            messages.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 

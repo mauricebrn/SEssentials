@@ -146,6 +146,7 @@ help:
       - "<click:suggest_command:'/bank'><gold>/bank</gold></click> <gray>– Items einzahlen, Kontostand, Auszahlen"
       - "<click:suggest_command:'/pay '><gold>/pay <spieler> <betrag></gold></click> <gray>– Geld überweisen"
       - "<gold>Shop</gold> <gray>– Schild an Kiste: <white>[Shop]</white>, Menge, <white>K 100 V 80</white>, Item"
+      - "<click:suggest_command:'/msg '><gold>/msg <spieler> <text></gold></click> <gray>– Private Nachricht, <gold>/r</gold> antwortet"
       - "<click:suggest_command:'/ec'><gold>/ec</gold></click> <gray>– Enderchest öffnen"
       - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
       - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
@@ -278,7 +279,9 @@ enderchest:
 #   Zeile 2: Menge pro Handel, z.B. 16
 #   Zeile 3: Preise in Talern: K 100 (Spieler kauft) und/oder V 80 (Spieler verkauft)
 #   Zeile 4: leer = erstes Item in der Kiste (sonst Item in der Hand) oder Item-Name, z.B. DIAMOND
-# Rechtsklick aufs Schild = kaufen, Linksklick = verkaufen. Besitzer bauen mit Sneak + Linksklick ab.
+# Gebühren-Shop (bezahlen ohne Item, z.B. für eine Farm; keine Kiste nötig):
+#   [Shop] / Beschreibung (z.B. Farm) / K 50 / Gebühr   (statt "Gebühr" auch Eintritt, Nutzung, Fee oder -)
+# Rechtsklick aufs Schild = kaufen bzw. Gebühr zahlen, Linksklick = verkaufen. Besitzer bauen mit Sneak + Linksklick ab.
 # Platzhalter: <owner>, <amount>, <item>, <buy>, <sell>, <stock>, <price>, <customer>
 # ------------------------------------------------------------
 chestshop:
@@ -307,6 +310,23 @@ chestshop:
     owner-hint: "<prefix><dark_gray>Zum Abbauen: Sneak + Linksklick."
     protected: "<prefix><red>Diese Kiste gehört zum Shop von <white><owner></white>."
     removed: "<prefix><gray>Shop entfernt."
+    created-fee: "<prefix><green>Gebühren-Shop erstellt: <white><item></white> für <gold><price></gold>."
+    invalid-fee-price: "<prefix><red>Zeile 3: Gebühr angeben, z.B. <white>K 50</white>."
+    fee-paid: "<prefix><gray>Du hast <gold><price></gold> an <white><owner></white> gezahlt <dark_gray>(<item>)</dark_gray>."
+    owner-fee-paid: "<prefix><white><customer></white> <gray>hat <gold><price></gold> gezahlt <dark_gray>(<item>)</dark_gray>."
+    fee-info: "<prefix><gray>Gebühr von <white><owner></white>: <white><item></white> – <gold><price></gold>. Rechtsklick zum Bezahlen."
+
+# ------------------------------------------------------------
+# Private Nachrichten: /msg (auch /tell, /w, /whisper) und /r (/reply) für die letzte Konversation
+# Platzhalter: <sender>, <target>, <message> (immer reiner Text)
+# ------------------------------------------------------------
+msg:
+  sent: "<dark_gray>[<gray>Du</gray> <dark_gray>→</dark_gray> <click:suggest_command:'/msg <target> '><white><target></white></click>]</dark_gray> <gray><message>"
+  received: "<dark_gray>[<click:suggest_command:'/msg <sender> '><white><sender></white></click> <dark_gray>→</dark_gray> <gray>Dir</gray>]</dark_gray> <gray><message>"
+  not-online: "<prefix><red><target> ist nicht online."
+  self: "<prefix><red>Du kannst dir nicht selbst schreiben."
+  no-partner: "<prefix><red>Du hast noch mit niemandem geschrieben."
+  partner-offline: "<prefix><red>Dein Gesprächspartner ist nicht mehr online."
 
 # ------------------------------------------------------------
 # Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])
