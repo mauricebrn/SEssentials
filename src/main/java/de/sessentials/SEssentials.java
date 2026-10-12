@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.sessentials.chat.ChatListener;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
+import de.sessentials.player.PlayerCommands;
 import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.tab.TabNametagManager;
@@ -25,6 +26,7 @@ public final class SEssentials extends JavaPlugin {
     private JoinQuitListener joinQuit;
     private TabNametagManager tab;
     private VanishManager vanish;
+    private PlayerCommands playerCommands;
 
     @Override
     public void onEnable() {
@@ -48,11 +50,13 @@ public final class SEssentials extends JavaPlugin {
         chat = new ChatListener(this);
         joinQuit = new JoinQuitListener(this);
         tab = new TabNametagManager(this);
+        playerCommands = new PlayerCommands(this);
 
         getServer().getPluginManager().registerEvents(softRestart, this);
         getServer().getPluginManager().registerEvents(chat, this);
         getServer().getPluginManager().registerEvents(joinQuit, this);
         getServer().getPluginManager().registerEvents(vanish, this);
+        getServer().getPluginManager().registerEvents(playerCommands, this);
         getServer().getPluginManager().registerEvents(tab, this);
         tab.reload();
 
@@ -151,6 +155,8 @@ public final class SEssentials extends JavaPlugin {
                             .build(),
                     "Macht dich unsichtbar / wieder sichtbar",
                     List.of("v"));
+
+            playerCommands.register(commands);
         });
     }
 }

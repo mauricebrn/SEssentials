@@ -104,6 +104,21 @@ vanish:
     staff-quit: "<prefix><gray><player> hat den Server unsichtbar verlassen."
 
 # ------------------------------------------------------------
+# /fly, /heal, /feed, /god  (optional mit <spieler>)
+# ------------------------------------------------------------
+player-commands:
+  messages:
+    fly-on: "<prefix><gray>Flugmodus <green>aktiviert</green>."
+    fly-off: "<prefix><gray>Flugmodus <red>deaktiviert</red>."
+    heal: "<prefix><gray>Du wurdest <green>geheilt</green>."
+    feed: "<prefix><gray>Dein Hunger wurde <green>gestillt</green>."
+    god-on: "<prefix><gray>God-Modus <green>aktiviert</green>."
+    god-off: "<prefix><gray>God-Modus <red>deaktiviert</red>."
+    # an den Ausführenden, wenn er den Befehl für einen anderen Spieler nutzt
+    other: "<prefix><gray>/<command> für <white><player></white> ausgeführt."
+    player-only: "<prefix><red>Nur für Spieler – nutze /<command> <spieler>."
+
+# ------------------------------------------------------------
 # TAB-Liste
 # ------------------------------------------------------------
 tab:

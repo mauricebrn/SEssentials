@@ -1,0 +1,144 @@
+# =====================================================================
+#   ITEM GUARD - Skript
+#   Erkennt nicht-survival-taugliche Items im Inventar, meldet den
+#   Spieler automatisch im Report-System und entfernt die Items.
+# =====================================================================
+#
+#   VORAUSSETZUNG:
+#   Dieses Skript baut auf den Variablen des zuvor erstellten
+#   Report-Systems (reports.sk) auf:
+#   {report-counter}, {reports::%id%::reporter/reported/reason/time/status},
+#   {reports::open::*}
+#   -> reports.sk muss installiert und geladen sein, damit die Meldungen
+#      in der /reports Admin-GUI erscheinen. Ist reports.sk nicht
+#      geladen, werden trotzdem eigene Report-Einträge in denselben
+#      Variablen angelegt (falls du reports.sk später installierst,
+#      tauchen sie dort ganz normal mit auf).
+#
+#   INSTALLATION:
+#   1. Datei nach /plugins/Skript/scripts/itemguard.sk kopieren
+#   2. /sk reload itemguard
+#
+#   PERMISSIONS:
+#   - server.itembypass  -> Spieler mit dieser Permission werden NICHT
+#                            gescannt (z.B. für Admins/Builder im
+#                            Creative-Modus)
+#   - server.itemscan     -> darf den manuellen Scan-Befehl /itemscan nutzen
+#   - reports.notify       -> bekommt Live-Benachrichtigung, wenn Items
+#                            entfernt und automatisch gemeldet wurden
+#
+#   WAS PASSIERT:
+#   - Alle 15 Sekunden (und zusätzlich beim Join) wird das Inventar
+#     jedes Spielers ohne "server.itembypass" nach Items aus der Liste
+#     {bannedItems::*} durchsucht.
+#   - Gefundene Items werden sofort aus dem Inventar entfernt.
+#   - Es wird automatisch ein Report im Report-System erstellt
+#     (Melder: "AntiCheat"), der in der /reports Admin-GUI auftaucht.
+#   - Der betroffene Spieler bekommt eine Nachricht, welche Items
+#     entfernt wurden.
+#
+#   DIE ITEM-LISTE ANPASSEN:
+#   Ganz unten im "on script load"-Abschnitt kannst du die Liste der
+#   verbotenen Items erweitern oder kürzen. Alias-Namen können sich
+#   je nach Skript-/Minecraft-Version leicht unterscheiden - prüfe im
+#   Zweifel mit /sk reload, ob beim Laden ein Fehler zu einem der
+#   Item-Namen auftaucht.
+# =====================================================================
+
+options:
+    prefix: &8[&4AntiCheat&8]&r
+
+# ------------------------- Verbotene Item-Liste -------------------------
+
+on script load:
+    clear {bannedItems::*}
+    add command block to {bannedItems::*}
+    add chain command block to {bannedItems::*}
+    add repeating command block to {bannedItems::*}
+    add command block minecart to {bannedItems::*}
+    add structure block to {bannedItems::*}
+    add structure void to {bannedItems::*}
+    add jigsaw block to {bannedItems::*}
+    add barrier to {bannedItems::*}
+    add spawner to {bannedItems::*}
+    add debug stick to {bannedItems::*}
+    add knowledge book to {bannedItems::*}
+    add bedrock to {bannedItems::*}
+    add end portal frame to {bannedItems::*}
+    add light block to {bannedItems::*}
+    add reinforced deepslate to {bannedItems::*}
+    add petrified oak slab to {bannedItems::*}
+    add player head to {bannedItems::*}
+
+# ------------------------- Scan-Funktion -------------------------
+
+function scanPlayer(p: player):
+    if {_p} does not have permission "server.itembypass":
+        delete {_found::*}
+        loop all items in {_p}'s inventory:
+            if {bannedItems::*} contains loop-item:
+                add "%type of loop-item%" to {_found::*}
+                remove loop-item from {_p}'s inventory
+            else if "%type of loop-item%" matches "(?i).*spawn.?egg.*":
+                add "%type of loop-item%" to {_found::*}
+                remove loop-item from {_p}'s inventory
+        if size of {_found::*} is greater than 0:
+            send "{@prefix} &cUnerlaubte Items wurden aus deinem Inventar entfernt: &f%{_found::*}%" to {_p}
+            createAutoReport({_p}, "Illegale Items gefunden und entfernt: %{_found::*}%")
+
+# ------------------------- Auto-Report-Funktion -------------------------
+
+function createAutoReport(reported: player, reason: text):
+    add 1 to {report-counter}
+    set {_id} to {report-counter}
+    set {reports::%{_id}%::reporter} to "AntiCheat"
+    set {reports::%{_id}%::reported} to "%{_reported}'s name%"
+    set {reports::%{_id}%::reason} to "%{_reason}%"
+    set {reports::%{_id}%::time} to now
+    set {reports::%{_id}%::status} to "open"
+    add "%{_id}%" to {reports::open::*}
+    loop all players:
+        if loop-player has permission "reports.notify":
+            send "{@prefix} &c%{_reported}'s name%&7 hatte illegale Items &8(#%{_id}%)&7: &f%{_reason}%" to loop-player
+            play sound "entity.experience_orb.pickup" with volume 1 with pitch 1 to loop-player
+
+# ------------------------- Automatischer periodischer Scan -------------------------
+
+every 15 seconds:
+    loop all players:
+        scanPlayer(loop-player)
+
+# ------------------------- Scan beim Beitreten -------------------------
+
+on join:
+    wait 10 ticks
+    scanPlayer(player)
+
+# ------------------------- Spawn-Eggs sofort blockieren -------------------------
+# Verhindert das Benutzen/"Platzieren" (= Mob spawnen) von Spawn-Eggs direkt
+# beim Rechtsklick, statt auf den nächsten periodischen Scan zu warten.
+
+on right click:
+    if player's tool is set:
+        if "%type of player's tool%" matches "(?i).*spawn.?egg.*":
+            if player does not have permission "server.itembypass":
+                cancel the event
+                set {_eggtype} to type of player's tool
+                remove player's tool from player's inventory
+                send "{@prefix} &cSpawn-Eggs dürfen nicht benutzt werden." to player
+                createAutoReport(player, "Versuch, ein Spawn-Egg zu benutzen (%{_eggtype}%)")
+
+# ------------------------- Manueller Scan-Befehl -------------------------
+
+command /itemscan [<player>]:
+    aliases: /iscan
+    permission: server.itemscan
+    permission message: {@prefix} &cDu darfst diesen Befehl nicht nutzen.
+    trigger:
+        if arg-1 is set:
+            scanPlayer(arg-1)
+            send "{@prefix} &aInventar von %name of arg-1% wurde gescannt." to player
+        else:
+            loop all players:
+                scanPlayer(loop-player)
+            send "{@prefix} &aAlle Spieler wurden gescannt." to player

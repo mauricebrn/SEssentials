@@ -2,7 +2,7 @@ name: SEssentials
 version: '${project.version}'
 main: de.sessentials.SEssentials
 api-version: '26.2'
-description: Softrestart, Chatformat, TAB und Nametags mit MiniMessage & LuckPerms
+description: Softrestart, Chatformat, TAB, Nametags, Join/Leave, Vanish und Spieler-Befehle mit MiniMessage & LuckPerms
 author: Moritz
 softdepend: [LuckPerms, PlaceholderAPI]
 
@@ -24,6 +24,30 @@ permissions:
     default: op
   sess.vanish.see:
     description: Sieht versteckte Spieler
+    default: op
+  sess.fly:
+    description: Erlaubt /fly
+    default: op
+  sess.fly.others:
+    description: Erlaubt /fly <spieler>
+    default: op
+  sess.heal:
+    description: Erlaubt /heal
+    default: op
+  sess.heal.others:
+    description: Erlaubt /heal <spieler>
+    default: op
+  sess.feed:
+    description: Erlaubt /feed
+    default: op
+  sess.feed.others:
+    description: Erlaubt /feed <spieler>
+    default: op
+  sess.god:
+    description: Erlaubt /god
+    default: op
+  sess.god.others:
+    description: Erlaubt /god <spieler>
     default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
