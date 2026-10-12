@@ -13,6 +13,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst vom Konto oder gegen Items)
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
 - Teleport-Anfragen (`/tpa`) mit einstellbaren Kosten
+- `/enderchest` (`/ec`) mit einstellbaren Kosten
 - Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
@@ -34,7 +35,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.bank` und `sess.bank.pay` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank` und `sess.bank.pay` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -59,6 +60,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.report`, `sess.tpa`, `sess.b
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
 | `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` kostenpflichtig (Standard 500 Taler vom Konto) |
 | `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` kostenpflichtig (Standard 500 Taler) |
+| `/enderchest` | `sess.enderchest` / `sess.enderchest.free` | Eigene Enderchest öffnen (Alias `/ec`). Ohne `.free` kostenpflichtig (Standard 50 Taler) |
 | `/bank` | `sess.bank` | Bank-Menü: Kontostand, Einzahlen, Auszahlen, Kurse |
 | `/bank einzahlen [hand]` | `sess.bank` | Alle passenden Items bzw. den Stack in der Hand einzahlen |
 | `/bank auszahlen <betrag>` | `sess.bank` | Betrag in Items auszahlen (falls erlaubt) |
@@ -155,7 +157,7 @@ nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorie
 | Kategorie | Anwendungen |
 |---|---|
 | Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht) |
-| Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
+| Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed, Enderchest) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
 | Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern), **Item-Tracker** |
 | Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |
 | Einstellungen | **Benachrichtigungen** (Report-Meldungen an/aus, Client-Detector-Stufe) |
@@ -229,7 +231,7 @@ Gespeichert in `plugins/SEssentials/tracker/`. Werte richten sich nach `bank.mat
 Items ohne Kurs werden nur gezählt.
 
 ## Kosten
-`spawn.cost` und `tpa.cost` haben dasselbe Format:
+`spawn.cost`, `tpa.cost` und `enderchest.cost` haben dasselbe Format:
 ```yaml
 cost:
   type: money   # money = vom Bankkonto, item = in Items

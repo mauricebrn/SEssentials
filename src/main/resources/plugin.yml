@@ -100,6 +100,12 @@ permissions:
   sess.tracker:
     description: Item-Tracker im Admin-Panel
     default: op
+  sess.enderchest:
+    description: Erlaubt /enderchest (/ec)
+    default: true
+  sess.enderchest.free:
+    description: /enderchest ohne Kosten
+    default: op
   sess.chat.color:
     description: Erlaubt &-Farbcodes in Chatnachrichten
     default: op

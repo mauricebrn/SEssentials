@@ -145,6 +145,7 @@ help:
       - "<click:suggest_command:'/news'><gold>/news</gold></click> <gray>– Aktuelle Neuigkeiten"
       - "<click:suggest_command:'/bank'><gold>/bank</gold></click> <gray>– Items einzahlen, Kontostand, Auszahlen"
       - "<click:suggest_command:'/pay '><gold>/pay <spieler> <betrag></gold></click> <gray>– Geld überweisen"
+      - "<click:suggest_command:'/ec'><gold>/ec</gold></click> <gray>– Enderchest öffnen"
       - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
       - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
       - "<click:suggest_command:'/help 2'><gold>/help <seite></gold></click> <gray>– Weitere Seiten"
@@ -256,6 +257,19 @@ tracker:
     - TOTEM_OF_UNDYING
     - ELYTRA
     - BEACON
+
+# ------------------------------------------------------------
+# /enderchest (Alias /ec) – öffnet die eigene Enderchest. Mit sess.enderchest.free kostenlos.
+# Platzhalter: <price> (z.B. "50 Taler" oder "1x Diamant"), <amount>, <item>
+# ------------------------------------------------------------
+enderchest:
+  cost:
+    type: money       # money = vom Bankkonto, item = in Items
+    amount: 50        # Betrag bzw. Anzahl Items; 0 = kostenlos für alle
+    item: DIAMOND     # nur bei type: item
+  messages:
+    opened-paid: "<prefix><gray>Enderchest geöffnet. <dark_gray>(-<price>)"
+    not-enough: "<prefix><red>Du brauchst <white><price></white>, um deine Enderchest zu öffnen."
 
 # ------------------------------------------------------------
 # Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])

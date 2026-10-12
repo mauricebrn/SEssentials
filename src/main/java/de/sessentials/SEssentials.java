@@ -19,6 +19,7 @@ import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.joinquit.JoinQuitListener;
 import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
+import de.sessentials.player.EnderChestCommand;
 import de.sessentials.player.PlayerCommands;
 import de.sessentials.report.ReportManager;
 import de.sessentials.hook.PermissionInfo;
@@ -66,6 +67,7 @@ public final class SEssentials extends JavaPlugin {
     private BankMenu bankMenu;
     private BankCommands bankCommands;
     private ItemTracker tracker;
+    private EnderChestCommand enderChest;
     private TrackerMenu trackerMenu;
     private NewsManager news;
 
@@ -109,6 +111,7 @@ public final class SEssentials extends JavaPlugin {
         spawn = new SpawnManager(this);
         help = new HelpCommand(this);
         tpa = new TpaManager(this);
+        enderChest = new EnderChestCommand(this);
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
         notifications = new Notifications(this);
@@ -158,6 +161,7 @@ public final class SEssentials extends JavaPlugin {
         spawn.reload();
         help.reload();
         tpa.reload();
+        enderChest.reload();
         tab.reload();
     }
 
@@ -207,7 +211,7 @@ public final class SEssentials extends JavaPlugin {
         // Spieler & Teleport
         adminPanel.addApp(Category.PLAYERS, p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
                 p -> Menu.icon(Material.COMMAND_BLOCK, Component.text("Befehle", NamedTextColor.AQUA),
-                        Component.text("Fly, God, Heal, Feed", NamedTextColor.GRAY),
+                        Component.text("Fly, God, Heal, Feed, Enderchest", NamedTextColor.GRAY),
                         Component.text("Spawn, Nether, End", NamedTextColor.GRAY)),
                 this::openCommandsMenu);
 
@@ -248,7 +252,7 @@ public final class SEssentials extends JavaPlugin {
                 notifications::openMenu);
     }
 
-    private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed", "sess.nether", "sess.end", "sess.spawn", "sess.setspawn");
+    private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed", "sess.enderchest", "sess.nether", "sess.end", "sess.spawn", "sess.setspawn");
 
     /** Untermenü „Befehle“: Spieler- und Teleport-Befehle, jede Kachel nur mit ihrem Recht. */
     private void openCommandsMenu(Player player) {
@@ -268,6 +272,10 @@ public final class SEssentials extends JavaPlugin {
         if (player.hasPermission("sess.feed")) {
             self.add(new Menu.Entry(Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
                     p -> playerCommands.execute("feed", p)));
+        }
+        if (player.hasPermission(EnderChestCommand.PERM_USE)) {
+            self.add(new Menu.Entry(Menu.icon(Material.ENDER_CHEST, Component.text("Enderchest", NamedTextColor.DARK_PURPLE)),
+                    enderChest::open));
         }
 
         List<Menu.Entry> teleport = new ArrayList<>();
@@ -402,6 +410,7 @@ public final class SEssentials extends JavaPlugin {
             spawn.register(commands);
             help.register(commands);
             tpa.register(commands);
+            enderChest.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 
