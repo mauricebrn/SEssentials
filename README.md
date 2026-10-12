@@ -5,22 +5,39 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 ## Bauen
 
 ```bash
-mvn clean package
+./mvnw clean package
 ```
 Ergebnis: `target/SEssentials-1.0.0.jar` → in den `plugins/`-Ordner.
-Voraussetzung: JDK 25 und Maven 3.9+.
+Voraussetzung: JDK 25+. Maven muss nicht installiert sein, `./mvnw` lädt es beim ersten Aufruf.
 
 Kompiliert wird gegen `paper-api 26.2.build.112-stable`; das JAR läuft auch auf 26.3.
 Für einen reinen 26.3-Build `paper.version` in der `pom.xml` z.B. auf `26.3.build.143-beta` setzen.
 
 Optional: **LuckPerms** (Prefix/Suffix/Gruppen) und **PlaceholderAPI**.
 
+## Lokaler Testserver
+
+```bash
+./test-server.sh          # Paper 26.3
+./test-server.sh 26.2     # andere Paper-Version
+```
+
+Das Skript baut das Plugin, lädt den neuesten Paper-Build der Version nach `run/`
+(SHA-256 geprüft), kopiert das JAR nach `run/plugins/` und startet den Server.
+Verbinden mit `localhost`, beenden mit `stop` in der Konsole.
+
+- Das Skript setzt `eula=true` – damit akzeptierst du die [Minecraft-EULA](https://aka.ms/MinecraftEULA).
+- `run/` ist in `.gitignore`. Welt und Configs bleiben zwischen Starts erhalten;
+  für einen frischen Server `run/` löschen.
+- LuckPerms und PlaceholderAPI sind nicht dabei. Zum Testen die JARs selbst nach `run/plugins/` legen.
+- `/softrestart` endet lokal mit einem Stopp, da kein `restart-script` gesetzt ist.
+
 ## CI & Releases
 
 Die Pipeline liegt in `.github/workflows/build.yml` (GitHub Actions).
 
 **Build-Check:** Jeder Push auf `main` und jeder Pull Request baut das Plugin mit
-`mvn -B verify` (Temurin JDK 25). Schlägt das Kompilieren fehl, ist der Run rot.
+`./mvnw -B verify` (Temurin JDK 25). Schlägt das Kompilieren fehl, ist der Run rot.
 Das fertige JAR hängt als Artifact `SEssentials` am Run (Tab *Actions* → Run → *Artifacts*).
 
 **Release veröffentlichen:**
