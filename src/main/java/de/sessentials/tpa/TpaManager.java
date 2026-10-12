@@ -4,11 +4,11 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import de.sessentials.SEssentials;
+import de.sessentials.text.TextService;
 import de.sessentials.cost.ItemCost;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -104,7 +104,7 @@ public final class TpaManager implements Listener {
         Player target = Bukkit.getPlayerExact(targetName);
         // versteckte (Vanish) Spieler gelten als nicht online
         if (target == null || !requester.canSee(target)) {
-            requester.sendMessage(msg("not-found", requester, Placeholder.unparsed("target", targetName)));
+            requester.sendMessage(msg("not-found", requester, TextService.placeholder("target", targetName)));
             return;
         }
         TagResolver tags = tags(requester, target);
@@ -187,9 +187,9 @@ public final class TpaManager implements Listener {
 
     private TagResolver tags(Player requester, Player target) {
         return TagResolver.resolver(
-                Placeholder.unparsed("requester", requester.getName()),
-                Placeholder.unparsed("target", target.getName()),
-                Placeholder.unparsed("seconds", String.valueOf(expireMillis / 1000)),
+                TextService.placeholder("requester", requester.getName()),
+                TextService.placeholder("target", target.getName()),
+                TextService.placeholder("seconds", String.valueOf(expireMillis / 1000)),
                 cost.tags());
     }
 

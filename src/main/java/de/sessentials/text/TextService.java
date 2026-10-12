@@ -58,15 +58,15 @@ public final class TextService {
 
         List<TagResolver> resolvers = new ArrayList<>();
         resolvers.add(Placeholder.component("prefix", parse(prefix)));
-        resolvers.add(Placeholder.unparsed("online", String.valueOf(onlineCount.getAsInt())));
-        resolvers.add(Placeholder.unparsed("max_players", String.valueOf(Bukkit.getMaxPlayers())));
+        resolvers.add(placeholder("online", String.valueOf(onlineCount.getAsInt())));
+        resolvers.add(placeholder("max_players", String.valueOf(Bukkit.getMaxPlayers())));
         if (player != null) {
-            resolvers.add(Placeholder.unparsed("player", player.getName()));
+            resolvers.add(placeholder("player", player.getName()));
             resolvers.add(Placeholder.component("displayname", player.displayName()));
-            resolvers.add(Placeholder.unparsed("world", player.getWorld().getName()));
+            resolvers.add(placeholder("world", player.getWorld().getName()));
             resolvers.add(Placeholder.component("lp_prefix", parse(perms.prefix(player))));
             resolvers.add(Placeholder.component("lp_suffix", parse(perms.suffix(player))));
-            resolvers.add(Placeholder.unparsed("lp_group", perms.primaryGroup(player)));
+            resolvers.add(placeholder("lp_group", perms.primaryGroup(player)));
             resolvers.add(TagResolver.resolver("lp_meta", (args, ctx) -> {
                 String key = args.popOr("lp_meta benötigt einen Schlüssel, z.B. <lp_meta:color>").value();
                 return Tag.selfClosingInserting(parse(perms.meta(player, key)));
@@ -78,11 +78,21 @@ public final class TextService {
                 }));
             }
         } else {
-            resolvers.add(Placeholder.unparsed("player", "Konsole"));
+            resolvers.add(placeholder("player", "Konsole"));
         }
         for (TagResolver r : extra) resolvers.add(r);
 
         return MM.deserialize(input, TagResolver.resolver(resolvers));
+    }
+
+    /**
+     * Platzhalter für reinen Text. Werte ohne MiniMessage-Sonderzeichen werden vor dem Parsen eingesetzt
+     * und funktionieren so auch in Tag-Argumenten wie {@code <click:run_command:'/news read <id>'>};
+     * alle anderen (z.B. Spielereingaben mit {@code <}) bleiben reiner Text und können nichts einschleusen.
+     */
+    public static TagResolver placeholder(String key, String value) {
+        boolean plain = value.chars().noneMatch(c -> c == '<' || c == '\\' || c == '\'' || c == '"');
+        return plain ? Placeholder.parsed(key, value) : Placeholder.unparsed(key, value);
     }
 
     /** Parst einen Einzelwert (z.B. LuckPerms-Prefix) – egal ob MiniMessage oder &-Codes. */

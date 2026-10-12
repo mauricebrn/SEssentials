@@ -3,10 +3,10 @@ package de.sessentials.report;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.sessentials.SEssentials;
+import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -173,10 +173,10 @@ public final class ReportManager implements Listener {
 
     static TagResolver tags(Report r) {
         return TagResolver.resolver(
-                Placeholder.unparsed("id", String.valueOf(r.id)),
-                Placeholder.unparsed("target", r.reported),
-                Placeholder.unparsed("reporter", r.reporter),
-                Placeholder.unparsed("reason", r.reason));
+                TextService.placeholder("id", String.valueOf(r.id)),
+                TextService.placeholder("target", r.reported),
+                TextService.placeholder("reporter", r.reporter),
+                TextService.placeholder("reason", r.reason));
     }
 
     // ------------------------------------------------------------
@@ -228,7 +228,7 @@ public final class ReportManager implements Listener {
                             CommandSender sender = ctx.getSource().getSender();
                             int count = clearOpen();
                             sender.sendMessage(msg("cleared", sender instanceof Player p ? p : null,
-                                    Placeholder.unparsed("count", String.valueOf(count))));
+                                    TextService.placeholder("count", String.valueOf(count))));
                             return Command.SINGLE_SUCCESS;
                         })
                         .build(),
@@ -238,7 +238,7 @@ public final class ReportManager implements Listener {
 
     private void report(Player reporter, String targetName, String reason) {
         OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(targetName);
-        TagResolver targetTag = Placeholder.unparsed("target", targetName);
+        TagResolver targetTag = TextService.placeholder("target", targetName);
         if (target == null) {
             reporter.sendMessage(msg("unknown-player", reporter, targetTag));
             return;
@@ -253,7 +253,7 @@ public final class ReportManager implements Listener {
         Long last = lastReport.get(reporter.getUniqueId());
         if (last != null && now - last < cooldownMillis && !reporter.hasPermission(PERM_BYPASS_COOLDOWN)) {
             long remaining = (cooldownMillis - (now - last) + 999) / 1000;
-            reporter.sendMessage(msg("cooldown", reporter, Placeholder.unparsed("time", String.valueOf(remaining))));
+            reporter.sendMessage(msg("cooldown", reporter, TextService.placeholder("time", String.valueOf(remaining))));
             return;
         }
         lastReport.put(reporter.getUniqueId(), now);

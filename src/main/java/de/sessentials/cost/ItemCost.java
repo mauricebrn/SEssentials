@@ -1,5 +1,6 @@
 package de.sessentials.cost;
 
+import de.sessentials.text.TextService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -45,7 +46,7 @@ public final class ItemCost {
     /** Platzhalter {@code <amount>} und {@code <item>} (Item-Name in der Sprache des Spielers). */
     public TagResolver tags() {
         return TagResolver.resolver(
-                Placeholder.unparsed("amount", String.valueOf(amount)),
+                TextService.placeholder("amount", String.valueOf(amount)),
                 Placeholder.component("item", Component.translatable(item.translationKey())));
     }
 

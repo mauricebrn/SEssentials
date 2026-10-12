@@ -4,12 +4,12 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import de.sessentials.SEssentials;
+import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
@@ -72,7 +72,7 @@ public final class PlayerCommands implements Listener {
                         .requires(src -> src.getSender().hasPermission(perm))
                         .executes(ctx -> {
                             if (!(ctx.getSource().getExecutor() instanceof Player self)) {
-                                ctx.getSource().getSender().sendMessage(render("player-only", null, Placeholder.unparsed("command", name)));
+                                ctx.getSource().getSender().sendMessage(render("player-only", null, TextService.placeholder("command", name)));
                                 return 0;
                             }
                             run(ctx.getSource().getSender(), self, name, action);
@@ -95,7 +95,7 @@ public final class PlayerCommands implements Listener {
 
     private void run(CommandSender sender, Player target, String name, Function<Player, String> action) {
         target.sendMessage(render(action.apply(target), target));
-        if (sender != target) sender.sendMessage(render("other", target, Placeholder.unparsed("command", name)));
+        if (sender != target) sender.sendMessage(render("other", target, TextService.placeholder("command", name)));
     }
 
     private String fly(Player player) {

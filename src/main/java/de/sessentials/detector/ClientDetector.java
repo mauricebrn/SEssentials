@@ -1,9 +1,9 @@
 package de.sessentials.detector;
 
 import de.sessentials.SEssentials;
+import de.sessentials.text.TextService;
 import de.sessentials.notify.Notifications.DetectorLevel;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -114,10 +114,10 @@ public final class ClientDetector implements Listener {
             case VANILLA -> "vanilla";
         };
         TagResolver tags = TagResolver.resolver(
-                Placeholder.unparsed("client", brand),
-                Placeholder.unparsed("channels", channels.isEmpty() ? "keine" : String.join("\n", channels)),
-                Placeholder.unparsed("match", match == null ? "" : match),
-                Placeholder.unparsed("id", reportId < 0 ? "-" : String.valueOf(reportId)));
+                TextService.placeholder("client", brand),
+                TextService.placeholder("channels", channels.isEmpty() ? "keine" : String.join("\n", channels)),
+                TextService.placeholder("match", match == null ? "" : match),
+                TextService.placeholder("id", reportId < 0 ? "-" : String.valueOf(reportId)));
         Component msg = plugin.text().render(plugin.getConfig().getString("client-detector.messages." + key), player, tags);
 
         for (Player admin : Bukkit.getOnlinePlayers()) {

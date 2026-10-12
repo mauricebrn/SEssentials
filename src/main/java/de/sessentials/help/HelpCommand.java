@@ -3,6 +3,7 @@ package de.sessentials.help;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.sessentials.SEssentials;
+import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -90,15 +91,15 @@ public final class HelpCommand {
         int total = visible.size();
         int page = Math.max(1, Math.min(requestedPage, total));
         TagResolver pageTags = TagResolver.resolver(
-                Placeholder.unparsed("page", String.valueOf(page)),
-                Placeholder.unparsed("pages", String.valueOf(total)));
+                TextService.placeholder("page", String.valueOf(page)),
+                TextService.placeholder("pages", String.valueOf(total)));
 
         sender.sendMessage(render("header", player, pageTags));
         for (Line line : visible.get(page - 1)) {
             sender.sendMessage(plugin.text().render(line.text(), player, pageTags));
         }
-        Component prev = page > 1 ? render("previous", player, Placeholder.unparsed("target", String.valueOf(page - 1))) : Component.empty();
-        Component next = page < total ? render("next", player, Placeholder.unparsed("target", String.valueOf(page + 1))) : Component.empty();
+        Component prev = page > 1 ? render("previous", player, TextService.placeholder("target", String.valueOf(page - 1))) : Component.empty();
+        Component next = page < total ? render("next", player, TextService.placeholder("target", String.valueOf(page + 1))) : Component.empty();
         sender.sendMessage(render("footer", player, pageTags, Placeholder.component("previous", prev), Placeholder.component("next", next)));
     }
 
