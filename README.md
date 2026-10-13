@@ -20,6 +20,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
+- Strafen: Bans, Mutes, IP-Bans – frei oder per Vorlage-ID, zeitlich oder permanent
 - ItemGuard: entfernt verbotene Items und Spawn-Eier, meldet automatisch
 - CreativeLog: protokolliert Aktionen im Kreativmodus
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
@@ -57,6 +58,12 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/vanish bypass` | `sess.vanish.bypass` | Schutzregeln im Vanish aufheben/wieder aktivieren (bis zum Verlassen) |
 | `/report <spieler> <grund>` | `sess.report` | Spieler melden (Alias `/melden`) |
 | `/reports` | `sess.reports.admin` | Report-Übersicht öffnen (Aliase `/rlist`, `/reportadmin`) |
+| `/punish <spieler> <id>` | Recht des Typs | Strafe nach Vorlage aus `punishments.templates` |
+| `/ban <spieler> [dauer\|perm] [grund]` | `sess.punish.ban` | Bannen (ersetzt Vanilla-`/ban`); ohne Dauer permanent |
+| `/mute <spieler> [dauer\|perm] [grund]` | `sess.punish.mute` | Muten: blockiert Chat und `mute-blocked-commands` |
+| `/ipban <spieler\|ip> [dauer\|perm] [grund]` | `sess.punish.ipban` | IP-Bann (aktuelle oder letzte bekannte IP) |
+| `/unban`, `/unmute`, `/unbanip <spieler>` | Recht des Typs | Strafe aufheben (`/unbanip` auch mit IP) |
+| `/history <spieler>` | `sess.punish.history` | Strafen-Verlauf eines Spielers |
 | `/itemscan [spieler]` | `sess.itemguard.scan` | Inventare sofort nach verbotenen Items scannen (Alias `/iscan`) |
 | `/creativelog <spieler> [seite]` | `sess.creativelog.view` | Kreativ-Aktionen eines Spielers (Alias `/clog`) |
 | `/clearreports` | `sess.reports.admin` | Alle offenen Reports löschen |
@@ -142,6 +149,23 @@ Ein Klick öffnet die Details mit **Teleportieren**, **Als erledigt markieren** 
 Reports liegen in `plugins/SEssentials/reports.yml`; erledigte bleiben dort mit `status: resolved` erhalten.
 Texte unter `reports.messages`, zusätzlich mit `<id>`, `<target>`, `<reporter>` und `<reason>`.
 
+## Strafen
+Bans, Mutes und IP-Bans, zeitlich begrenzt oder permanent:
+- **Vorlagen:** `/punish <spieler> <id>` – IDs mit Typ, Dauer und Grund unter `punishments.templates`
+  (Tab-Completion zeigt die Vorlagen). Erlaubt, wenn man das Recht des Typs hat.
+- **Frei:** `/ban`, `/mute`, `/ipban <spieler> [dauer|perm] [grund]`. Dauer z.B. `30m`, `2h`, `7d`, `1d12h`, `1mo`, `1y`;
+  ohne Dauer permanent. `/ipban` nimmt die aktuelle bzw. letzte bekannte IP des Spielers oder direkt eine IP.
+- **Aufheben/Verlauf:** `/unban`, `/unmute`, `/unbanip`, `/history <spieler>`.
+
+Bans und IP-Bans greifen schon beim Login (mit Grund, Restdauer und ID auf dem Kick-Bildschirm); Online-Spieler werden
+sofort gekickt. Gemutete können nicht chatten und die `mute-blocked-commands` nicht nutzen. Eine neue Strafe ersetzt
+eine aktive gleichen Typs. Staff mit `sess.punish.notify` wird informiert, `broadcast: true` sagt Bans/Mutes allen an.
+Spieler mit `sess.punish.exempt` (Standard: op) können nur von der Konsole bestraft werden.
+
+Admin-Panel (Moderation → **Strafen**): aktive Strafen mit Grund, Restzeit, Urheber und ID – Rechtsklick hebt auf;
+dazu die Vorlagen. Gespeichert in `plugins/SEssentials/punishments.yml` (inkl. letzter IP je Spieler für IP-Bans).
+`/ban` ersetzt den Vanilla-Befehl; die Vanilla-Bannliste (`banned-players.json`) bleibt davon getrennt.
+
 ## ItemGuard
 Entfernt nicht survival-taugliche Items (Befehlsblöcke, Barrieren, Spawner, Grundgestein, Debug-Stick, … – Liste
 `itemguard.banned`) und auf Wunsch alle Spawn-Eier aus Inventar, Enderchest und Shulkerkisten darin.
@@ -192,7 +216,7 @@ nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorie
 
 | Kategorie | Anwendungen |
 |---|---|
-| Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht), **ItemGuard** (Schalter, verbotene Items, Sofort-Scan), **CreativeLog** (Spieler mit Log, Klick zeigt den Log) |
+| Moderation | **Strafen** (aktive Strafen, Rechtsklick hebt auf, Vorlagen), **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht), **ItemGuard** (Schalter, verbotene Items, Sofort-Scan), **CreativeLog** (Spieler mit Log, Klick zeigt den Log) |
 | Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed, Enderchest) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
 | Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern), **Item-Tracker** |
 | Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |

@@ -28,6 +28,9 @@ import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
 import de.sessentials.player.EnderChestCommand;
 import de.sessentials.player.PlayerCommands;
+import de.sessentials.punish.PunishCommands;
+import de.sessentials.punish.PunishmentManager;
+import de.sessentials.punish.PunishmentMenu;
 import de.sessentials.report.ReportManager;
 import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
@@ -81,6 +84,9 @@ public final class SEssentials extends JavaPlugin {
     private ItemGuardMenu itemGuardMenu;
     private CreativeLog creativeLog;
     private CreativeLogMenu creativeLogMenu;
+    private PunishmentManager punishments;
+    private PunishCommands punishCommands;
+    private PunishmentMenu punishmentMenu;
     private MessageCommands messages;
     private TrackerMenu trackerMenu;
     private NewsManager news;
@@ -138,6 +144,9 @@ public final class SEssentials extends JavaPlugin {
         itemGuardMenu = new ItemGuardMenu(this, itemGuard);
         creativeLog = new CreativeLog(this);
         creativeLogMenu = new CreativeLogMenu(this, creativeLog);
+        punishments = new PunishmentManager(this);
+        punishCommands = new PunishCommands(this, punishments);
+        punishmentMenu = new PunishmentMenu(this, punishments, punishCommands);
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -151,6 +160,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(detector, this);
         getServer().getPluginManager().registerEvents(itemGuard, this);
         getServer().getPluginManager().registerEvents(creativeLog, this);
+        getServer().getPluginManager().registerEvents(punishments, this);
         getServer().getPluginManager().registerEvents(spawn, this);
         getServer().getPluginManager().registerEvents(tpa, this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
@@ -172,6 +182,7 @@ public final class SEssentials extends JavaPlugin {
         if (vanish != null) vanish.shutdown();
         if (tracker != null) tracker.shutdown();
         if (creativeLog != null) creativeLog.shutdown();
+        if (punishments != null) punishments.shutdown();
         if (chestShops != null) chestShops.shutdown();
         if (bank != null) bank.shutdown();
     }
@@ -229,6 +240,11 @@ public final class SEssentials extends JavaPlugin {
     /** Kacheln im Admin-Panel. Reihenfolge innerhalb einer Kategorie = Position in der Zeile. */
     private void registerAdminApps() {
         // Moderation
+        adminPanel.addApp(Category.MODERATION, PunishmentMenu.PERM,
+                p -> Menu.icon(Material.IRON_BARS, Component.text("Strafen", NamedTextColor.DARK_RED),
+                        Component.text("Aktiv: " + punishments.active().size(), NamedTextColor.GRAY),
+                        Component.text("Bans, Mutes, IP-Bans", NamedTextColor.GRAY)),
+                punishmentMenu::open);
         adminPanel.addApp(Category.MODERATION, "sess.vanish",
                 p -> Menu.icon(Material.ENDER_EYE, Component.text("Vanish", NamedTextColor.LIGHT_PURPLE), status(vanish.isVanished(p))),
                 p -> vanish.toggle(p, true));
@@ -455,6 +471,7 @@ public final class SEssentials extends JavaPlugin {
             shopCreator.register(commands);
             itemGuard.register(commands);
             creativeLog.register(commands);
+            punishCommands.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 

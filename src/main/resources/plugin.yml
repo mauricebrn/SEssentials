@@ -112,6 +112,24 @@ permissions:
   sess.creativelog.bypass:
     description: Wird im Kreativmodus nicht protokolliert
     default: false
+  sess.punish.ban:
+    description: /ban, /unban und Ban-Vorlagen
+    default: op
+  sess.punish.mute:
+    description: /mute, /unmute und Mute-Vorlagen
+    default: op
+  sess.punish.ipban:
+    description: /ipban, /unbanip und IP-Ban-Vorlagen
+    default: op
+  sess.punish.history:
+    description: /history und Strafen im Admin-Panel
+    default: op
+  sess.punish.notify:
+    description: Benachrichtigung bei neuen und aufgehobenen Strafen
+    default: op
+  sess.punish.exempt:
+    description: Kann von Spielern nicht bestraft werden (Konsole schon)
+    default: op
   sess.tracker:
     description: Item-Tracker im Admin-Panel
     default: op

@@ -21,14 +21,12 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -47,7 +45,6 @@ public final class NewsManager implements Listener {
 
     /** [Text](/befehl) → klickbarer Befehl (Syntax aus dem alten Skript). */
     private static final Pattern LINK = Pattern.compile("\\[([^\\]]+)]\\((/[^)]+)\\)");
-    private static final Pattern DURATION_PART = Pattern.compile("(\\d+)\\s*([a-zäöü]+)");
 
     enum Status {
         DRAFT("Entwurf"), SCHEDULED("Geplant"), ACTIVE("Aktiv"), EXPIRED("Abgelaufen");
@@ -347,34 +344,5 @@ public final class NewsManager implements Listener {
                         .build(),
                 "News-Verwaltung",
                 List.of());
-    }
-
-    /**
-     * Zeitspanne wie "2h", "7 Tage", "1d 12h", "30 minutes". {@code null} bei ungültiger Eingabe.
-     */
-    static Duration parseDuration(String input) {
-        String text = input.toLowerCase(Locale.ROOT).trim();
-        Matcher m = DURATION_PART.matcher(text);
-        Duration total = Duration.ZERO;
-        int end = 0;
-        boolean any = false;
-        while (m.find()) {
-            if (!text.substring(end, m.start()).replaceAll("[\\s,]|und|and", "").isEmpty()) return null;
-            long value = Long.parseLong(m.group(1));
-            Duration unit = switch (m.group(2)) {
-                case "s", "sek", "sekunde", "sekunden", "sec", "second", "seconds" -> Duration.ofSeconds(1);
-                case "m", "min", "minute", "minuten", "minutes" -> Duration.ofMinutes(1);
-                case "h", "std", "stunde", "stunden", "hour", "hours" -> Duration.ofHours(1);
-                case "d", "t", "tag", "tage", "tagen", "day", "days" -> Duration.ofDays(1);
-                case "w", "woche", "wochen", "week", "weeks" -> Duration.ofDays(7);
-                default -> null;
-            };
-            if (unit == null) return null;
-            total = total.plus(unit.multipliedBy(value));
-            end = m.end();
-            any = true;
-        }
-        if (!any || !text.substring(end).isBlank() || total.isZero()) return null;
-        return total;
     }
 }

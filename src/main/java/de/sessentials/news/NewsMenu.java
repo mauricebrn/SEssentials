@@ -5,6 +5,7 @@ import de.sessentials.text.TextService;
 import de.sessentials.admin.Menu;
 import de.sessentials.news.NewsManager.News;
 import de.sessentials.news.NewsManager.Status;
+import de.sessentials.text.Durations;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -198,7 +199,7 @@ public final class NewsMenu {
 
     private void promptDuration(Player player, News n, String messageKey, Consumer<Duration> apply) {
         ask(player, n, messageKey, input -> {
-            Duration d = NewsManager.parseDuration(input);
+            Duration d = Durations.parse(input);
             if (d == null) {
                 player.sendMessage(news.msg("messages.invalid-duration", player));
                 return false;

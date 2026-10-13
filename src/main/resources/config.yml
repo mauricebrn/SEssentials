@@ -423,6 +423,44 @@ reports:
     cleared: "<prefix><green><count> offene Report(s) wurden gelöscht."
 
 # ------------------------------------------------------------
+# Strafen: Bans, Mutes, IP-Bans – frei (/ban, /mute, /ipban <spieler> [dauer|perm] [grund])
+# oder nach Vorlage (/punish <spieler> <id>). Dauer z.B. 30m, 2h, 7d, 1d12h, 1mo, 1y; ohne Dauer = permanent.
+# Aufheben: /unban, /unmute, /unbanip; Verlauf: /history <spieler>; Admin-Panel → Moderation → Strafen.
+# Platzhalter: <id>, <type>, <verb>, <target>, <reason>, <actor>, <duration>, <remaining>, <date>, <expires>
+# ------------------------------------------------------------
+punishments:
+  broadcast: false              # true = Bans/Mutes auch allen Spielern ansagen (IP-Bans nie)
+  # Befehle, die gemutete Spieler nicht nutzen dürfen
+  mute-blocked-commands: [msg, tell, w, whisper, r, reply, me, say]
+  # Vorgefertigte Strafen: type ban|mute|ipban, duration z.B. 7d oder permanent
+  templates:
+    "1": { type: ban, duration: 30d, reason: "Hacking / unerlaubte Clients" }
+    "2": { type: ban, duration: 7d, reason: "Griefing" }
+    "3": { type: mute, duration: 1h, reason: "Beleidigung" }
+    "4": { type: mute, duration: 1d, reason: "Spam" }
+    "5": { type: ban, duration: 3d, reason: "Ausnutzen von Bugs" }
+    "6": { type: ban, duration: permanent, reason: "Schwerer Regelverstoß" }
+    "7": { type: ipban, duration: permanent, reason: "Ban-Umgehung" }
+  messages:
+    ban-screen: "<red><bold>Du wurdest vom Server gebannt</bold></red><newline><newline><gray>Grund: <white><reason></white><newline><gray>Dauer: <white><remaining></white><newline><gray>Ablauf: <white><expires></white><newline><newline><dark_gray>ID #<id>"
+    ipban-screen: "<red><bold>Deine IP wurde vom Server gebannt</bold></red><newline><newline><gray>Grund: <white><reason></white><newline><gray>Dauer: <white><remaining></white><newline><newline><dark_gray>ID #<id>"
+    muted: "<prefix><red>Du wurdest gemutet: <white><reason></white> <gray>(<duration>)"
+    muted-blocked: "<prefix><red>Du bist gemutet: <white><reason></white> <gray>– noch <remaining>"
+    unmuted: "<prefix><green>Dein Mute wurde aufgehoben."
+    notify: "<prefix><red><actor></red> <gray>hat <white><target></white> <verb> <dark_gray>(<duration>)</dark_gray>: <white><reason></white> <dark_gray>#<id>"
+    broadcast: "<prefix><white><target></white> <gray>wurde <verb>: <white><reason>"
+    revoked: "<prefix><green><revoker></green> <gray>hat den <type> von <white><target></white> aufgehoben <dark_gray>#<id>"
+    not-punished: "<prefix><red><target> hat keinen aktiven <type>."
+    unknown-player: "<prefix><red>Der Spieler <white><target></white> war noch nie auf dem Server."
+    unknown-template: "<prefix><red>Es gibt keine Vorlage <white><id></white>."
+    no-permission: "<prefix><red>Dafür fehlt dir das Recht."
+    self: "<prefix><red>Du kannst dich nicht selbst bestrafen."
+    exempt: "<prefix><red><target> kann nicht bestraft werden."
+    no-ip: "<prefix><red>Für <target> ist keine IP bekannt (noch nie online gewesen?)."
+    history-header: "<dark_gray>────── <gold>Strafen von <yellow><target></yellow> <gray>(<count>)</gray> ──────"
+    history-entry: "<dark_gray>#<id></dark_gray> <gold><type></gold> <white><reason></white> <gray>– <duration>, von <actor> am <date> – <status>"
+
+# ------------------------------------------------------------
 # ItemGuard – entfernt nicht survival-taugliche Items und meldet den Spieler (Report, Absender "ItemGuard").
 # Scan beim Join und alle interval-seconds; /itemscan [spieler] (Alias /iscan) scannt sofort.
 # Spieler mit sess.itemguard.bypass werden nicht gescannt. Einstellbar auch im Admin-Panel (Moderation → ItemGuard).
