@@ -106,6 +106,12 @@ permissions:
   sess.itemguard.admin:
     description: ItemGuard im Admin-Panel einstellen
     default: op
+  sess.creativelog.view:
+    description: Erlaubt /creativelog und die Ansicht im Admin-Panel
+    default: op
+  sess.creativelog.bypass:
+    description: Wird im Kreativmodus nicht protokolliert
+    default: false
   sess.tracker:
     description: Item-Tracker im Admin-Panel
     default: op

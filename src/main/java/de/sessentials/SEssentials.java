@@ -14,6 +14,8 @@ import de.sessentials.admin.Menu;
 import de.sessentials.chat.ChatListener;
 import de.sessentials.chestshop.ChestShopManager;
 import de.sessentials.chestshop.ShopCreatorMenu;
+import de.sessentials.creativelog.CreativeLog;
+import de.sessentials.creativelog.CreativeLogMenu;
 import de.sessentials.detector.ClientDetector;
 import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.help.HelpCommand;
@@ -77,6 +79,8 @@ public final class SEssentials extends JavaPlugin {
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
     private ItemGuardMenu itemGuardMenu;
+    private CreativeLog creativeLog;
+    private CreativeLogMenu creativeLogMenu;
     private MessageCommands messages;
     private TrackerMenu trackerMenu;
     private NewsManager news;
@@ -132,6 +136,8 @@ public final class SEssentials extends JavaPlugin {
         detector = new ClientDetector(this);
         itemGuard = new ItemGuard(this);
         itemGuardMenu = new ItemGuardMenu(this, itemGuard);
+        creativeLog = new CreativeLog(this);
+        creativeLogMenu = new CreativeLogMenu(this, creativeLog);
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -144,6 +150,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(reports, this);
         getServer().getPluginManager().registerEvents(detector, this);
         getServer().getPluginManager().registerEvents(itemGuard, this);
+        getServer().getPluginManager().registerEvents(creativeLog, this);
         getServer().getPluginManager().registerEvents(spawn, this);
         getServer().getPluginManager().registerEvents(tpa, this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
@@ -164,6 +171,7 @@ public final class SEssentials extends JavaPlugin {
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
         if (tracker != null) tracker.shutdown();
+        if (creativeLog != null) creativeLog.shutdown();
         if (chestShops != null) chestShops.shutdown();
         if (bank != null) bank.shutdown();
     }
@@ -176,6 +184,7 @@ public final class SEssentials extends JavaPlugin {
         vanish.reload();
         detector.reload();
         itemGuard.reload();
+        creativeLog.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         tracker.reload();
         spawn.reload();
@@ -233,6 +242,11 @@ public final class SEssentials extends JavaPlugin {
                         Component.text("Verbotene Items: " + itemGuard.banned().size(), NamedTextColor.GRAY),
                         Component.text("Entfernt seit Start: " + itemGuard.removedSinceStart(), NamedTextColor.GRAY)),
                 itemGuardMenu::open);
+        adminPanel.addApp(Category.MODERATION, CreativeLogMenu.PERM,
+                p -> Menu.icon(Material.GRASS_BLOCK, Component.text("CreativeLog", NamedTextColor.GREEN),
+                        status(creativeLog.enabled()),
+                        Component.text("Aktionen im Kreativmodus", NamedTextColor.GRAY)),
+                creativeLogMenu::open);
 
         // Spieler & Teleport
         adminPanel.addApp(Category.PLAYERS, p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
@@ -440,6 +454,7 @@ public final class SEssentials extends JavaPlugin {
             messages.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);
+            creativeLog.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 

@@ -461,6 +461,22 @@ itemguard:
     not-online: "<prefix><red>Dieser Spieler ist nicht online."
 
 # ------------------------------------------------------------
+# CreativeLog – protokolliert alle Aktionen von Spielern im Kreativmodus (außer mit sess.creativelog.bypass):
+# Moduswechsel, Join/Quit, Items aus dem Kreativ-Inventar, Container, Droppen/Aufheben, Blöcke, Rechtsklicks,
+# Schaden, Befehle. Abruf: /creativelog <spieler> [seite] (Alias /clog) oder Admin-Panel → Moderation → CreativeLog.
+# Platzhalter: <target>, <page>, <pages>, <prev>, <next>
+# ------------------------------------------------------------
+creativelog:
+  enabled: true
+  max-entries: 1000     # pro Spieler; ältere Einträge fallen weg
+  page-size: 15
+  messages:
+    header: "<dark_gray>────── <gold>Kreativ-Log: <yellow><target></yellow> <gray>(Seite <page>/<pages>)</gray> ──────"
+    footer: "<dark_gray>Neueste zuerst</dark_gray> <click:run_command:'/creativelog <target> <prev>'><yellow>[« Zurück]</yellow></click> <click:run_command:'/creativelog <target> <next>'><yellow>[Weiter »]</yellow></click>"
+    none: "<prefix><red>Für <white><target></white> gibt es keine Kreativ-Logs."
+    no-page: "<prefix><red>Diese Seite gibt es nicht (nur <pages>)."
+
+# ------------------------------------------------------------
 # Client-Detector
 # Erkennt beim Join den Client über Brand und Plugin-Channels.
 # Hack-Clients nur über Signaturen – getarnte Clients (Brand "vanilla"/"fabric") fallen nicht auf.

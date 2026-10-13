@@ -21,6 +21,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
 - ItemGuard: entfernt verbotene Items und Spawn-Eier, meldet automatisch
+- CreativeLog: protokolliert Aktionen im Kreativmodus
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
@@ -38,7 +39,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -57,6 +58,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.t
 | `/report <spieler> <grund>` | `sess.report` | Spieler melden (Alias `/melden`) |
 | `/reports` | `sess.reports.admin` | Report-Übersicht öffnen (Aliase `/rlist`, `/reportadmin`) |
 | `/itemscan [spieler]` | `sess.itemguard.scan` | Inventare sofort nach verbotenen Items scannen (Alias `/iscan`) |
+| `/creativelog <spieler> [seite]` | `sess.creativelog.view` | Kreativ-Aktionen eines Spielers (Alias `/clog`) |
 | `/clearreports` | `sess.reports.admin` | Alle offenen Reports löschen |
 | `/fly [spieler]` | `sess.fly` / `sess.fly.others` | Flugmodus ein/aus |
 | `/heal [spieler]` | `sess.heal` / `sess.heal.others` | Volle Gesundheit, Feuer aus |
@@ -89,6 +91,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.t
 | – | `sess.chestshop.admin` | Admin-Shops erstellen, alle Shops öffnen und abbauen |
 | – | `sess.itemguard.bypass` | Wird vom ItemGuard nicht gescannt |
 | – | `sess.itemguard.admin` | ItemGuard im Admin-Panel einstellen |
+| – | `sess.creativelog.bypass` | Wird im Kreativmodus nicht protokolliert (Standard: niemand) |
 | – | `sess.tracker` | Item-Tracker im Admin-Panel |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
@@ -152,6 +155,15 @@ Im Admin-Panel (Moderation → **ItemGuard**): Schalter für ItemGuard, Spawn-Ei
 verbotene Items ansehen und per Rechtsklick entfernen, „Item aus der Hand verbieten“, „Alle jetzt scannen“.
 Änderungen werden in der `config.yml` gespeichert.
 
+## CreativeLog
+Protokolliert alle Aktionen von Spielern im Kreativmodus – außer mit `sess.creativelog.bypass` (Standard: niemand,
+auch Ops werden protokolliert): Moduswechsel mit Position, Join/Quit im Kreativmodus, Items aus dem Kreativ-Inventar,
+geöffnete Container, Droppen/Aufheben, Blöcke setzen/abbauen, Rechtsklicks auf Blöcke und Entities, Schaden, Befehle.
+
+Abruf mit `/creativelog <spieler> [seite]` (neueste zuerst, klickbar blättern) oder im Admin-Panel
+(Moderation → **CreativeLog**: Spieler mit Log, wer gerade im Kreativmodus ist, Ein/Aus-Schalter).
+Pro Spieler bleiben `max-entries` Einträge; gespeichert in `plugins/SEssentials/creativelog/` (alle 30 s, beim Verlassen und beim Stoppen).
+
 ## Client-Detector
 Prüft jeden Spieler kurz nach dem Join (`check-delay-ticks`) anhand von Client-Brand und Plugin-Channels:
 - **Vanilla:** Brand `vanilla` und keine Plugin-Channels
@@ -180,7 +192,7 @@ nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorie
 
 | Kategorie | Anwendungen |
 |---|---|
-| Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht), **ItemGuard** (Schalter, verbotene Items, Sofort-Scan) |
+| Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht), **ItemGuard** (Schalter, verbotene Items, Sofort-Scan), **CreativeLog** (Spieler mit Log, Klick zeigt den Log) |
 | Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed, Enderchest) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
 | Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern), **Item-Tracker** |
 | Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |
