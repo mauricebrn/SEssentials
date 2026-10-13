@@ -423,6 +423,24 @@ reports:
     cleared: "<prefix><green><count> offene Report(s) wurden gelöscht."
 
 # ------------------------------------------------------------
+# Webpanel – Statistiken aus dem Admin-Panel im Browser (nur lesend, ohne IP-Adressen).
+# Login: im Spiel /webpanel → persönlicher Einmal-Link (5 Minuten gültig), danach Sitzung per Cookie.
+# Läuft über HTTP ohne Verschlüsselung – für Zugriff von außen am besten hinter einen Reverse-Proxy mit HTTPS
+# (z.B. Caddy/nginx) stellen und public-url auf dessen Adresse setzen.
+# ------------------------------------------------------------
+webpanel:
+  enabled: true
+  bind: "0.0.0.0"          # 127.0.0.1 = nur lokal erreichbar
+  port: 8085               # muss beim Hoster freigegeben sein
+  public-url: ""           # Adresse in Login-Links, z.B. https://panel.meinserver.de (leer = http://<server-ip>:<port>)
+  session-hours: 12
+  refresh-seconds: 30
+  messages:
+    link: "<prefix><gray>Dein Login-Link (5 Minuten, einmalig): <click:open_url:'<url>'><aqua><u>Webpanel öffnen</u></aqua></click> <dark_gray>– nicht weitergeben!"
+    disabled: "<prefix><red>Das Webpanel ist deaktiviert oder konnte nicht starten (siehe Konsole)."
+    logged-out: "<prefix><gray>Alle deine Webpanel-Sitzungen wurden beendet."
+
+# ------------------------------------------------------------
 # Strafen: Bans, Mutes, IP-Bans – frei (/ban, /mute, /ipban <spieler> [dauer|perm] [grund])
 # oder nach Vorlage (/punish <spieler> <id>). Dauer z.B. 30m, 2h, 7d, 1d12h, 1mo, 1y; ohne Dauer = permanent.
 # Aufheben: /unban, /unmute, /unbanip; Verlauf: /history <spieler>; Admin-Panel → Moderation → Strafen.

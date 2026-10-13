@@ -41,6 +41,7 @@ import de.sessentials.tracker.ItemTracker;
 import de.sessentials.tracker.TrackerMenu;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
+import de.sessentials.web.WebPanel;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
@@ -87,6 +88,7 @@ public final class SEssentials extends JavaPlugin {
     private PunishmentManager punishments;
     private PunishCommands punishCommands;
     private PunishmentMenu punishmentMenu;
+    private WebPanel webPanel;
     private MessageCommands messages;
     private TrackerMenu trackerMenu;
     private NewsManager news;
@@ -173,10 +175,14 @@ public final class SEssentials extends JavaPlugin {
         tab.reload();
 
         registerCommands();
+
+        webPanel = new WebPanel(this);
+        webPanel.start();
     }
 
     @Override
     public void onDisable() {
+        if (webPanel != null) webPanel.stop();
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
@@ -203,6 +209,9 @@ public final class SEssentials extends JavaPlugin {
         tpa.reload();
         enderChest.reload();
         tab.reload();
+        // Webpanel neu starten, damit Port/Adresse greifen; Sitzungen bleiben erhalten
+        webPanel.stop();
+        webPanel.start();
     }
 
     public TextService text() {
@@ -223,6 +232,34 @@ public final class SEssentials extends JavaPlugin {
 
     public Notifications notifications() {
         return notifications;
+    }
+
+    public VanishManager vanish() {
+        return vanish;
+    }
+
+    public SoftRestartManager softRestart() {
+        return softRestart;
+    }
+
+    public PunishmentManager punishments() {
+        return punishments;
+    }
+
+    public ItemGuard itemGuard() {
+        return itemGuard;
+    }
+
+    public ChestShopManager chestShops() {
+        return chestShops;
+    }
+
+    public ItemTracker tracker() {
+        return tracker;
+    }
+
+    public NewsManager news() {
+        return news;
     }
 
     public ChatPrompt chatPrompt() {
@@ -472,6 +509,7 @@ public final class SEssentials extends JavaPlugin {
             itemGuard.register(commands);
             creativeLog.register(commands);
             punishCommands.register(commands);
+            webPanel.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 

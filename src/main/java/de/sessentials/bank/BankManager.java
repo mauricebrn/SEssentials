@@ -95,6 +95,10 @@ public final class BankManager implements Listener {
                 .toList();
     }
 
+    public synchronized int accounts() {
+        return balances.size();
+    }
+
     public synchronized long total() {
         return balances.values().stream().mapToLong(Long::longValue).sum();
     }

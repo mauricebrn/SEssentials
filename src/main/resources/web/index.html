@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SEssentials Webpanel</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>SEssentials Webpanel</h1>
+      <p class="muted" id="meta">Lade Daten …</p>
+    </div>
+    <a class="button" href="/logout">Abmelden</a>
+  </header>
+  <main>
+    <section class="kpis" id="kpis"></section>
+
+    <section class="grid">
+      <article class="card wide">
+        <h2>Spieler online</h2>
+        <div id="players"></div>
+      </article>
+
+      <article class="card">
+        <h2>Offene Reports</h2>
+        <div id="reports"></div>
+      </article>
+      <article class="card">
+        <h2>Aktive Strafen</h2>
+        <div id="punishments"></div>
+      </article>
+
+      <article class="card wide">
+        <h2>Item-Wert auf dem Server (7 Tage)</h2>
+        <div id="chart" class="chart"></div>
+      </article>
+
+      <article class="card">
+        <h2>Wertvolle Items</h2>
+        <div id="items"></div>
+      </article>
+      <article class="card">
+        <h2>Reichste Spieler</h2>
+        <div id="top"></div>
+      </article>
+
+      <article class="card wide">
+        <h2>Aktive News</h2>
+        <div id="news"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

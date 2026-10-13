@@ -38,14 +38,14 @@ public final class ReportManager implements Listener {
     private static final String PERM_USE = "sess.report";
     private static final String PERM_BYPASS_COOLDOWN = "sess.report.bypasscooldown";
 
-    static final class Report {
-        final int id;
-        final String reporter;
-        final String reported;
-        final String reason;
-        final long time;
+    public static final class Report {
+        public final int id;
+        public final String reporter;
+        public final String reported;
+        public final String reason;
+        public final long time;
         /** Zusatzinfos, z.B. vom Client-Detector. Leer bei normalen /report-Meldungen. */
-        final List<String> details;
+        public final List<String> details;
         boolean open;
 
         Report(int id, String reporter, String reported, String reason, long time, List<String> details, boolean open) {
@@ -116,7 +116,7 @@ public final class ReportManager implements Listener {
         }
     }
 
-    List<Report> openReports() {
+    public List<Report> openReports() {
         List<Report> open = new ArrayList<>();
         for (Report r : reports.values()) if (r.open) open.add(r);
         return open;

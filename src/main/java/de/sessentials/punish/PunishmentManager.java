@@ -61,16 +61,16 @@ public final class PunishmentManager implements Listener {
 
     /** Eine Strafe. {@code target} ist bei reinen IP-Bans {@code null}; {@code expires} -1 = permanent. */
     public static final class Punishment {
-        final int id;
-        final Type type;
-        final UUID target;
-        final String targetName;
-        final String ip;
-        final String reason;
-        final String actor;
-        final long created;
-        final long expires;
-        final String template;
+        public final int id;
+        public final Type type;
+        public final UUID target;
+        public final String targetName;
+        public final String ip;
+        public final String reason;
+        public final String actor;
+        public final long created;
+        public final long expires;
+        public final String template;
         boolean active = true;
         String revokedBy;
         long revokedAt;

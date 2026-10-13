@@ -24,6 +24,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - ItemGuard: entfernt verbotene Items und Spawn-Eier, meldet automatisch
 - CreativeLog: protokolliert Aktionen im Kreativmodus
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
+- Webpanel: Statistiken aus dem Admin-Panel im Browser
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
 Alle Texte unterstützen MiniMessage und &-Farbcodes.
@@ -49,6 +50,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/newsadmin` | `sess.news.admin` | News-Verwaltung öffnen |
 | `/help [seite]` | – | Hilfeseiten aus der Config (Alias `/?`) |
 | `/admin` | `sess.admin` | Admin-Panel öffnen |
+| `/webpanel [logout]` | `sess.webpanel` | Login-Link fürs Webpanel bzw. alle eigenen Sitzungen beenden |
 | `/sessentials reload` | `sess.reload` | Config neu laden (Alias `/sess`) |
 | `/softrestart <minuten>` | `sess.softrestart` | Neustart nach X Minuten planen (Alias `/srestart`) |
 | `/softrestart cancel` | `sess.softrestart` | Geplanten Neustart abbrechen |
@@ -345,6 +347,20 @@ Versteckte Spieler (Vanish) können nicht angefragt werden. Eine neue Anfrage an
 
 Genutzt wird jeweils die erste geladene Welt der Dimension (Standard: `world`, `world_nether`, `world_the_end`).
 Texte unter `dimensions.messages`.
+
+## Webpanel
+Zeigt Statistiken aus dem Admin-Panel im Browser – nur lesend: Online-Spieler (mit Vanish-Markierung, Ping, Kontostand),
+TPS/MSPT/Laufzeit, offene Reports, aktive Strafen, Taler im Umlauf, reichste Spieler, Item-Tracker-Bestände mit
+7-Tage-Trend und Wert-Verlauf als Diagramm sowie aktive News. Aktualisiert sich alle 30 Sekunden; IP-Adressen werden nie gezeigt.
+
+**Login:** Im Spiel `/webpanel` (Recht `sess.webpanel`) – es kommt ein persönlicher Link, 5 Minuten gültig und nur einmal
+verwendbar. Auch in der Server-Konsole möglich; der Link erscheint dann dort. Danach bleibt man `session-hours` angemeldet (HttpOnly-Cookie). `/webpanel logout` beendet alle eigenen Sitzungen;
+Sitzungen enden auch bei einem Server-Neustart.
+
+**Erreichbarkeit:** Standard `0.0.0.0:8085` (Port beim Hoster freigeben). Das Panel spricht nur HTTP – für Zugriff über das
+Internet einen Reverse-Proxy mit HTTPS davorsetzen (z.B. Caddy, nginx) und `webpanel.public-url` auf dessen Adresse setzen;
+dann wird das Cookie zusätzlich als `Secure` markiert. `bind: 127.0.0.1` macht das Panel nur lokal erreichbar.
+Spielerköpfe werden von `mc-heads.net` geladen.
 
 ## Platzhalter
 `<player>`, `<displayname>`, `<world>`, `<online>`, `<max_players>`, `<prefix>`,

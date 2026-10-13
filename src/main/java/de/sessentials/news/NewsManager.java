@@ -56,12 +56,12 @@ public final class NewsManager implements Listener {
         }
     }
 
-    static final class News {
-        final int id;
-        final long created;
-        String title;
+    public static final class News {
+        public final int id;
+        public final long created;
+        public String title;
         String content;
-        int priority;
+        public int priority;
         Long start;
         Long expires;
         boolean visible;
@@ -171,7 +171,7 @@ public final class NewsManager implements Listener {
     }
 
     /** Aktive News: höchste Priorität zuerst, innerhalb gleicher Priorität neueste zuerst. */
-    private List<News> active() {
+    public List<News> active() {
         long now = System.currentTimeMillis();
         return news.values().stream()
                 .filter(n -> n.status(now) == Status.ACTIVE)

@@ -130,6 +130,9 @@ permissions:
   sess.punish.exempt:
     description: Kann von Spielern nicht bestraft werden (Konsole schon)
     default: op
+  sess.webpanel:
+    description: Erlaubt /webpanel (Login-Link für das Webpanel)
+    default: op
   sess.tracker:
     description: Item-Tracker im Admin-Panel
     default: op
