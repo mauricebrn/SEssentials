@@ -97,6 +97,15 @@ permissions:
   sess.bank.admin:
     description: Erlaubt /eco und die Konten-Verwaltung im Admin-Panel
     default: op
+  sess.itemguard.bypass:
+    description: Wird vom ItemGuard nicht gescannt
+    default: op
+  sess.itemguard.scan:
+    description: Erlaubt /itemscan
+    default: op
+  sess.itemguard.admin:
+    description: ItemGuard im Admin-Panel einstellen
+    default: op
   sess.tracker:
     description: Item-Tracker im Admin-Panel
     default: op

@@ -423,6 +423,44 @@ reports:
     cleared: "<prefix><green><count> offene Report(s) wurden gelöscht."
 
 # ------------------------------------------------------------
+# ItemGuard – entfernt nicht survival-taugliche Items und meldet den Spieler (Report, Absender "ItemGuard").
+# Scan beim Join und alle interval-seconds; /itemscan [spieler] (Alias /iscan) scannt sofort.
+# Spieler mit sess.itemguard.bypass werden nicht gescannt. Einstellbar auch im Admin-Panel (Moderation → ItemGuard).
+# Platzhalter: <items>, <target>, <id> (Report-Nummer)
+# ------------------------------------------------------------
+itemguard:
+  enabled: true
+  interval-seconds: 15
+  block-spawn-eggs: true      # alle Spawn-Eier entfernen und das Benutzen blockieren
+  scan-enderchest: true
+  scan-shulkers: true         # Shulkerkisten in Inventar und Enderchest durchsuchen
+  banned:
+    - COMMAND_BLOCK
+    - CHAIN_COMMAND_BLOCK
+    - REPEATING_COMMAND_BLOCK
+    - COMMAND_BLOCK_MINECART
+    - STRUCTURE_BLOCK
+    - STRUCTURE_VOID
+    - JIGSAW
+    - BARRIER
+    - SPAWNER
+    - DEBUG_STICK
+    - KNOWLEDGE_BOOK
+    - BEDROCK
+    - END_PORTAL_FRAME
+    - LIGHT
+    - REINFORCED_DEEPSLATE
+    - PETRIFIED_OAK_SLAB
+    - PLAYER_HEAD
+  messages:
+    removed: "<prefix><red>Unerlaubte Items wurden entfernt: <white><items>"
+    spawn-egg: "<prefix><red>Spawn-Eier dürfen nicht benutzt werden."
+    notify: "<prefix><red><target></red> <gray>hatte unerlaubte Items <dark_gray>(Report #<id>)</dark_gray>: <white><items>"
+    scanned: "<prefix><green>Inventar von <white><target></white> wurde gescannt."
+    scanned-all: "<prefix><green>Alle Spieler wurden gescannt."
+    not-online: "<prefix><red>Dieser Spieler ist nicht online."
+
+# ------------------------------------------------------------
 # Client-Detector
 # Erkennt beim Join den Client über Brand und Plugin-Channels.
 # Hack-Clients nur über Signaturen – getarnte Clients (Brand "vanilla"/"fabric") fallen nicht auf.

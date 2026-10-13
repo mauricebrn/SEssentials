@@ -18,6 +18,8 @@ import de.sessentials.detector.ClientDetector;
 import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.help.HelpCommand;
 import de.sessentials.hook.LuckPermsHook;
+import de.sessentials.itemguard.ItemGuard;
+import de.sessentials.itemguard.ItemGuardMenu;
 import de.sessentials.joinquit.JoinQuitListener;
 import de.sessentials.msg.MessageCommands;
 import de.sessentials.news.NewsManager;
@@ -73,6 +75,8 @@ public final class SEssentials extends JavaPlugin {
     private EnderChestCommand enderChest;
     private ChestShopManager chestShops;
     private ShopCreatorMenu shopCreator;
+    private ItemGuard itemGuard;
+    private ItemGuardMenu itemGuardMenu;
     private MessageCommands messages;
     private TrackerMenu trackerMenu;
     private NewsManager news;
@@ -126,6 +130,8 @@ public final class SEssentials extends JavaPlugin {
         notifications = new Notifications(this);
         reports = new ReportManager(this);
         detector = new ClientDetector(this);
+        itemGuard = new ItemGuard(this);
+        itemGuardMenu = new ItemGuardMenu(this, itemGuard);
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -137,6 +143,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
         getServer().getPluginManager().registerEvents(reports, this);
         getServer().getPluginManager().registerEvents(detector, this);
+        getServer().getPluginManager().registerEvents(itemGuard, this);
         getServer().getPluginManager().registerEvents(spawn, this);
         getServer().getPluginManager().registerEvents(tpa, this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
@@ -168,6 +175,7 @@ public final class SEssentials extends JavaPlugin {
         joinQuit.reload();
         vanish.reload();
         detector.reload();
+        itemGuard.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         tracker.reload();
         spawn.reload();
@@ -219,6 +227,12 @@ public final class SEssentials extends JavaPlugin {
                 p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
                         Component.text("Offen: " + reports.openCount(), NamedTextColor.GRAY)),
                 p -> reports.menu().openList(p, 1));
+        adminPanel.addApp(Category.MODERATION, ItemGuardMenu.PERM,
+                p -> Menu.icon(Material.SHIELD, Component.text("ItemGuard", NamedTextColor.RED),
+                        status(itemGuard.enabled()),
+                        Component.text("Verbotene Items: " + itemGuard.banned().size(), NamedTextColor.GRAY),
+                        Component.text("Entfernt seit Start: " + itemGuard.removedSinceStart(), NamedTextColor.GRAY)),
+                itemGuardMenu::open);
 
         // Spieler & Teleport
         adminPanel.addApp(Category.PLAYERS, p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
@@ -425,6 +439,7 @@ public final class SEssentials extends JavaPlugin {
             enderChest.register(commands);
             messages.register(commands);
             shopCreator.register(commands);
+            itemGuard.register(commands);
             news.register(commands);
             bankCommands.register(commands);
 

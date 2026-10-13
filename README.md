@@ -20,6 +20,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
+- ItemGuard: entfernt verbotene Items und Spawn-Eier, meldet automatisch
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
@@ -55,6 +56,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.t
 | `/vanish bypass` | `sess.vanish.bypass` | Schutzregeln im Vanish aufheben/wieder aktivieren (bis zum Verlassen) |
 | `/report <spieler> <grund>` | `sess.report` | Spieler melden (Alias `/melden`) |
 | `/reports` | `sess.reports.admin` | Report-Übersicht öffnen (Aliase `/rlist`, `/reportadmin`) |
+| `/itemscan [spieler]` | `sess.itemguard.scan` | Inventare sofort nach verbotenen Items scannen (Alias `/iscan`) |
 | `/clearreports` | `sess.reports.admin` | Alle offenen Reports löschen |
 | `/fly [spieler]` | `sess.fly` / `sess.fly.others` | Flugmodus ein/aus |
 | `/heal [spieler]` | `sess.heal` / `sess.heal.others` | Volle Gesundheit, Feuer aus |
@@ -85,6 +87,8 @@ Alle Rechte sind standardmäßig `op`, außer `sess.msg`, `sess.report`, `sess.t
 | – | `sess.report.bypasscooldown` | Ignoriert den Cooldown von `/report` |
 | – | `sess.chestshop.create` | Chestshops erstellen |
 | – | `sess.chestshop.admin` | Admin-Shops erstellen, alle Shops öffnen und abbauen |
+| – | `sess.itemguard.bypass` | Wird vom ItemGuard nicht gescannt |
+| – | `sess.itemguard.admin` | ItemGuard im Admin-Panel einstellen |
 | – | `sess.tracker` | Item-Tracker im Admin-Panel |
 | – | `sess.chat.color` | &-Farbcodes im Chat |
 | – | `sess.chat.minimessage` | MiniMessage-Farben/Formatierung im Chat |
@@ -135,6 +139,19 @@ Ein Klick öffnet die Details mit **Teleportieren**, **Als erledigt markieren** 
 Reports liegen in `plugins/SEssentials/reports.yml`; erledigte bleiben dort mit `status: resolved` erhalten.
 Texte unter `reports.messages`, zusätzlich mit `<id>`, `<target>`, `<reporter>` und `<reason>`.
 
+## ItemGuard
+Entfernt nicht survival-taugliche Items (Befehlsblöcke, Barrieren, Spawner, Grundgestein, Debug-Stick, … – Liste
+`itemguard.banned`) und auf Wunsch alle Spawn-Eier aus Inventar, Enderchest und Shulkerkisten darin.
+Gescannt wird beim Join und alle `interval-seconds`; Spawn-Eier werden schon beim Benutzen blockiert.
+
+Jeder Fund wird als Report angelegt (Absender „ItemGuard“, Details mit Mengen) und – wie Reports – an Admins mit
+`sess.report.notify` gemeldet (abschaltbar unter **Benachrichtigungen**). Der Spieler bekommt eine Nachricht,
+die Konsole ein Protokoll. Spieler mit `sess.itemguard.bypass` (Standard: op) werden nicht gescannt.
+
+Im Admin-Panel (Moderation → **ItemGuard**): Schalter für ItemGuard, Spawn-Eier, Enderchest und Shulker,
+verbotene Items ansehen und per Rechtsklick entfernen, „Item aus der Hand verbieten“, „Alle jetzt scannen“.
+Änderungen werden in der `config.yml` gespeichert.
+
 ## Client-Detector
 Prüft jeden Spieler kurz nach dem Join (`check-delay-ticks`) anhand von Client-Brand und Plugin-Channels:
 - **Vanilla:** Brand `vanilla` und keine Plugin-Channels
@@ -163,7 +180,7 @@ nur mit ihrem eigenen Recht (z.B. Vanish nur mit `sess.vanish`); leere Kategorie
 
 | Kategorie | Anwendungen |
 |---|---|
-| Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht) |
+| Moderation | **Vanish** (umschalten, zeigt Status), **Reports** (Zahl offener Reports, Übersicht), **ItemGuard** (Schalter, verbotene Items, Sofort-Scan) |
 | Spieler & Teleport | **Befehle** – Untermenü „Spieler“ (Fly, God, Heal, Feed, Enderchest) und „Teleport“ (Spawn, Spawn setzen, Nether, End) |
 | Wirtschaft | **Bank** (Geld im Umlauf, Konten ansehen und per Chat-Eingabe `+100` / `-50` / `=200` ändern), **Item-Tracker** |
 | Server | **News** (Verwaltung), **Softrestart** (Zeiten, Abbrechen), **Config neu laden** |
