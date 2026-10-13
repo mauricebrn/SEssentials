@@ -58,3 +58,35 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .chart .grid-line { stroke: var(--border); stroke-width: 1; }
 .chart .series { fill: none; stroke: var(--line); stroke-width: 2; }
 .chart .dot { fill: var(--line); }
+
+/* Navigation */
+.nav { display: flex; gap: 14px; margin-top: 4px; }
+.nav a { color: var(--muted); text-decoration: none; font-size: .9rem; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.nav a.active { color: var(--text); border-bottom-color: var(--accent); }
+.nav a[hidden] { display: none; }
+button.button { background: transparent; font: inherit; cursor: pointer; }
+button.button[hidden] { display: none; }
+
+/* CreativeLog-Viewer */
+.filters { margin-bottom: 16px; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.filter-row + .filter-row { margin-top: 12px; }
+.filter-row label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); min-width: 150px; }
+.filter-row label.grow { flex: 1 1 260px; }
+.filter-row input, .filter-row select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+.filter-row.actions { align-items: center; }
+.kinds { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.kinds legend { font-size: .8rem; color: var(--muted); padding: 0; margin-bottom: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: .85rem; cursor: pointer; user-select: none; }
+.chip input { margin: 0; }
+.chip .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.kind { display: inline-block; font-size: .72rem; padding: 1px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid currentColor; }
+.kind-ENTER { color: var(--good); }
+.kind-LEAVE, .kind-COMBAT { color: var(--bad); }
+.kind-SESSION, .kind-COMMAND { color: var(--warn); }
+.kind-ITEM { color: var(--accent); }
+.kind-BLOCK, .kind-INTERACT { color: var(--muted); }
+td.time { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+td.text { word-break: break-word; }
+mark { background: color-mix(in srgb, var(--warn) 30%, transparent); color: inherit; border-radius: 2px; }
+.more { text-align: center; margin-top: 12px; }

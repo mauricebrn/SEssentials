@@ -353,6 +353,13 @@ Zeigt Statistiken aus dem Admin-Panel im Browser – nur lesend: Online-Spieler 
 TPS/MSPT/Laufzeit, offene Reports, aktive Strafen, Taler im Umlauf, reichste Spieler, Item-Tracker-Bestände mit
 7-Tage-Trend und Wert-Verlauf als Diagramm sowie aktive News. Aktualisiert sich alle 30 Sekunden; IP-Adressen werden nie gezeigt.
 
+**CreativeLog-Viewer** (`/creativelog` im Webpanel, nur mit `sess.creativelog.view`): alle Kreativ-Einträge durchsuchen und
+filtern – nach Spieler (mit Hinweis, wer gerade im Kreativmodus ist), Art (Betreten, Verlassen, Join/Quit, Items, Blöcke,
+Interaktion, Kampf, Befehle; mit Trefferzahl je Art), Volltext (z.B. `DIAMOND`, `/gamemode`, Koordinaten) und Zeitraum.
+Neueste zuerst, 100 pro Seite mit „Mehr laden“, Suchtreffer hervorgehoben, Klick auf einen Namen filtert nach diesem Spieler.
+Die Filter stehen in der Adresse (als Link teilbar); **CSV-Export** der gefilterten Einträge (bis 50.000 Zeilen).
+Das Recht wird beim Erzeugen des Login-Links festgehalten.
+
 **Login:** Im Spiel `/webpanel` (Recht `sess.webpanel`) – es kommt ein persönlicher Link, 5 Minuten gültig und nur einmal
 verwendbar. Auch in der Server-Konsole möglich; der Link erscheint dann dort. Danach bleibt man `session-hours` angemeldet (HttpOnly-Cookie). `/webpanel logout` beendet alle eigenen Sitzungen;
 Sitzungen enden auch bei einem Server-Neustart.

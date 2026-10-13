@@ -262,6 +262,10 @@ public final class SEssentials extends JavaPlugin {
         return news;
     }
 
+    public CreativeLog creativeLog() {
+        return creativeLog;
+    }
+
     public ChatPrompt chatPrompt() {
         return chatPrompt;
     }

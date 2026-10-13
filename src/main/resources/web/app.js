@@ -159,5 +159,10 @@ async function load() {
   }
 }
 
+// Navigation: CreativeLog nur mit Recht anzeigen
+fetch("/api/me", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).then(me => {
+  if (me && me.creativeLog) document.getElementById("nav-creativelog").hidden = false;
+}).catch(() => {});
+
 load();
 setInterval(load, REFRESH_MS);

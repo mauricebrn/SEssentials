@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CreativeLog – SEssentials Webpanel</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/creativelog.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>SEssentials Webpanel</h1>
+      <nav class="nav"><a href="/">Dashboard</a><a href="/creativelog" class="active">CreativeLog</a></nav>
+    </div>
+    <a class="button" href="/logout">Abmelden</a>
+  </header>
+  <main>
+    <section class="card filters" aria-label="Filter">
+      <div class="filter-row">
+        <label>Spieler
+          <select id="player"><option value="">Alle Spieler</option></select>
+        </label>
+        <label class="grow">Suche
+          <input id="q" type="search" placeholder="z.B. DIAMOND, /gamemode, 120 64 -30 …" autocomplete="off">
+        </label>
+        <label>Von
+          <input id="from" type="datetime-local">
+        </label>
+        <label>Bis
+          <input id="to" type="datetime-local">
+        </label>
+      </div>
+      <div class="filter-row">
+        <fieldset class="kinds" id="kinds"><legend>Art</legend></fieldset>
+      </div>
+      <div class="filter-row actions">
+        <button type="button" id="reset" class="button">Filter zurücksetzen</button>
+        <a id="csv" class="button" href="/api/creativelog.csv">Als CSV exportieren</a>
+        <span class="muted" id="summary" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div id="results"></div>
+      <div class="more"><button type="button" id="more" class="button" hidden>Mehr laden</button></div>
+    </section>
+  </main>
+</body>
+</html>

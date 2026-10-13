@@ -1,9 +1,11 @@
 package de.sessentials.web;
 
 import com.mojang.brigadier.Command;
+import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import de.sessentials.SEssentials;
+import de.sessentials.creativelog.CreativeLog;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
@@ -18,9 +20,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,10 +45,12 @@ public final class WebPanel {
     private static final long LINK_MILLIS = 5 * 60 * 1000;
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private record Login(UUID player, String name, long expires) {}
+    /** {@code creativeLog}: Recht für den CreativeLog-Viewer, festgehalten beim Erzeugen des Links. */
+    private record Login(UUID player, String name, long expires, boolean creativeLog) {}
 
     private final SEssentials plugin;
     private final WebStats stats;
+    private final CreativeLogApi creativeLogApi;
     /** Einmal-Token aus /webpanel → wird beim ersten Aufruf verbraucht. {@code player} ist bei der Konsole {@code null}. */
     private final Map<String, Login> pendingLinks = new ConcurrentHashMap<>();
     /** Sitzungs-ID (Cookie) → angemeldeter Admin. */
@@ -56,6 +62,7 @@ public final class WebPanel {
     public WebPanel(SEssentials plugin) {
         this.plugin = plugin;
         this.stats = new WebStats(plugin);
+        this.creativeLogApi = new CreativeLogApi(plugin);
     }
 
     // ------------------------------------------------------------
@@ -133,7 +140,8 @@ public final class WebPanel {
         pendingLinks.values().removeIf(l -> l.expires() < now);
         String token = randomToken();
         pendingLinks.put(token, new Login(player != null ? player.getUniqueId() : null,
-                player != null ? player.getName() : "Konsole", now + LINK_MILLIS));
+                player != null ? player.getName() : "Konsole", now + LINK_MILLIS,
+                player == null || player.hasPermission(CreativeLog.PERM_VIEW)));
         String url = baseUrl() + "/login?token=" + token;
         sender.sendMessage(msg("link", player, TextService.placeholder("url", url)));
         // in der Konsole ist der Link nicht klickbar – deshalb zusätzlich als Text
@@ -178,6 +186,33 @@ public final class WebPanel {
                     else send(ex, 200, "application/json", snapshot);
                 }
                 case "/" -> resource(ex, session(ex) == null ? "web/login.html" : "web/index.html", "text/html");
+                case "/api/me" -> {
+                    Login s = session(ex);
+                    if (s == null) send(ex, 401, "application/json", "{\"error\":\"unauthorized\"}");
+                    else {
+                        JsonObject me = new JsonObject();
+                        me.addProperty("name", s.name());
+                        me.addProperty("creativeLog", s.creativeLog());
+                        send(ex, 200, "application/json", me.toString());
+                    }
+                }
+                case "/creativelog", "/creativelog.js", "/api/creativelog", "/api/creativelog/players", "/api/creativelog.csv" -> {
+                    Login s = session(ex);
+                    if (s == null) {
+                        if (path.equals("/creativelog")) resource(ex, "web/login.html", "text/html");
+                        else send(ex, 401, "text/plain", "Unauthorized");
+                    } else if (!s.creativeLog()) {
+                        send(ex, 403, "text/plain", "Kein Zugriff auf den CreativeLog (Recht sess.creativelog.view).");
+                    } else {
+                        switch (path) {
+                            case "/creativelog" -> resource(ex, "web/creativelog.html", "text/html");
+                            case "/creativelog.js" -> resource(ex, "web/creativelog.js", "text/javascript");
+                            case "/api/creativelog/players" -> creativeLogApi.players(ex);
+                            case "/api/creativelog.csv" -> creativeLogApi.csv(ex);
+                            default -> creativeLogApi.entries(ex);
+                        }
+                    }
+                }
                 default -> send(ex, 404, "text/plain", "Not Found");
             }
         } catch (RuntimeException e) {
@@ -186,7 +221,7 @@ public final class WebPanel {
     }
 
     private void login(HttpExchange ex) throws IOException {
-        String token = query(ex.getRequestURI(), "token");
+        String token = params(ex.getRequestURI()).get("token");
         Login link = token == null ? null : pendingLinks.remove(token);
         if (link == null || link.expires() < System.currentTimeMillis()) {
             resource(ex, "web/login.html", "text/html");
@@ -194,7 +229,7 @@ public final class WebPanel {
         }
         long hours = Math.max(1, plugin.getConfig().getLong("webpanel.session-hours"));
         String sid = randomToken();
-        sessions.put(sid, new Login(link.player(), link.name(), System.currentTimeMillis() + hours * 3600_000L));
+        sessions.put(sid, new Login(link.player(), link.name(), System.currentTimeMillis() + hours * 3600_000L, link.creativeLog()));
         boolean https = baseUrl().startsWith("https://");
         ex.getResponseHeaders().add("Set-Cookie", COOKIE + "=" + sid + "; Path=/; Max-Age=" + hours * 3600
                 + "; HttpOnly; SameSite=Strict" + (https ? "; Secure" : ""));
@@ -224,14 +259,18 @@ public final class WebPanel {
         return null;
     }
 
-    private static String query(URI uri, String key) {
+    /** URL-Parameter (dekodiert); bei doppelten Namen gilt der erste. */
+    static Map<String, String> params(URI uri) {
+        Map<String, String> result = new HashMap<>();
         String q = uri.getRawQuery();
-        if (q == null) return null;
+        if (q == null) return result;
         for (String part : q.split("&")) {
             String[] kv = part.split("=", 2);
-            if (kv.length == 2 && kv[0].equals(key)) return kv[1];
+            if (kv.length == 2) {
+                result.putIfAbsent(URLDecoder.decode(kv[0], StandardCharsets.UTF_8), URLDecoder.decode(kv[1], StandardCharsets.UTF_8));
+            }
         }
-        return null;
+        return result;
     }
 
     private static void securityHeaders(HttpExchange ex) {
@@ -259,7 +298,7 @@ public final class WebPanel {
         ex.sendResponseHeaders(302, -1);
     }
 
-    private static void send(HttpExchange ex, int status, String type, String body) throws IOException {
+    static void send(HttpExchange ex, int status, String type, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().add("Content-Type", type + "; charset=utf-8");
         ex.sendResponseHeaders(status, bytes.length);

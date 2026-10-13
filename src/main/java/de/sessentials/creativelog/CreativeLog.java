@@ -65,13 +65,13 @@ import java.util.logging.Level;
  */
 public final class CreativeLog implements Listener {
 
-    static final String PERM_VIEW = "sess.creativelog.view";
+    public static final String PERM_VIEW = "sess.creativelog.view";
     private static final String PERM_BYPASS = "sess.creativelog.bypass";
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
     private static final long FLUSH_TICKS = 30 * 20L;
 
     /** Art des Eintrags – bestimmt die Farbe in der Anzeige. */
-    enum Kind {
+    public enum Kind {
         ENTER(NamedTextColor.GREEN), LEAVE(NamedTextColor.RED), SESSION(NamedTextColor.YELLOW),
         ITEM(NamedTextColor.AQUA), BLOCK(NamedTextColor.WHITE), INTERACT(NamedTextColor.GRAY),
         COMBAT(NamedTextColor.RED), COMMAND(NamedTextColor.GOLD);
@@ -83,7 +83,10 @@ public final class CreativeLog implements Listener {
         }
     }
 
-    record Entry(long time, Kind kind, String text) {}
+    public record Entry(long time, Kind kind, String text) {}
+
+    /** Unveränderliche Kopie eines Spieler-Logs, z.B. für das Webpanel. */
+    public record LogSnapshot(UUID id, String name, boolean inCreativeNow, List<Entry> entries) {}
 
     /** Log eines Spielers, älteste zuerst. */
     static final class PlayerLog {
@@ -136,6 +139,17 @@ public final class CreativeLog implements Listener {
 
     Collection<PlayerLog> logs() {
         return logs.values();
+    }
+
+    /** Kopie aller Logs (älteste Einträge zuerst). Nur im Main-Thread aufrufen. */
+    public List<LogSnapshot> snapshot() {
+        List<LogSnapshot> result = new ArrayList<>();
+        for (PlayerLog log : logs.values()) {
+            Player online = Bukkit.getPlayer(log.id);
+            result.add(new LogSnapshot(log.id, log.name, online != null && online.getGameMode() == GameMode.CREATIVE,
+                    List.copyOf(log.entries)));
+        }
+        return result;
     }
 
     // ------------------------------------------------------------
