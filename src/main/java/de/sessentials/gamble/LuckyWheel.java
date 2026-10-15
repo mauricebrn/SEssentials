@@ -40,7 +40,7 @@ public final class LuckyWheel {
     public static final String PERM_ADMIN = "sess.gamble.admin";
 
     /** Feld des Rads: Gewinn = Einsatz × {@code multiplier}, Wahrscheinlichkeit = {@code weight} / Summe aller Gewichte. */
-    private record Segment(double multiplier, int weight) {}
+    public record Segment(double multiplier, int weight) {}
 
     private record Settings(List<Segment> segments, int totalWeight, double maxMultiplier, long minBet, long maxBet, Cost fee) {}
 
@@ -60,10 +60,12 @@ public final class LuckyWheel {
     private final Map<UUID, Integer> offsets = new HashMap<>();
     private final Set<UUID> spinning = new HashSet<>();
     private volatile Settings settings;
+    private final GambleStats stats;
 
     public LuckyWheel(SEssentials plugin) {
         this.plugin = plugin;
         this.bank = plugin.bank();
+        this.stats = new GambleStats(plugin);
         reload();
     }
 
@@ -87,6 +89,25 @@ public final class LuckyWheel {
                 segments.stream().mapToDouble(Segment::multiplier).max().orElse(0),
                 minBet, maxBet,
                 Cost.fromConfig(cfg, "gambling.fee", bank, plugin.bankExchange(), plugin.getLogger()));
+    }
+
+    public GambleStats stats() {
+        return stats;
+    }
+
+    public List<Segment> segments() {
+        return settings.segments();
+    }
+
+    /** Auszahlungsquote laut Config: erwarteter Gewinn je eingesetzter Einheit (ohne Gebühr). */
+    public double expectedReturn() {
+        Settings s = settings;
+        if (s.totalWeight() == 0) return 0;
+        return s.segments().stream().mapToDouble(seg -> seg.multiplier() * seg.weight()).sum() / s.totalWeight();
+    }
+
+    public void shutdown() {
+        stats.shutdown();
     }
 
     // ------------------------------------------------------------
@@ -267,6 +288,9 @@ public final class LuckyWheel {
                     : msg("pot-too-small", player, money("amount", maxStake(s))));
             return;
         }
+
+        stats.record(id, new GambleStats.Spin(System.currentTimeMillis(), player.getName(), stake, fee.value(),
+                result.multiplier(), win), bank.pot());
 
         spinning.add(id);
         int from = offsets.getOrDefault(id, 0);

@@ -56,6 +56,11 @@ public final class Cost {
         return new Cost(false, item, count, exchange.worth(item) * count, bank);
     }
 
+    /** Wert in Bank-Währung, der beim Bezahlen in den Server-Topf geht. */
+    public long value() {
+        return isFree() ? 0 : potValue;
+    }
+
     public boolean isFree() {
         return amount == 0;
     }

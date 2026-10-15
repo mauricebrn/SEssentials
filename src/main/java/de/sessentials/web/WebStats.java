@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import de.sessentials.SEssentials;
 import de.sessentials.bank.BankManager;
+import de.sessentials.gamble.GambleStats;
+import de.sessentials.gamble.LuckyWheel;
 import de.sessentials.news.NewsManager;
 import de.sessentials.punish.PunishmentManager.Punishment;
 import de.sessentials.report.ReportManager.Report;
@@ -16,7 +18,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.lang.management.ManagementFactory;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Baut den Statistik-Schnappschuss für das Webpanel – nur lesend, im Main-Thread.
@@ -40,6 +44,7 @@ final class WebStats {
         root.add("moderation", moderation());
         root.add("economy", economy());
         root.add("news", news());
+        root.add("gambling", gambling());
         return root;
     }
 
@@ -154,6 +159,76 @@ final class WebStats {
         }
         o.add("valueHistory", series);
         return o;
+    }
+
+    private JsonObject gambling() {
+        LuckyWheel wheel = plugin.luckyWheel();
+        GambleStats st = wheel.stats();
+        JsonObject o = new JsonObject();
+        o.addProperty("pot", plugin.bank().pot());
+        o.addProperty("spins", st.spins());
+        o.addProperty("staked", st.staked());
+        o.addProperty("paidOut", st.paidOut());
+        o.addProperty("fees", st.fees());
+        o.addProperty("players", st.players().size());
+        o.addProperty("expectedReturn", wheel.expectedReturn());
+
+        GambleStats.Spin big = st.biggest();
+        if (big != null) o.add("biggest", spin(big));
+
+        JsonArray segments = new JsonArray();
+        int totalWeight = wheel.segments().stream().mapToInt(LuckyWheel.Segment::weight).sum();
+        for (LuckyWheel.Segment seg : wheel.segments()) {
+            JsonObject j = new JsonObject();
+            j.addProperty("multiplier", seg.multiplier());
+            j.addProperty("chance", (double) seg.weight() / totalWeight);
+            j.addProperty("hits", st.hits(seg.multiplier()));
+            segments.add(j);
+        }
+        o.add("segments", segments);
+
+        JsonArray days = new JsonArray();
+        for (Map.Entry<String, GambleStats.Day> e : st.days().entrySet()) {
+            GambleStats.Day d = e.getValue();
+            JsonObject j = new JsonObject();
+            j.addProperty("date", e.getKey());
+            j.addProperty("spins", d.spins);
+            j.addProperty("staked", d.staked);
+            j.addProperty("paidOut", d.paidOut);
+            j.addProperty("fees", d.fees);
+            j.addProperty("pot", d.pot);
+            days.add(j);
+        }
+        o.add("days", days);
+
+        JsonArray players = new JsonArray();
+        st.players().stream()
+                .sorted(Comparator.comparingLong((GambleStats.PlayerStats p) -> p.spins).reversed())
+                .limit(10)
+                .forEach(p -> {
+                    JsonObject j = new JsonObject();
+                    j.addProperty("name", p.name);
+                    j.addProperty("spins", p.spins);
+                    j.addProperty("staked", p.staked);
+                    j.addProperty("won", p.won);
+                    players.add(j);
+                });
+        o.add("topPlayers", players);
+
+        JsonArray recent = new JsonArray();
+        for (GambleStats.Spin sp : st.recent()) recent.add(spin(sp));
+        o.add("recent", recent);
+        return o;
+    }
+
+    private static JsonObject spin(GambleStats.Spin sp) {
+        JsonObject j = new JsonObject();
+        j.addProperty("time", sp.time());
+        j.addProperty("name", sp.name());
+        j.addProperty("stake", sp.stake());
+        j.addProperty("multiplier", sp.multiplier());
+        j.addProperty("win", sp.win());
+        return j;
     }
 
     private JsonArray news() {

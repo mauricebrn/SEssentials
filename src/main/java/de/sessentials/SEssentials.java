@@ -201,6 +201,7 @@ public final class SEssentials extends JavaPlugin {
         if (creativeLog != null) creativeLog.shutdown();
         if (punishments != null) punishments.shutdown();
         if (chestShops != null) chestShops.shutdown();
+        if (luckyWheel != null) luckyWheel.shutdown();
         if (bank != null) bank.shutdown();
     }
 
@@ -318,6 +319,10 @@ public final class SEssentials extends JavaPlugin {
 
     public BankManager bank() {
         return bank;
+    }
+
+    public LuckyWheel luckyWheel() {
+        return luckyWheel;
     }
 
     public BankExchange bankExchange() {

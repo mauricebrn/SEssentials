@@ -180,6 +180,13 @@ public final class WebPanel {
                     if (session(ex) == null) send(ex, 401, "text/plain", "Unauthorized");
                     else resource(ex, "web/app.js", "text/javascript");
                 }
+                case "/gambling", "/gambling.js" -> {
+                    if (session(ex) == null) {
+                        if (path.equals("/gambling")) resource(ex, "web/login.html", "text/html");
+                        else send(ex, 401, "text/plain", "Unauthorized");
+                    } else if (path.equals("/gambling")) resource(ex, "web/gambling.html", "text/html");
+                    else resource(ex, "web/gambling.js", "text/javascript");
+                }
                 case "/api/stats" -> {
                     Login s = session(ex);
                     if (s == null) send(ex, 401, "application/json", "{\"error\":\"unauthorized\"}");

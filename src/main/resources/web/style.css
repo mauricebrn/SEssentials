@@ -90,3 +90,12 @@ td.time { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--
 td.text { word-break: break-word; }
 mark { background: color-mix(in srgb, var(--warn) 30%, transparent); color: inherit; border-radius: 2px; }
 .more { text-align: center; margin-top: 12px; }
+
+/* Glücksrad */
+.chart .series.alt { stroke: var(--warn); }
+.chart .hit { fill: transparent; }
+.chart .hit:hover { fill: color-mix(in srgb, var(--border) 50%, transparent); }
+.legend { display: flex; gap: 16px; font-size: .8rem; color: var(--muted); margin: -4px 0 8px; }
+.key::before { content: ""; display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.key-staked::before { background: var(--line); }
+.key-paid::before { background: var(--warn); }
