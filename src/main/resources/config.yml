@@ -657,3 +657,28 @@ nametag:
 
 messages:
   reloaded: "<prefix><green>Konfiguration neu geladen."
+
+# ------------------------------------------------------------
+# Auto-Update aus GitHub-Releases (vom Build-Workflow bei einem Tag wie v1.2.3 veröffentlicht).
+# Prüft täglich zur Uhrzeit, ob es ein neueres Release gibt, lädt das Jar, prüft SHA-256 und plugin.yml
+# und legt es in den Update-Ordner (plugins/update) – aktiv nach dem nächsten Neustart.
+# An/aus: /autoupdate an|aus oder Admin-Panel (Server → Auto-Update). Sofort prüfen: /autoupdate check
+# Platzhalter: <version>, <current>, <error>, <repository>, <state>, <time>, <result>
+# ------------------------------------------------------------
+auto-update:
+  enabled: false
+  repository: mauricebrn/SEssentials   # besitzer/repo auf GitHub
+  time: "04:00"                        # tägliche Prüfung, Serverzeit (HH:mm, in Anführungszeichen)
+  token: ""                            # nur für private Repos: GitHub-Token mit Lesezugriff auf Inhalte
+  restart-minutes: 0                   # > 0 = nach einem Update Softrestart in X Minuten starten
+  messages:
+    enabled: "<prefix><green>Auto-Update eingeschaltet."
+    disabled: "<prefix><gray>Auto-Update ausgeschaltet."
+    status: "<prefix><gray>Auto-Update: <white><state></white> · <white><repository></white> täglich um <white><time></white> · installiert <white><current></white><newline><gray>Letzte Prüfung: <white><result>"
+    checking: "<prefix><gray>Suche nach Updates …"
+    busy: "<prefix><gray>Es läuft bereits eine Prüfung."
+    up-to-date: "<prefix><green>SEssentials ist aktuell (<current>)."
+    already-staged: "<prefix><gray>Version <white><version></white> ist schon heruntergeladen und wird beim nächsten Neustart aktiv."
+    no-release: "<prefix><gray>Im Repository <white><repository></white> gibt es noch kein Release."
+    staged: "<prefix><green>Update <white><version></white> heruntergeladen (installiert: <current>) – aktiv nach dem nächsten Neustart."
+    failed: "<prefix><red>Auto-Update fehlgeschlagen: <white><error>"

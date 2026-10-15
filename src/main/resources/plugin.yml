@@ -13,6 +13,9 @@ permissions:
   sess.reload:
     description: Erlaubt /sessentials reload
     default: op
+  sess.update:
+    description: Erlaubt /autoupdate und das Auto-Update im Admin-Panel; bekommt Update-Meldungen
+    default: op
   sess.admin:
     description: Erlaubt /admin (Admin-Panel)
     default: op

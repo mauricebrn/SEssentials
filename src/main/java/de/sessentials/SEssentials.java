@@ -39,6 +39,7 @@ import de.sessentials.spawn.SpawnManager;
 import de.sessentials.tab.TabNametagManager;
 import de.sessentials.tpa.TpaManager;
 import de.sessentials.tracker.ItemTracker;
+import de.sessentials.update.AutoUpdater;
 import de.sessentials.tracker.TrackerMenu;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
@@ -88,6 +89,7 @@ public final class SEssentials extends JavaPlugin {
     private ItemTracker tracker;
     private EnderChestCommand enderChest;
     private LuckyWheel luckyWheel;
+    private AutoUpdater autoUpdater;
     private ChestShopManager chestShops;
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
@@ -135,6 +137,7 @@ public final class SEssentials extends JavaPlugin {
         trackerMenu = new TrackerMenu(this, tracker);
 
         softRestart = new SoftRestartManager(this);
+        autoUpdater = new AutoUpdater(this);
         chat = new ChatListener(this);
         joinQuit = new JoinQuitListener(this);
         tab = new TabNametagManager(this);
@@ -194,6 +197,7 @@ public final class SEssentials extends JavaPlugin {
     @Override
     public void onDisable() {
         if (webPanel != null) webPanel.stop();
+        if (autoUpdater != null) autoUpdater.shutdown();
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
@@ -255,6 +259,7 @@ public final class SEssentials extends JavaPlugin {
         tpa.reload();
         enderChest.reload();
         luckyWheel.reload();
+        autoUpdater.reload();
         tab.reload();
         // Webpanel neu starten, damit Port/Adresse greifen; Sitzungen bleiben erhalten
         webPanel.stop();
@@ -319,6 +324,11 @@ public final class SEssentials extends JavaPlugin {
 
     public BankManager bank() {
         return bank;
+    }
+
+    /** Das geladene Plugin-Jar (für den Auto-Updater). */
+    public File jarFile() {
+        return getFile();
     }
 
     public LuckyWheel luckyWheel() {
@@ -391,6 +401,18 @@ public final class SEssentials extends JavaPlugin {
                                 ? text.render("<gray>Neustart in <white><time>", softRestart.time(softRestart.remainingSeconds()))
                                 : Component.text("Kein Neustart geplant", NamedTextColor.GRAY)),
                 this::openSoftRestartMenu);
+        adminPanel.addApp(Category.SERVER, AutoUpdater.PERM,
+                p -> Menu.icon(Material.HOPPER_MINECART, Component.text("Auto-Update", NamedTextColor.AQUA),
+                        status(autoUpdater.enabled()),
+                        Component.text(autoUpdater.repository() + " · täglich " + autoUpdater.time(), NamedTextColor.GRAY),
+                        Component.text(autoUpdater.lastResult(), NamedTextColor.GRAY),
+                        Component.empty(),
+                        Component.text("Klick", NamedTextColor.YELLOW).append(Component.text(" » an/aus", NamedTextColor.GRAY)),
+                        Component.text("/autoupdate check", NamedTextColor.YELLOW).append(Component.text(" » sofort prüfen", NamedTextColor.GRAY))),
+                p -> {
+                    autoUpdater.setEnabled(p, !autoUpdater.enabled());
+                    adminPanel.open(p);
+                });
         adminPanel.addApp(Category.SERVER, "sess.reload",
                 p -> Menu.icon(Material.COMPARATOR, Component.text("Config neu laden", NamedTextColor.GREEN)),
                 p -> {
@@ -565,6 +587,7 @@ public final class SEssentials extends JavaPlugin {
             tpa.register(commands);
             enderChest.register(commands);
             luckyWheel.register(commands);
+            autoUpdater.register(commands);
             messages.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);
