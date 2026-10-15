@@ -25,7 +25,7 @@ public final class EnderChestCommand {
     }
 
     public void reload() {
-        cost = Cost.fromConfig(plugin.getConfig(), "enderchest.cost", plugin.bank(), plugin.getLogger());
+        cost = Cost.fromConfig(plugin.getConfig(), "enderchest.cost", plugin.bank(), plugin.bankExchange(), plugin.getLogger());
     }
 
     public void register(Commands commands) {

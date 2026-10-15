@@ -46,7 +46,7 @@ public final class TpaManager implements Listener {
 
     /** Ohne explizite Defaults lesen: fehlende Keys in älteren Configs fallen auf die config.yml im JAR zurück. */
     public void reload() {
-        cost = Cost.fromConfig(plugin.getConfig(), "tpa.cost", plugin.bank(), plugin.getLogger());
+        cost = Cost.fromConfig(plugin.getConfig(), "tpa.cost", plugin.bank(), plugin.bankExchange(), plugin.getLogger());
         expireMillis = Math.max(1L, plugin.getConfig().getLong("tpa.expire-seconds")) * 1000L;
     }
 

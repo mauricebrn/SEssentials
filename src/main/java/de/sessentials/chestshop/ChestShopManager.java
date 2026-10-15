@@ -312,7 +312,7 @@ public final class ChestShopManager implements Listener {
             return;
         }
         boolean paid = shop.admin()
-                ? plugin.bank().withdraw(player.getUniqueId(), shop.buy())
+                ? plugin.bank().payServer(player.getUniqueId(), shop.buy())
                 : plugin.bank().transfer(player.getUniqueId(), shop.owner(), shop.buy());
         if (!paid) {
             player.sendMessage(msg("not-enough-money", player, tags, money(shop.buy())));
@@ -359,7 +359,7 @@ public final class ChestShopManager implements Listener {
         lastFee.values().removeIf(t -> now - t >= FEE_COOLDOWN_MILLIS);
 
         boolean paid = shop.admin()
-                ? plugin.bank().withdraw(player.getUniqueId(), shop.buy())
+                ? plugin.bank().payServer(player.getUniqueId(), shop.buy())
                 : plugin.bank().transfer(player.getUniqueId(), shop.owner(), shop.buy());
         if (!paid) {
             player.sendMessage(msg("not-enough-money", player, tags(shop), money(shop.buy())));

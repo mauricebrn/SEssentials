@@ -274,6 +274,45 @@ enderchest:
     not-enough: "<prefix><red>Du brauchst <white><price></white>, um deine Enderchest zu öffnen."
 
 # ------------------------------------------------------------
+# Glücksrad (/gluecksrad, Alias /gamble)
+# Einsatz in Bank-Währung einstellen und drehen. Einsätze, die Gebühr unten und alle Zahlungen an den
+# Server (Kosten von /tpa, /spawn, /ec, Käufe in Admin-Shops; Item-Kosten mit ihrem Bank-Kurs) fließen
+# in den Topf; Gewinne werden aus dem Topf bezahlt. Gedreht werden kann nur, wenn der Topf den höchsten
+# möglichen Gewinn deckt. Topf ansehen: /gluecksrad topf, setzen: /gluecksrad topf setzen <betrag>
+# Platzhalter: <amount>, <stake>, <multiplier>, <pot>, <price>
+# ------------------------------------------------------------
+gambling:
+  min-bet: 10
+  max-bet: 100000
+  # Gebühr pro Dreh, zusätzlich zum Einsatz
+  fee:
+    type: money       # money = vom Bankkonto, item = in Items
+    amount: 5         # 0 = keine Gebühr
+    item: DIAMOND     # nur bei type: item
+  # Felder des Rads: multiplier = Gewinn als Vielfaches des Einsatzes (0 = verloren),
+  # weight = Gewichtung; Wahrscheinlichkeit = weight / Summe aller weights (hier 100 = Prozent)
+  segments:
+    - {multiplier: 0, weight: 45}
+    - {multiplier: 0.5, weight: 20}
+    - {multiplier: 1, weight: 15}
+    - {multiplier: 1.5, weight: 10}
+    - {multiplier: 2, weight: 7}
+    - {multiplier: 5, weight: 2}
+    - {multiplier: 10, weight: 1}
+  messages:
+    won: "<prefix><green>Das Rad bleibt auf <white><multiplier></white> stehen – du bekommst <gold><amount></gold>. <dark_gray>(Einsatz <stake>)"
+    lost: "<prefix><red>Das Rad bleibt auf <white><multiplier></white> stehen – leider verloren. <dark_gray>(Einsatz <stake>)"
+    not-enough: "<prefix><red>Dein Kontostand reicht nicht für den Einsatz von <amount>."
+    not-enough-fee: "<prefix><red>Du brauchst <white><price></white> als Gebühr."
+    pot-too-small: "<prefix><red>Der Topf (<pot>) kann den möglichen Gewinn nicht decken. Höchster Einsatz gerade: <white><amount></white>."
+    disabled: "<prefix><red>Das Glücksrad ist nicht eingerichtet."
+    prompt-stake: "<prefix><gray>Wie viel möchtest du setzen? Betrag im Chat eingeben. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    invalid-amount: "<prefix><red>Ungültiger Betrag."
+    cancelled: "<prefix><gray>Eingabe abgebrochen."
+    pot: "<prefix><gray>Im Topf des Glücksrads: <gold><pot>"
+    pot-set: "<prefix><gray>Topf auf <gold><pot></gold> gesetzt."
+
+# ------------------------------------------------------------
 # Chestshops – Schild an eine Kiste/ein Fass (Wandschild oder obendrauf):
 #   Zeile 1: [Shop]        (Admin-Shop mit unbegrenztem Bestand: [AdminShop], Recht sess.chestshop.admin)
 #   Zeile 2: Menge pro Handel, z.B. 16

@@ -18,6 +18,7 @@ import de.sessentials.creativelog.CreativeLog;
 import de.sessentials.creativelog.CreativeLogMenu;
 import de.sessentials.detector.ClientDetector;
 import de.sessentials.dimension.DimensionCommands;
+import de.sessentials.gamble.LuckyWheel;
 import de.sessentials.help.HelpCommand;
 import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.itemguard.ItemGuard;
@@ -79,6 +80,7 @@ public final class SEssentials extends JavaPlugin {
     private BankCommands bankCommands;
     private ItemTracker tracker;
     private EnderChestCommand enderChest;
+    private LuckyWheel luckyWheel;
     private ChestShopManager chestShops;
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
@@ -134,6 +136,7 @@ public final class SEssentials extends JavaPlugin {
         help = new HelpCommand(this);
         tpa = new TpaManager(this);
         enderChest = new EnderChestCommand(this);
+        luckyWheel = new LuckyWheel(this);
         chestShops = new ChestShopManager(this);
         shopCreator = new ShopCreatorMenu(this, chestShops);
         messages = new MessageCommands(this);
@@ -208,6 +211,7 @@ public final class SEssentials extends JavaPlugin {
         help.reload();
         tpa.reload();
         enderChest.reload();
+        luckyWheel.reload();
         tab.reload();
         // Webpanel neu starten, damit Port/Adresse greifen; Sitzungen bleiben erhalten
         webPanel.stop();
@@ -508,6 +512,7 @@ public final class SEssentials extends JavaPlugin {
             help.register(commands);
             tpa.register(commands);
             enderChest.register(commands);
+            luckyWheel.register(commands);
             messages.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);

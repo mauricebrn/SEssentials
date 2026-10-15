@@ -31,6 +31,8 @@ public final class BankManager implements Listener {
     private final Map<UUID, Long> balances = new HashMap<>();
     private final Map<UUID, String> names = new HashMap<>();
     private final AsyncFileWriter writer;
+    /** Topf des Glücksrads: alles, was Spieler an den Server zahlen. Gewinne werden daraus bezahlt. */
+    private long pot;
 
     public BankManager(SEssentials plugin) {
         this.plugin = plugin;
@@ -87,6 +89,50 @@ public final class BankManager implements Listener {
         return true;
     }
 
+    // ------------------------------------------------------------
+    // Server-Topf (Glücksrad)
+    // ------------------------------------------------------------
+
+    public synchronized long pot() {
+        return pot;
+    }
+
+    /** Zahlung an den Server (Befehlskosten, Admin-Shops, …): geht in den Topf. {@code false} = nicht genug Guthaben. */
+    public synchronized boolean payServer(UUID id, long amount) {
+        if (amount < 0) throw new IllegalArgumentException("amount < 0");
+        long current = balance(id);
+        if (current < amount) return false;
+        balances.put(id, current - amount);
+        pot = Math.addExact(pot, amount);
+        save();
+        return true;
+    }
+
+    /** Ändert den Topf um {@code delta}, nie unter 0 (z.B. Rückerstattung, nachdem der Topf schon ausgezahlt hat). */
+    public synchronized void addToPot(long delta) {
+        pot = Math.max(0, Math.addExact(pot, delta));
+        save();
+    }
+
+    public synchronized void setPot(long amount) {
+        pot = Math.max(0, amount);
+        save();
+    }
+
+    /**
+     * Einsatz in den Topf, Gewinn aus dem Topf – in einem Schritt. {@code false} (nichts geändert), wenn der Spieler
+     * den Einsatz nicht hat oder Topf plus Einsatz den höchstmöglichen Gewinn {@code maxWin} nicht decken.
+     */
+    public synchronized boolean wager(UUID id, long stake, long maxWin, long win) {
+        if (stake < 0 || win < 0 || win > maxWin) throw new IllegalArgumentException("stake/win");
+        long current = balance(id);
+        if (current < stake || Math.addExact(pot, stake) < maxWin) return false;
+        balances.put(id, current - stake + win);
+        pot = pot + stake - win;
+        save();
+        return true;
+    }
+
     public synchronized List<Account> top(int limit) {
         return balances.entrySet().stream()
                 .sorted(Map.Entry.<UUID, Long>comparingByValue(Comparator.reverseOrder()))
@@ -126,6 +172,7 @@ public final class BankManager implements Listener {
 
     private void load() {
         YamlConfiguration yml = YamlConfiguration.loadConfiguration(file);
+        pot = Math.max(0, yml.getLong("server-pot"));
         ConfigurationSection sec = yml.getConfigurationSection("accounts");
         if (sec == null) return;
         for (String key : sec.getKeys(false)) {
@@ -139,6 +186,7 @@ public final class BankManager implements Listener {
     /** Schnappschuss unter Sperre, Schreiben asynchron. */
     private void save() {
         YamlConfiguration yml = new YamlConfiguration();
+        yml.set("server-pot", pot);
         for (Map.Entry<UUID, Long> e : balances.entrySet()) {
             yml.set("accounts." + e.getKey() + ".name", names.get(e.getKey()));
             yml.set("accounts." + e.getKey() + ".balance", e.getValue());
