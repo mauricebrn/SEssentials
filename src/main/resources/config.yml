@@ -663,6 +663,51 @@ messages:
   reloaded: "<prefix><green>Konfiguration neu geladen."
 
 # ------------------------------------------------------------
+# Item-Upgrader (/upgrader, Alias /upgrade – Recht sess.upgrader)
+# Ein Item aus dem Inventar setzen, ein wertvolleres Ziel wählen und drehen: Gewinn = Ziel-Item,
+# Verlust = Einsatz weg. Chance = house-factor × Einsatzwert / Zielwert, begrenzt auf min/max-chance.
+# Item-Werte: Grundwerte für Rohstoffe sind im Plugin hinterlegt (Erde 1, Eisen 40, Gold 60, Diamant 400,
+# Netherstern 4000), alles andere wird aus den Rezepten berechnet. Beschädigte Items zählen anteilig.
+# Umbenannte Items, Plugin-Items und gefüllte Behälter (Shulker, Bündel) können nicht gesetzt werden.
+# Verwalten: /upgrader admin bzw. Admin-Panel (Wirtschaft → Item-Upgrader); Wert eines Items: /upgrader value [item]
+# Platzhalter: <item>, <amount>, <chance>, <value>, <total>
+# ------------------------------------------------------------
+upgrader:
+  house-factor: 0.9
+  min-chance: 0.001         # 0,1 %
+  max-chance: 0.9           # 90 %
+  # Items, die weder gesetzt noch gewonnen werden können
+  blacklist:
+    - SPAWNER
+    - TRIAL_SPAWNER
+    - VAULT
+    - DRAGON_EGG
+    - COMMAND_BLOCK
+    - CHAIN_COMMAND_BLOCK
+    - REPEATING_COMMAND_BLOCK
+    - BEDROCK
+    - BARRIER
+  # Eigene Werte pro Item, z.B. ELYTRA: 5000 (gehen den Grundwerten und Rezepten vor)
+  value-overrides: {}
+  messages:
+    bet-empty: "<prefix><red>Wähle zuerst einen Einsatz: Klicke ein Item in deinem Inventar an."
+    bet-blacklisted: "<prefix><red>Dieses Item kann nicht gesetzt werden."
+    bet-no-value: "<prefix><red>Dieses Item hat keinen Wert und kann nicht gesetzt werden."
+    bet-modified: "<prefix><red>Umbenannte oder besondere Items können nicht gesetzt werden."
+    bet-container: "<prefix><red>Leere den Behälter zuerst – sein Inhalt würde sonst mit verloren gehen."
+    bet-changed: "<prefix><red>Dein Einsatz hat sich im Inventar verändert – wähle ihn neu aus."
+    target-empty: "<prefix><red>Wähle zuerst ein Ziel."
+    won: "<prefix><green>Upgrade geglückt! Du bekommst <white><amount>x <item></white>. <dark_gray>(Chance <chance>)"
+    lost: "<prefix><red>Upgrade fehlgeschlagen – dein Einsatz ist weg. <dark_gray>(Chance <chance>)"
+    delivered: "<prefix><green>Dein Gewinn aus dem Item-Upgrader wurde nachgeliefert."
+    value: "<prefix><gray>Wert von <white><item></white>: <gold><value></gold> pro Stück, <gold><total></gold> für <amount> Stück."
+    value-unknown: "<prefix><gray>Dieses Item hat keinen Upgrader-Wert."
+    prompt-amount: "<prefix><gray>Wie viele möchtest du gewinnen? Zahl im Chat eingeben. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    prompt-search: "<prefix><gray>Suchbegriff im Chat eingeben (englischer Name, <white>-</white> = alle). <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    prompt-value: "<prefix><gray>Neuen Wert im Chat eingeben oder <white>reset</white> für den berechneten Wert. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    invalid-number: "<prefix><red>Ungültige Zahl."
+
+# ------------------------------------------------------------
 # Auto-Update aus GitHub-Releases (vom Build-Workflow bei einem Tag wie v1.2.3 veröffentlicht).
 # Prüft täglich zur Uhrzeit, ob es ein neueres Release gibt, lädt das Jar, prüft SHA-256 und plugin.yml
 # und legt es in den Update-Ordner (plugins/update) – aktiv nach dem nächsten Neustart.

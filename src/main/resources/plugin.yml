@@ -19,6 +19,12 @@ permissions:
   sess.fakeplayer.ignore:
     description: Wird von kämpfenden Fake-Spielern nicht angegriffen
     default: false
+  sess.upgrader:
+    description: Erlaubt /upgrader (Item-Upgrader)
+    default: true
+  sess.upgrader.admin:
+    description: Erlaubt /upgrader admin (Item-Werte und Sperrliste verwalten)
+    default: op
   sess.update:
     description: Erlaubt /autoupdate und das Auto-Update im Admin-Panel; bekommt Update-Meldungen
     default: op

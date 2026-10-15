@@ -37,6 +37,7 @@ public final class Menu implements InventoryHolder {
     private final Inventory inventory;
     private final Map<Integer, BiConsumer<Player, ClickType>> actions = new HashMap<>();
     private Consumer<Player> refresh;
+    private BiConsumer<Player, Integer> playerInventoryClick;
 
     public Menu(int rows, Component title) {
         this.inventory = Bukkit.createInventory(this, Math.max(1, Math.min(6, rows)) * 9, title);
@@ -67,6 +68,14 @@ public final class Menu implements InventoryHolder {
      */
     public void refreshWith(Consumer<Player> refresh) {
         this.refresh = refresh;
+    }
+
+    /**
+     * Klicks ins eigene Inventar (unten), solange das Menü offen ist – z.B. um dort ein Item auszuwählen.
+     * Bekommt den Slot im Spielerinventar; das Item wird dabei nicht bewegt.
+     */
+    public void onPlayerInventoryClick(BiConsumer<Player, Integer> action) {
+        this.playerInventoryClick = action;
     }
 
     public int size() {
@@ -133,7 +142,12 @@ public final class Menu implements InventoryHolder {
         public void onClick(InventoryClickEvent event) {
             if (!(event.getView().getTopInventory().getHolder(false) instanceof Menu menu)) return;
             event.setCancelled(true);
-            if (event.getClickedInventory() != menu.inventory || !(event.getWhoClicked() instanceof Player player)) return;
+            if (!(event.getWhoClicked() instanceof Player player)) return;
+            if (event.getClickedInventory() == player.getInventory() && menu.playerInventoryClick != null) {
+                menu.playerInventoryClick.accept(player, event.getSlot());
+                return;
+            }
+            if (event.getClickedInventory() != menu.inventory) return;
             BiConsumer<Player, ClickType> action = menu.actions.get(event.getSlot());
             if (action == null) return;
             action.accept(player, event.getClick());

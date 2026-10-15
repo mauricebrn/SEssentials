@@ -302,7 +302,10 @@ public final class LuckyWheel {
         int from = offsets.getOrDefault(id, 0);
         int n = s.segments().size();
         int steps = MIN_STEPS + Math.floorMod(index - from - MIN_STEPS, n);
-        animate(player, menu, s, stake, from, steps, steps, () -> {
+        SpinAnimation.run(plugin, steps, i -> {
+            drawStrip(menu, s, from + i, stake);
+            if (player.isOnline()) player.playSound(CLICK);
+        }, () -> {
             spinning.remove(id);
             offsets.put(id, index);
             if (!player.isOnline()) return;
@@ -317,20 +320,6 @@ public final class LuckyWheel {
             player.playSound(win > stake ? WIN : LOSE);
             render(menu, player);
         });
-    }
-
-    /** Dreht das Band Schritt für Schritt weiter und wird dabei langsamer. */
-    private void animate(Player player, Menu menu, Settings s, long stake, int offset, int left, int total, Runnable done) {
-        drawStrip(menu, s, offset, stake);
-        if (player.isOnline()) player.playSound(CLICK);
-        if (left == 0) {
-            done.run();
-            return;
-        }
-        double progress = 1 - (double) left / total;
-        long delay = 1 + Math.round(6 * progress * progress * progress);
-        Bukkit.getScheduler().runTaskLater(plugin,
-                () -> animate(player, menu, s, stake, offset + 1, left - 1, total, done), delay);
     }
 
     private static int pick(Settings s) {

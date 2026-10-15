@@ -41,6 +41,7 @@ import de.sessentials.tab.TabNametagManager;
 import de.sessentials.tpa.TpaManager;
 import de.sessentials.tracker.ItemTracker;
 import de.sessentials.update.AutoUpdater;
+import de.sessentials.upgrader.ItemUpgrader;
 import de.sessentials.tracker.TrackerMenu;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
@@ -92,6 +93,7 @@ public final class SEssentials extends JavaPlugin {
     private LuckyWheel luckyWheel;
     private AutoUpdater autoUpdater;
     private FakePlayerManager fakePlayers;
+    private ItemUpgrader upgrader;
     private ChestShopManager chestShops;
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
@@ -151,6 +153,7 @@ public final class SEssentials extends JavaPlugin {
         enderChest = new EnderChestCommand(this);
         luckyWheel = new LuckyWheel(this);
         fakePlayers = new FakePlayerManager(this);
+        upgrader = new ItemUpgrader(this);
         chestShops = new ChestShopManager(this);
         shopCreator = new ShopCreatorMenu(this, chestShops);
         messages = new MessageCommands(this);
@@ -190,6 +193,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(messages, this);
         getServer().getPluginManager().registerEvents(tab, this);
         getServer().getPluginManager().registerEvents(fakePlayers, this);
+        getServer().getPluginManager().registerEvents(upgrader, this);
         tab.reload();
 
         registerCommands();
@@ -203,6 +207,7 @@ public final class SEssentials extends JavaPlugin {
         if (webPanel != null) webPanel.stop();
         if (autoUpdater != null) autoUpdater.shutdown();
         if (fakePlayers != null) fakePlayers.shutdown();
+        if (upgrader != null) upgrader.shutdown();
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
@@ -266,6 +271,7 @@ public final class SEssentials extends JavaPlugin {
         luckyWheel.reload();
         autoUpdater.reload();
         fakePlayers.reload();
+        upgrader.reload();
         tab.reload();
         // Webpanel neu starten, damit Port/Adresse greifen; Sitzungen bleiben erhalten
         webPanel.stop();
@@ -390,6 +396,10 @@ public final class SEssentials extends JavaPlugin {
                         Component.text("Wertvolle Items in Inventar und", NamedTextColor.GRAY),
                         Component.text("Enderchest, mit Verlauf", NamedTextColor.GRAY)),
                 p -> trackerMenu.openOverview(p, 1));
+        adminPanel.addApp(Category.ECONOMY, ItemUpgrader.PERM_ADMIN,
+                p -> Menu.icon(Material.SMITHING_TABLE, Component.text("Item-Upgrader", NamedTextColor.AQUA),
+                        Component.text("Item-Werte und Sperrliste", NamedTextColor.GRAY)),
+                upgrader::openAdmin);
         adminPanel.addApp(Category.ECONOMY, LuckyWheel.PERM_ADMIN,
                 p -> Menu.icon(Material.CLOCK, Component.text("Glücksrad", NamedTextColor.LIGHT_PURPLE),
                         Component.text("Topf: " + bank.format(bank.pot()), NamedTextColor.GRAY),
@@ -595,6 +605,7 @@ public final class SEssentials extends JavaPlugin {
             luckyWheel.register(commands);
             autoUpdater.register(commands);
             fakePlayers.register(commands);
+            upgrader.register(commands);
             messages.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);
