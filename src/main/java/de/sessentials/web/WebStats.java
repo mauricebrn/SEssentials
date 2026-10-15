@@ -181,8 +181,9 @@ final class WebStats {
         for (LuckyWheel.Segment seg : wheel.segments()) {
             JsonObject j = new JsonObject();
             j.addProperty("multiplier", seg.multiplier());
+            j.addProperty("jackpot", seg.jackpot());
             j.addProperty("chance", (double) seg.weight() / totalWeight);
-            j.addProperty("hits", st.hits(seg.multiplier()));
+            j.addProperty("hits", st.hits(seg.multiplier(), seg.jackpot()));
             segments.add(j);
         }
         o.add("segments", segments);
@@ -227,6 +228,7 @@ final class WebStats {
         j.addProperty("name", sp.name());
         j.addProperty("stake", sp.stake());
         j.addProperty("multiplier", sp.multiplier());
+        j.addProperty("jackpot", sp.jackpot());
         j.addProperty("win", sp.win());
         return j;
     }

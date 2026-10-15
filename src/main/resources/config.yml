@@ -280,7 +280,7 @@ enderchest:
 # in den Topf; Gewinne werden aus dem Topf bezahlt. Gedreht werden kann nur, wenn der Topf den höchsten
 # möglichen Gewinn deckt. Topf ansehen: /gluecksrad topf, setzen: /gluecksrad topf setzen <betrag>
 # oder im Admin-Panel (Wirtschaft → Glücksrad, Recht sess.gamble.admin)
-# Platzhalter: <amount>, <stake>, <multiplier>, <pot>, <price>
+# Platzhalter: <amount>, <stake>, <multiplier>, <pot>, <price>, <winner> (nur jackpot-broadcast)
 # ------------------------------------------------------------
 gambling:
   min-bet: 10
@@ -291,17 +291,21 @@ gambling:
     amount: 5         # 0 = keine Gebühr
     item: DIAMOND     # nur bei type: item
   # Felder des Rads: multiplier = Gewinn als Vielfaches des Einsatzes (0 = verloren),
+  # jackpot: true = Gewinn ist der ganze Topf (danach ist der Topf leer),
   # weight = Gewichtung; Wahrscheinlichkeit = weight / Summe aller weights (hier 100 = Prozent)
   segments:
-    - {multiplier: 0, weight: 45}
+    - {multiplier: 0, weight: 44}
     - {multiplier: 0.5, weight: 20}
     - {multiplier: 1, weight: 15}
     - {multiplier: 1.5, weight: 10}
     - {multiplier: 2, weight: 7}
     - {multiplier: 5, weight: 2}
     - {multiplier: 10, weight: 1}
+    - {jackpot: true, weight: 1}
   messages:
     won: "<prefix><green>Das Rad bleibt auf <white><multiplier></white> stehen – du bekommst <gold><amount></gold>. <dark_gray>(Einsatz <stake>)"
+    jackpot: "<prefix><light_purple><bold>JACKPOT!</bold></light_purple> <green>Du gewinnst den ganzen Topf: <gold><amount></gold>."
+    jackpot-broadcast: "<prefix><light_purple><bold>JACKPOT!</bold></light_purple> <white><winner></white> <gray>hat am Glücksrad den ganzen Topf gewonnen: <gold><amount></gold>!"
     lost: "<prefix><red>Das Rad bleibt auf <white><multiplier></white> stehen – leider verloren. <dark_gray>(Einsatz <stake>)"
     not-enough: "<prefix><red>Dein Kontostand reicht nicht für den Einsatz von <amount>."
     not-enough-fee: "<prefix><red>Du brauchst <white><price></white> als Gebühr."

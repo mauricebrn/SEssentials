@@ -39,8 +39,11 @@ public final class LuckyWheel {
     public static final String PERM_USE = "sess.gamble";
     public static final String PERM_ADMIN = "sess.gamble.admin";
 
-    /** Feld des Rads: Gewinn = Einsatz × {@code multiplier}, Wahrscheinlichkeit = {@code weight} / Summe aller Gewichte. */
-    public record Segment(double multiplier, int weight) {}
+    /**
+     * Feld des Rads: Gewinn = Einsatz × {@code multiplier} bzw. beim Jackpot der ganze Topf;
+     * Wahrscheinlichkeit = {@code weight} / Summe aller Gewichte.
+     */
+    public record Segment(double multiplier, int weight, boolean jackpot) {}
 
     private record Settings(List<Segment> segments, int totalWeight, double maxMultiplier, long minBet, long maxBet, Cost fee) {}
 
@@ -73,20 +76,22 @@ public final class LuckyWheel {
         var cfg = plugin.getConfig();
         List<Segment> segments = new ArrayList<>();
         for (Map<?, ?> map : cfg.getMapList("gambling.segments")) {
-            double multiplier = map.get("multiplier") instanceof Number n ? n.doubleValue() : -1;
+            boolean jackpot = Boolean.TRUE.equals(map.get("jackpot"));
+            double multiplier = jackpot ? 0 : map.get("multiplier") instanceof Number n ? n.doubleValue() : -1;
             int weight = map.get("weight") instanceof Number n ? n.intValue() : 0;
             if (multiplier < 0 || weight <= 0) {
-                plugin.getLogger().warning("gambling.segments: " + map + " braucht multiplier >= 0 und weight > 0 – übersprungen.");
+                plugin.getLogger().warning("gambling.segments: " + map + " braucht multiplier >= 0 (oder jackpot: true) und weight > 0 – übersprungen.");
                 continue;
             }
-            segments.add(new Segment(multiplier, weight));
+            segments.add(new Segment(multiplier, weight, jackpot));
         }
         if (segments.isEmpty()) plugin.getLogger().warning("gambling.segments ist leer – das Glücksrad ist deaktiviert.");
         long minBet = Math.max(1, cfg.getLong("gambling.min-bet", 1));
         long maxBet = Math.max(minBet, cfg.getLong("gambling.max-bet", minBet));
         settings = new Settings(List.copyOf(segments),
                 segments.stream().mapToInt(Segment::weight).sum(),
-                segments.stream().mapToDouble(Segment::multiplier).max().orElse(0),
+                // der Jackpot zahlt genau den Topf und braucht deshalb keine Deckung
+                segments.stream().filter(seg -> !seg.jackpot()).mapToDouble(Segment::multiplier).max().orElse(0),
                 minBet, maxBet,
                 Cost.fromConfig(cfg, "gambling.fee", bank, plugin.bankExchange(), plugin.getLogger()));
     }
@@ -99,7 +104,7 @@ public final class LuckyWheel {
         return settings.segments();
     }
 
-    /** Auszahlungsquote laut Config: erwarteter Gewinn je eingesetzter Einheit (ohne Gebühr). */
+    /** Auszahlungsquote laut Config: erwarteter Gewinn je eingesetzter Einheit (ohne Gebühr und ohne Jackpot, der vom Topf abhängt). */
     public double expectedReturn() {
         Settings s = settings;
         if (s.totalWeight() == 0) return 0;
@@ -167,7 +172,8 @@ public final class LuckyWheel {
             Segment seg = s.segments().get(Math.floorMod(offset + i - STRIP_CENTER, n));
             menu.set(STRIP_START + i, Menu.icon(material(seg, s), Component.text(multiplier(seg), color(seg), TextDecoration.BOLD),
                     line("Chance", percent(seg.weight(), s.totalWeight())),
-                    line("Gewinn", bank.format(win(stake, seg.multiplier())))), p -> {});
+                    line("Gewinn", seg.jackpot() ? "der ganze Topf (" + bank.format(bank.pot() + stake) + ")"
+                            : bank.format(win(stake, seg.multiplier())))), p -> {});
         }
     }
 
@@ -279,8 +285,8 @@ public final class LuckyWheel {
 
         int index = pick(s);
         Segment result = s.segments().get(index);
-        long win = win(stake, result.multiplier());
-        if (!bank.wager(id, stake, maxWin, win)) {
+        long win = result.jackpot() ? bank.wagerJackpot(id, stake) : win(stake, result.multiplier());
+        if (win < 0 || !result.jackpot() && !bank.wager(id, stake, maxWin, win)) {
             // Gebühr (Geld) hat das Konto unter den Einsatz gedrückt, oder der Topf hat sich geändert
             fee.refund(player);
             player.sendMessage(bank.balance(id) < stake
@@ -290,7 +296,7 @@ public final class LuckyWheel {
         }
 
         stats.record(id, new GambleStats.Spin(System.currentTimeMillis(), player.getName(), stake, fee.value(),
-                result.multiplier(), win), bank.pot());
+                result.multiplier(), result.jackpot(), win), bank.pot());
 
         spinning.add(id);
         int from = offsets.getOrDefault(id, 0);
@@ -302,7 +308,12 @@ public final class LuckyWheel {
             if (!player.isOnline()) return;
             TagResolver tags = TagResolver.resolver(money("amount", win), money("stake", stake),
                     TextService.placeholder("multiplier", multiplier(result)));
-            player.sendMessage(msg(win > 0 ? "won" : "lost", player, tags));
+            if (result.jackpot()) {
+                Bukkit.broadcast(msg("jackpot-broadcast", null, tags, TextService.placeholder("winner", player.getName())));
+                player.sendMessage(msg("jackpot", player, tags));
+            } else {
+                player.sendMessage(msg(win > 0 ? "won" : "lost", player, tags));
+            }
             player.playSound(win > stake ? WIN : LOSE);
             render(menu, player);
         });
@@ -367,6 +378,7 @@ public final class LuckyWheel {
     // ------------------------------------------------------------
 
     private static Material material(Segment seg, Settings s) {
+        if (seg.jackpot()) return Material.NETHER_STAR;
         double m = seg.multiplier();
         if (m == 0) return Material.RED_CONCRETE;
         if (m < 1) return Material.ORANGE_CONCRETE;
@@ -375,11 +387,13 @@ public final class LuckyWheel {
     }
 
     private static NamedTextColor color(Segment seg) {
+        if (seg.jackpot()) return NamedTextColor.LIGHT_PURPLE;
         double m = seg.multiplier();
         return m == 0 ? NamedTextColor.RED : m < 1 ? NamedTextColor.GOLD : m == 1 ? NamedTextColor.YELLOW : NamedTextColor.GREEN;
     }
 
     private static String multiplier(Segment seg) {
+        if (seg.jackpot()) return "JACKPOT";
         NumberFormat f = NumberFormat.getNumberInstance(Locale.GERMANY);
         f.setMaximumFractionDigits(2);
         return "x" + f.format(seg.multiplier());

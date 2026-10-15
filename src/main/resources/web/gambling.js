@@ -29,7 +29,7 @@ function table(headers, rows, numeric = []) {
 }
 
 const replace = (id, node) => document.getElementById(id).replaceChildren(node);
-const multi = m => "x" + mf.format(m);
+const multi = (m, jackpot) => jackpot ? "Jackpot" : "x" + mf.format(m);
 
 /** Betrag mit Vorzeichen, grün/rot eingefärbt. */
 function signed(n) {
@@ -115,7 +115,7 @@ function renderChart(days) {
 function renderSegments(g) {
   const total = g.segments.reduce((a, s) => a + s.hits, 0);
   replace("segments", table(["Feld", "Chance", "Treffer", "Tatsächlich"],
-    g.segments.map(s => [multi(s.multiplier), pf.format(s.chance), nf.format(s.hits), total > 0 ? pf.format(s.hits / total) : "–"]),
+    g.segments.map(s => [multi(s.multiplier, s.jackpot), pf.format(s.chance), nf.format(s.hits), total > 0 ? pf.format(s.hits / total) : "–"]),
     [1, 2, 3]));
 }
 
@@ -127,7 +127,7 @@ function renderPlayers(g) {
 
 function renderRecent(g) {
   replace("recent", table(["Zeit", "Spieler", "Einsatz", "Feld", "Ergebnis"],
-    g.recent.map(r => [dtf.format(new Date(r.time)), r.name, nf.format(r.stake), multi(r.multiplier), signed(r.win - r.stake)]),
+    g.recent.map(r => [dtf.format(new Date(r.time)), r.name, nf.format(r.stake), multi(r.multiplier, r.jackpot), signed(r.win - r.stake)]),
     [2, 4]));
 }
 

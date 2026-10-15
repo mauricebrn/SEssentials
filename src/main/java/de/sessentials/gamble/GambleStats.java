@@ -28,7 +28,7 @@ import java.util.UUID;
  */
 public final class GambleStats {
 
-    public record Spin(long time, String name, long stake, long fee, double multiplier, long win) {}
+    public record Spin(long time, String name, long stake, long fee, double multiplier, boolean jackpot, long win) {}
 
     public static final class PlayerStats {
         public String name;
@@ -67,7 +67,7 @@ public final class GambleStats {
         paidOut += spin.win();
         fees += spin.fee();
         if (spin.win() > 0 && (biggest == null || spin.win() > biggest.win())) biggest = spin;
-        hits.merge(key(spin.multiplier()), 1L, Long::sum);
+        hits.merge(key(spin.multiplier(), spin.jackpot()), 1L, Long::sum);
 
         PlayerStats p = players.computeIfAbsent(player, id -> new PlayerStats());
         p.name = spin.name();
@@ -98,13 +98,13 @@ public final class GambleStats {
     /** Neueste zuerst. */
     public Collection<Spin> recent() { return recent; }
 
-    public long hits(double multiplier) {
-        return hits.getOrDefault(key(multiplier), 0L);
+    public long hits(double multiplier, boolean jackpot) {
+        return hits.getOrDefault(key(multiplier, jackpot), 0L);
     }
 
-    /** Einheitlicher Schlüssel: 2.0 und 2 sind dasselbe Feld. */
-    static String key(double multiplier) {
-        return BigDecimal.valueOf(multiplier).stripTrailingZeros().toPlainString();
+    /** Einheitlicher Schlüssel: 2.0 und 2 sind dasselbe Feld; der Jackpot heißt "jackpot". */
+    static String key(double multiplier, boolean jackpot) {
+        return jackpot ? "jackpot" : BigDecimal.valueOf(multiplier).stripTrailingZeros().toPlainString();
     }
 
     // ------------------------------------------------------------
@@ -146,7 +146,7 @@ public final class GambleStats {
 
     private static Spin spin(Map<?, ?> m) {
         return new Spin(num(m.get("time")), String.valueOf(m.get("name")), num(m.get("stake")), num(m.get("fee")),
-                m.get("multiplier") instanceof Number n ? n.doubleValue() : 0, num(m.get("win")));
+                m.get("multiplier") instanceof Number n ? n.doubleValue() : 0, Boolean.TRUE.equals(m.get("jackpot")), num(m.get("win")));
     }
 
     /** YAML liest ein unquotiertes 2026-10-15 als Datum – beides wird zu "yyyy-MM-dd". */
@@ -166,6 +166,7 @@ public final class GambleStats {
         m.put("stake", s.stake());
         m.put("fee", s.fee());
         m.put("multiplier", s.multiplier());
+        if (s.jackpot()) m.put("jackpot", true);
         m.put("win", s.win());
         return m;
     }

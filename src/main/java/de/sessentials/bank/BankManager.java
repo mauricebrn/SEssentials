@@ -133,6 +133,21 @@ public final class BankManager implements Listener {
         return true;
     }
 
+    /**
+     * Jackpot: Einsatz in den Topf, dann bekommt der Spieler den ganzen Topf und der Topf ist leer.
+     * @return Gewinn (Topf inklusive Einsatz) oder -1, wenn der Spieler den Einsatz nicht hat (nichts geändert).
+     */
+    public synchronized long wagerJackpot(UUID id, long stake) {
+        if (stake < 0) throw new IllegalArgumentException("stake < 0");
+        long current = balance(id);
+        if (current < stake) return -1;
+        long win = Math.addExact(pot, stake);
+        balances.put(id, current - stake + win);
+        pot = 0;
+        save();
+        return win;
+    }
+
     public synchronized List<Account> top(int limit) {
         return balances.entrySet().stream()
                 .sorted(Map.Entry.<UUID, Long>comparingByValue(Comparator.reverseOrder()))
