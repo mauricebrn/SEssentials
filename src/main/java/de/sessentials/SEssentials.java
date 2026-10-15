@@ -31,6 +31,7 @@ import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
 import de.sessentials.player.EnderChestCommand;
 import de.sessentials.player.PlayerCommands;
+import de.sessentials.player.SudoCommand;
 import de.sessentials.punish.PunishCommands;
 import de.sessentials.punish.PunishmentManager;
 import de.sessentials.punish.PunishmentMenu;
@@ -76,6 +77,7 @@ public final class SEssentials extends JavaPlugin {
     private TabNametagManager tab;
     private VanishManager vanish;
     private PlayerCommands playerCommands;
+    private SudoCommand sudo;
     private AdminPanel adminPanel;
     private ReportManager reports;
     private Notifications notifications;
@@ -148,6 +150,7 @@ public final class SEssentials extends JavaPlugin {
         joinQuit = new JoinQuitListener(this);
         tab = new TabNametagManager(this);
         playerCommands = new PlayerCommands(this);
+        sudo = new SudoCommand(this);
         dimensions = new DimensionCommands(this);
         spawn = new SpawnManager(this);
         help = new HelpCommand(this);
@@ -601,6 +604,7 @@ public final class SEssentials extends JavaPlugin {
                     List.of("v"));
 
             playerCommands.register(commands);
+            sudo.register(commands);
             reports.register(commands);
             dimensions.register(commands);
             spawn.register(commands);

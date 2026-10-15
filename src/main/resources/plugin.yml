@@ -82,6 +82,12 @@ permissions:
   sess.god.others:
     description: Erlaubt /god <spieler>
     default: op
+  sess.sudo:
+    description: Erlaubt /sudo (Spieler einen Befehl ausführen oder chatten lassen)
+    default: op
+  sess.sudo.exempt:
+    description: Kann von anderen Spielern nicht per /sudo gesteuert werden (von der Konsole schon)
+    default: op
   sess.nether:
     description: Erlaubt /nether
     default: op

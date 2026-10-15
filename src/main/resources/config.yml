@@ -119,6 +119,19 @@ player-commands:
     player-only: "<prefix><red>Nur für Spieler – nutze /<command> <spieler>."
 
 # ------------------------------------------------------------
+# /sudo <spieler> <befehl> bzw. /sudo <spieler> c:<text> (Recht sess.sudo)
+# Läuft wie eine echte Eingabe des Spielers: mit seinen Rechten, Mute-Sperren und Chatformat.
+# Auch Selektoren (@a, @p) und Fake-Spieler gehen. Spieler mit sess.sudo.exempt steuert nur die Konsole.
+# Platzhalter: <target>, <input>
+# ------------------------------------------------------------
+sudo:
+  messages:
+    executed: "<prefix><gray><white><target></white> führt aus: <white><input>"
+    chatted: "<prefix><gray><white><target></white> schreibt: <white><input>"
+    exempt: "<prefix><red><white><target></white> kann nicht per /sudo gesteuert werden."
+    empty: "<prefix><red>Gib einen Befehl oder c:<text> an."
+
+# ------------------------------------------------------------
 # /nether und /end – im Nether/End führt derselbe Befehl zurück in die Oberwelt
 # ------------------------------------------------------------
 dimensions:
