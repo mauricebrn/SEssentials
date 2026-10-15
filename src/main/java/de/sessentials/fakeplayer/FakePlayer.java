@@ -20,6 +20,8 @@ import java.util.function.Predicate;
  * ist Ziel von Befehlen), nur ohne Client. Die KI steuert ihn über dieselben Eingaben wie eine Tastatur:
  * vorwärts, sprinten, springen, schauen, schlagen. Keine Wegfindung – Ein-Block-Hindernisse werden
  * übersprungen, Abgründe über 3 Blöcke, Wasser und Lava gemieden.
+ * Angriff ({@link Goal}): wen er von sich aus angreift. Verteidigung ({@link Defense}): was er tut, wenn ihn
+ * ein Spieler oder Mob trifft – fliehen, zurückschlagen (und bei wenig Leben fliehen) oder nichts.
  */
 final class FakePlayer {
 
@@ -51,8 +53,36 @@ final class FakePlayer {
         }
     }
 
-    /** Einstellungen aus der Config, für alle Fake-Spieler gleich. */
-    record Tuning(double wanderRadius, double aggroRange, int attackCooldown) {}
+    enum Defense {
+        FLEE("flee", "Fliehen"),
+        FIGHT("fight", "Zurückschlagen"),
+        IGNORE("ignore", "Nichts tun");
+
+        final String key;
+        final String label;
+
+        Defense(String key, String label) {
+            this.key = key;
+            this.label = label;
+        }
+
+        static Defense byKey(String key) {
+            for (Defense d : values()) if (d.key.equalsIgnoreCase(key)) return d;
+            return null;
+        }
+    }
+
+    /**
+     * Einstellungen aus der Config, für alle Fake-Spieler gleich.
+     * @param fleeDistance  so weit (Blöcke) läuft er vor dem Angreifer weg
+     * @param fleeTicks     höchstens so lange flieht er
+     * @param fleeBelowHealth beim Zurückschlagen: unter diesem Leben (Herzen × 2) doch fliehen; 0 = nie
+     */
+    record Tuning(double wanderRadius, double aggroRange, int attackCooldown,
+                  double fleeDistance, int fleeTicks, double fleeBelowHealth) {}
+
+    /** Ausweich-Richtungen beim Fliehen, wenn geradeaus versperrt ist (Grad). */
+    private static final int[] FLEE_ANGLES = {0, 35, -35, 70, -70, 110, -110};
 
     private static final double REACH = 2.8;
     private static final double LOSE_TARGET_RANGE = 24;
@@ -71,12 +101,18 @@ final class FakePlayer {
     boolean placeAtHome;
     boolean ai;
     Goal goal;
+    Defense defense;
 
     /** Der laufende Spieler oder {@code null}, wenn offline. */
     FakeServerPlayer handle;
 
     // KI-Zustand (nur Main-Thread)
     private LivingEntity target;
+    /** Wer ihn zuletzt getroffen hat – darf zurückgeschlagen werden, egal was {@link #goal} sagt. */
+    private LivingEntity attacker;
+    /** Gefahr, vor der er gerade flieht. */
+    private LivingEntity threat;
+    private int fleeTicksLeft;
     private Location waypoint;
     private int pauseTicks, cooldown, stuckTicks, retargetTicks;
     private double lastDistance = Double.MAX_VALUE;
@@ -94,13 +130,36 @@ final class FakePlayer {
         return handle != null && !handle.isRemoved() ? handle.getBukkitEntity() : null;
     }
 
-    /** Von außen gesetztes Ziel (Gegenangriff), sofern das Ziel es erlaubt. */
-    void provoke(LivingEntity attacker) {
-        if (ai && allowed(attacker)) target = attacker;
+    /** Er wurde von {@code attacker} getroffen: je nach Verteidigung fliehen oder zurückschlagen. */
+    void attackedBy(LivingEntity attacker, Tuning t, Predicate<Player> attackable) {
+        if (!ai) return;
+        switch (defense) {
+            case FLEE -> flee(attacker, t);
+            case FIGHT -> {
+                // Spieler im Kreativmodus, im Vanish usw. bleiben auch beim Zurückschlagen tabu
+                if (attacker instanceof Player p && !attackable.test(p)) flee(attacker, t);
+                else if (threat == null) {
+                    this.attacker = attacker;
+                    target = attacker;
+                }
+            }
+            case IGNORE -> {
+            }
+        }
+    }
+
+    private void flee(LivingEntity from, Tuning t) {
+        threat = from;
+        fleeTicksLeft = t.fleeTicks();
+        target = null;
+        waypoint = null;
     }
 
     void clearState() {
         target = null;
+        attacker = null;
+        threat = null;
+        fleeTicksLeft = 0;
         waypoint = null;
         pauseTicks = 0;
         if (handle != null) stop();
@@ -123,6 +182,20 @@ final class FakePlayer {
             handle.setJumping(swim);
             lookAtNearestPlayer(body);
             return;
+        }
+        // bei zu wenig Leben auch im Kampf lieber weglaufen
+        if (defense == Defense.FIGHT && target != null && t.fleeBelowHealth() > 0 && body.getHealth() < t.fleeBelowHealth()) {
+            flee(target, t);
+        }
+        if (threat != null) {
+            if (fleeTicksLeft-- > 0 && threat.isValid() && !threat.isDead() && threat.getWorld().equals(body.getWorld())
+                    && threat.getLocation().distanceSquared(body.getLocation()) < t.fleeDistance() * t.fleeDistance()) {
+                runFrom(body);
+                if (swim) handle.setJumping(true);
+                return;
+            }
+            threat = null;
+            stop();
         }
         if (goal != Goal.WANDER && --retargetTicks <= 0) {
             retargetTicks = 10;
@@ -235,6 +308,16 @@ final class FakePlayer {
                 && !feet.isLiquid() && ground.getType() != Material.MAGMA_BLOCK;
     }
 
+    /** Sprintet weg von der Gefahr; ist der direkte Weg versperrt, schräg oder seitlich. */
+    private void runFrom(Player body) {
+        Vector away = body.getLocation().toVector().subtract(threat.getLocation().toVector()).setY(0);
+        if (away.lengthSquared() < 1e-6) away = body.getLocation().getDirection().multiply(-1).setY(0);
+        for (int angle : FLEE_ANGLES) {
+            if (walk(body, away.clone().rotateAroundY(Math.toRadians(angle)), true)) return;
+        }
+        stop(); // eingekesselt
+    }
+
     /**
      * Läuft einen Tick lang Richtung {@code direction} (Eingabe „vorwärts“, ggf. sprinten und springen).
      * {@code false}, wenn der Weg versperrt ist (Wand, Abgrund, Wasser, Lava).
@@ -252,8 +335,13 @@ final class FakePlayer {
 
         Block ahead = loc.clone().add(dir.clone().multiply(0.7)).getBlock();
         boolean jump = false;
-        if (!body.isInWater() && (ahead.isLiquid() || ahead.getRelative(BlockFace.DOWN).isLiquid())) return false;
-        if (ahead.isSolid()) {
+        if (body.isInWater()) {
+            // schon im Wasser: in jede Richtung schwimmen (oben halten, aus dem Wasser klettern), nur nicht in Lava
+            if (ahead.getType() == Material.LAVA) return false;
+            jump = true;
+        } else if (ahead.isLiquid() || ahead.getRelative(BlockFace.DOWN).isLiquid()) {
+            return false;
+        } else if (ahead.isSolid()) {
             boolean room = !ahead.getRelative(BlockFace.UP).isSolid() && !ahead.getRelative(0, 2, 0).isSolid()
                     && !loc.getBlock().getRelative(0, 2, 0).isSolid();
             if (!room) return false;
@@ -327,8 +415,8 @@ final class FakePlayer {
     private boolean validTarget(Player body, LivingEntity e, double range, Predicate<Player> attackable) {
         if (e == null || !e.isValid() || e.isDead() || e == body || !e.getWorld().equals(body.getWorld())) return false;
         if (e.getLocation().distanceSquared(body.getLocation()) > range * range) return false;
-        if (e instanceof Player p) return goal.players() && attackable.test(p);
-        return allowed(e);
+        if (e instanceof Player p) return (e == attacker || goal.players()) && attackable.test(p);
+        return e == attacker || allowed(e);
     }
 
     /** Spieler werden zusätzlich über {@code attackable} gefiltert (Spielmodus, Vanish, Recht, andere Fake-Spieler). */

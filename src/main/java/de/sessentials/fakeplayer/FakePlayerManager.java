@@ -86,6 +86,7 @@ public final class FakePlayerManager implements Listener {
     private final AsyncFileWriter writer;
     /** Kleingeschriebener Name → Fake-Spieler, in Erstellungsreihenfolge. */
     private final Map<String, FakePlayer> bots = new LinkedHashMap<>();
+    private final FakeAnimator animator;
     private FakePlayer.Tuning tuning;
     private BukkitTask task;
 
@@ -93,6 +94,9 @@ public final class FakePlayerManager implements Listener {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "fakeplayers.yml");
         this.writer = new AsyncFileWriter("FakePlayers", plugin.getLogger());
+        this.animator = new FakeAnimator(plugin, this);
+        // gehört zu diesem Modul – nur angemeldet, wenn es die Fake-Spieler gibt
+        Bukkit.getPluginManager().registerEvents(animator, plugin);
         reload();
         load();
         // einen Tick später, damit alle Plugins bereit sind und die Join-Events normal verarbeiten
@@ -105,12 +109,16 @@ public final class FakePlayerManager implements Listener {
         tuning = new FakePlayer.Tuning(
                 Math.max(2, cfg.getDouble("fakeplayers.wander-radius", 12)),
                 Math.max(2, cfg.getDouble("fakeplayers.aggro-range", 16)),
-                Math.max(1, cfg.getInt("fakeplayers.attack-cooldown-ticks", 12)));
+                Math.max(1, cfg.getInt("fakeplayers.attack-cooldown-ticks", 12)),
+                Math.max(2, cfg.getDouble("fakeplayers.defense.flee-distance", 16)),
+                Math.max(1, cfg.getInt("fakeplayers.defense.flee-seconds", 10)) * 20,
+                Math.max(0, cfg.getDouble("fakeplayers.defense.flee-below-health", 6)));
     }
 
     /** Beim Deaktivieren: alle Fake-Spieler regulär abmelden (Spielerdaten werden dabei gespeichert). */
     public void shutdown() {
         if (task != null) task.cancel();
+        animator.stopAll();
         for (FakePlayer b : bots.values()) disconnect(b, "Server stoppt");
         save();
         writer.shutdown();
@@ -121,9 +129,11 @@ public final class FakePlayerManager implements Listener {
     }
 
     private void tick() {
+        animator.tick();
         for (FakePlayer b : bots.values()) {
             Player body = b.bukkit();
-            if (body != null) b.tick(body, tuning, this::attackable);
+            // animierte Fake-Spieler steuert der Admin, nicht die KI
+            if (body != null && !animator.isAnimated(b)) b.tick(body, tuning, this::attackable);
         }
     }
 
@@ -137,7 +147,7 @@ public final class FakePlayerManager implements Listener {
     // ------------------------------------------------------------
 
     /** Lässt den Fake-Spieler beitreten. {@code null} bei Erfolg, sonst der Nachrichten-Schlüssel des Grundes. */
-    private String join(FakePlayer b) {
+    String join(FakePlayer b) {
         if (b.handle != null) return "already-online";
         if (Bukkit.getPlayerExact(b.name) != null) return "name-in-use";
         OfflinePlayer offline = Bukkit.getOfflinePlayer(b.id);
@@ -198,7 +208,7 @@ public final class FakePlayerManager implements Listener {
     }
 
     /** Meldet den Fake-Spieler regulär ab (Quit-Event, Spielerdaten speichern). */
-    private void disconnect(FakePlayer b, String reason) {
+    void disconnect(FakePlayer b, String reason) {
         FakeServerPlayer player = b.handle;
         if (player == null) return;
         removeFromServer(b, player, new DisconnectionDetails(net.minecraft.network.chat.Component.literal(reason)));
@@ -268,7 +278,7 @@ public final class FakePlayerManager implements Listener {
         if (b == null) return;
         Entity damager = event.getDamager();
         if (damager instanceof Projectile p && p.getShooter() instanceof Entity shooter) damager = shooter;
-        if (damager instanceof LivingEntity attacker) b.provoke(attacker);
+        if (damager instanceof LivingEntity attacker) b.attackedBy(attacker, tuning, this::attackable);
     }
 
     private FakePlayer byPlayer(Player player) {
@@ -298,7 +308,10 @@ public final class FakePlayerManager implements Listener {
         }
         FakePlayer b = new FakePlayer(name);
         b.skin = skin != null ? skin : name;
-        b.goal = FakePlayer.Goal.WANDER;
+        var cfg = plugin.getConfig();
+        b.ai = cfg.getBoolean("fakeplayers.defaults.ai", false);
+        b.goal = orDefault(FakePlayer.Goal.byKey(cfg.getString("fakeplayers.defaults.goal", "wander")), FakePlayer.Goal.WANDER);
+        b.defense = defaultDefense();
         b.home = FakePlayer.ground(sender.getLocation());
         b.placeAtHome = true;
         b.online = true;
@@ -344,7 +357,7 @@ public final class FakePlayerManager implements Listener {
             Player body = b.bukkit();
             Location at = body != null ? body.getLocation() : null;
             sender.sendMessage(msg("list-entry", sender, tag("name", b.name),
-                    tag("state", body == null ? "offline" : b.ai ? b.goal.label : "KI aus"),
+                    tag("state", body == null ? "offline" : b.ai ? b.goal.label + ", " + b.defense.label : "KI aus"),
                     tag("location", at == null ? "–" : at.getWorld().getName() + " " + at.getBlockX() + " " + at.getBlockY() + " " + at.getBlockZ())));
         }
     }
@@ -361,6 +374,21 @@ public final class FakePlayerManager implements Listener {
         if (b.handle != null) b.clearState();
         save();
         sender.sendMessage(msg("goal-set", sender, tag("name", b.name), tag("goal", goal.label)));
+    }
+
+    private void setDefense(CommandSender sender, FakePlayer b, FakePlayer.Defense defense) {
+        b.defense = defense;
+        if (b.handle != null) b.clearState();
+        save();
+        sender.sendMessage(msg("defense-set", sender, tag("name", b.name), tag("defense", defense.label)));
+    }
+
+    private FakePlayer.Defense defaultDefense() {
+        return orDefault(FakePlayer.Defense.byKey(plugin.getConfig().getString("fakeplayers.defaults.defense", "flee")), FakePlayer.Defense.FLEE);
+    }
+
+    private static <T> T orDefault(T value, T fallback) {
+        return value != null ? value : fallback;
     }
 
     private void setSkin(CommandSender sender, FakePlayer b, String skin) {
@@ -476,6 +504,12 @@ public final class FakePlayerManager implements Listener {
                 .then(withBot("inv", true, (sender, b) -> openInventory((Player) sender, b)))
                 .then(withBot("tp", true, (sender, b) -> teleportTo((Player) sender, b)))
                 .then(withBot("tphere", true, (sender, b) -> bringHere((Player) sender, b)))
+                .then(Commands.literal("animate").requires(src -> src.getExecutor() instanceof Player)
+                        .executes(ctx -> {
+                            animator.stop((Player) ctx.getSource().getExecutor());
+                            return Command.SINGLE_SUCCESS;
+                        })
+                        .then(botArgument().executes(ctx -> withBot(ctx, (sender, b) -> animator.toggle((Player) sender, b)))))
                 .then(Commands.literal("skin").then(botArgument()
                         .then(Commands.argument("skin", StringArgumentType.word()).executes(ctx -> withBot(ctx,
                                 (sender, b) -> setSkin(sender, b, StringArgumentType.getString(ctx, "skin")))))));
@@ -490,6 +524,12 @@ public final class FakePlayerManager implements Listener {
             goal.then(Commands.literal(g.key).executes(ctx -> withBot(ctx, (sender, b) -> setGoal(sender, b, g))));
         }
         root.then(Commands.literal("goal").then(goal));
+
+        var defense = botArgument();
+        for (FakePlayer.Defense d : FakePlayer.Defense.values()) {
+            defense.then(Commands.literal(d.key).executes(ctx -> withBot(ctx, (sender, b) -> setDefense(sender, b, d))));
+        }
+        root.then(Commands.literal("defense").then(defense));
 
         commands.register(root.build(), "Fake-Spieler verwalten", List.of("fp", "bot"));
     }
@@ -520,7 +560,7 @@ public final class FakePlayerManager implements Listener {
         return TextService.placeholder(key, value);
     }
 
-    private Component msg(String key, CommandSender sender, TagResolver... extra) {
+    Component msg(String key, CommandSender sender, TagResolver... extra) {
         return plugin.text().render(plugin.getConfig().getString("fakeplayers.messages." + key, ""),
                 sender instanceof Player p ? p : null, extra);
     }
@@ -545,6 +585,7 @@ public final class FakePlayerManager implements Listener {
                 b.ai = s.getBoolean("ai");
                 FakePlayer.Goal goal = FakePlayer.Goal.byKey(s.getString("goal", "wander"));
                 b.goal = goal != null ? goal : FakePlayer.Goal.WANDER;
+                b.defense = orDefault(FakePlayer.Defense.byKey(s.getString("defense", "")), defaultDefense());
                 b.home = s.getLocation("home");
                 bots.put(name.toLowerCase(Locale.ROOT), b);
             } catch (RuntimeException e) {
@@ -565,6 +606,7 @@ public final class FakePlayerManager implements Listener {
             yml.set(p + "place-at-home", b.placeAtHome);
             yml.set(p + "ai", b.ai);
             yml.set(p + "goal", b.goal.key);
+            yml.set(p + "defense", b.defense.key);
             yml.set(p + "home", b.home);
         }
         writer.write(file, yml.saveToString());

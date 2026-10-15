@@ -879,12 +879,18 @@ auto-update:
 #   /fp remove <name>          endgültig entfernen
 #   /fp tp|tphere|equip|inv <name>   hinreisen, herholen (setzt den Heimatpunkt), deine Ausrüstung kopieren, Inventar öffnen
 #   /fp ai <name> on|off       KI ein/aus
-#   /fp goal <name> wander|mobs|players|all   Herumlaufen bzw. Mobs / Spieler / beides bekämpfen
+#   /fp goal <name> wander|mobs|players|all   Angriff: nur herumlaufen bzw. Mobs / Spieler / beides von sich aus bekämpfen
+#   /fp defense <name> flee|fight|ignore      Verteidigung, wenn ihn ein Spieler oder Mob trifft: weglaufen,
+#                                             zurückschlagen (bei wenig Leben doch weglaufen) oder nichts tun
 #   /fp skin <name> <skin>     /fp list
+#   /fp animate <name>         den Fake-Spieler selbst steuern: du wirst unsichtbar und "verlässt" den Server
+#                              (Leave-Nachricht), er übernimmt deine Bewegungen, Armschwünge und deinen Chat.
+#                              Nochmal bzw. /fp animate beendet es (Join-Nachricht für dich). War er offline,
+#                              tritt er dafür bei und verlässt den Server danach wieder.
 # Kämpfende Fake-Spieler greifen nur echte Spieler im Überlebens-/Abenteuermodus an, nicht im Vanish und
 # nicht mit sess.fakeplayer.ignore. Nach dem Tod erscheinen sie nach respawn-seconds am Heimatpunkt.
 # Tritt ein echter Spieler mit demselben Namen bei, verlässt der Fake-Spieler den Server.
-# Platzhalter: <name>, <skin>, <goal>, <count>, <state>, <location>
+# Platzhalter: <name>, <skin>, <goal>, <defense>, <count>, <state>, <location>
 # ------------------------------------------------------------
 fakeplayers:
   max: 20
@@ -892,6 +898,17 @@ fakeplayers:
   wander-radius: 12            # Blöcke um den Heimatpunkt
   aggro-range: 16              # Suchradius für Gegner
   attack-cooldown-ticks: 12    # 20 Ticks = 1 Sekunde
+  # Startwerte für neu erstellte Fake-Spieler (danach mit /fp ai, /fp goal, /fp defense änderbar)
+  defaults:
+    ai: false
+    goal: wander               # wander, mobs, players, all
+    defense: flee              # flee, fight, ignore
+  defense:
+    flee-distance: 16          # so weit (Blöcke) läuft er vor dem Angreifer weg
+    flee-seconds: 10           # höchstens so lange
+    flee-below-health: 6       # bei "fight": unter so viel Leben (2 = 1 Herz) doch weglaufen; 0 = nie
+  animate:
+    announce: true             # beim Animieren Leave-/Join-Nachricht für dich senden
   messages:
     created: "<prefix><green>Fake-Spieler <white><name></white> erstellt (Skin: <skin>). KI: <white>/fp ai <name> on</white>"
     removed: "<prefix><gray>Fake-Spieler <white><name></white> entfernt."
@@ -912,7 +929,12 @@ fakeplayers:
     ai-on: "<prefix><green>KI von <white><name></white> eingeschaltet: <goal>."
     ai-off: "<prefix><gray>KI von <white><name></white> ausgeschaltet."
     goal-set: "<prefix><gray>Ziel von <white><name></white>: <white><goal></white>."
+    defense-set: "<prefix><gray>Verteidigung von <white><name></white>: <white><defense></white>."
     skin-set: "<prefix><gray>Skin von <white><name></white> auf <white><skin></white> gesetzt."
     equipped: "<prefix><gray><white><name></white> trägt jetzt eine Kopie deiner Ausrüstung."
     teleported: "<prefix><gray>Zu <white><name></white> teleportiert."
     moved: "<prefix><gray><white><name></white> ist jetzt hier (neuer Heimatpunkt)."
+    animate-start: "<prefix><green>Du steuerst jetzt <white><name></white>. Dein Chat läuft über ihn. Beenden: <white>/fp animate</white>"
+    animate-stop: "<prefix><gray>Du steuerst <white><name></white> nicht mehr."
+    animate-none: "<prefix><red>Du steuerst gerade keinen Fake-Spieler."
+    animate-busy: "<prefix><red><white><name></white> wird schon von jemand anderem gesteuert."
