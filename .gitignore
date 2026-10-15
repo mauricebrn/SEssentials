@@ -2,3 +2,6 @@ target/
 .DS_Store
 run/
 legacy/
+build/
+.gradle/
+.kotlin/

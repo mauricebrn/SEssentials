@@ -1,6 +1,11 @@
 package de.sessentials.fakeplayer;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
+import com.google.common.collect.ImmutableMultimap;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -8,54 +13,66 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.sessentials.SEssentials;
+import de.sessentials.punish.PunishmentManager;
 import de.sessentials.storage.AsyncFileWriter;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.minecraft.network.DisconnectionDetails;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.world.EntitiesLoadEvent;
-import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 /**
- * Fake-Spieler: sichtbar als Mannequin (Spielermodell mit Skin), mit TAB-Eintrag (über PacketEvents)
- * und einschaltbarer KI. Verwaltung mit /fakeplayer; gespeichert in fakeplayers.yml. Der Körper wird mit
- * der Welt gespeichert und über einen PDC-Schlüssel wiedererkannt; stirbt er, entsteht er am Heimatpunkt neu.
+ * Fake-Spieler als echte Spieler ohne Client: zählen online, stehen im TAB und in /list, laden Chunks,
+ * lassen Pflanzen wachsen und Mobs spawnen und sind Ziel aller Befehle (/msg, /ban, /tp, …).
+ * Inventar und Position speichert der Server wie bei jedem Spieler; fakeplayers.yml hält Skin, KI und
+ * Heimatpunkt. Nutzt Server-Interna (NMS) – nach Minecraft-Updates prüfen.
  */
 public final class FakePlayerManager implements Listener {
 
@@ -65,30 +82,21 @@ public final class FakePlayerManager implements Listener {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9_]{3,16}");
 
     private final SEssentials plugin;
-    private final NamespacedKey key;
     private final File file;
     private final AsyncFileWriter writer;
     /** Kleingeschriebener Name → Fake-Spieler, in Erstellungsreihenfolge. */
     private final Map<String, FakePlayer> bots = new LinkedHashMap<>();
-    /** {@code null}, wenn PacketEvents fehlt – dann gibt es keine TAB-Einträge. */
-    private final FakeTab tab;
     private FakePlayer.Tuning tuning;
     private BukkitTask task;
-    private long ticks;
 
     public FakePlayerManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.key = new NamespacedKey(plugin, "fakeplayer");
         this.file = new File(plugin.getDataFolder(), "fakeplayers.yml");
         this.writer = new AsyncFileWriter("FakePlayers", plugin.getLogger());
-        if (Bukkit.getPluginManager().isPluginEnabled("packetevents")) {
-            tab = new FakeTab();
-        } else {
-            tab = null;
-            plugin.getLogger().warning("PacketEvents nicht gefunden – Fake-Spieler erscheinen nicht im TAB.");
-        }
         reload();
         load();
+        // einen Tick später, damit alle Plugins bereit sind und die Join-Events normal verarbeiten
+        Bukkit.getScheduler().runTask(plugin, () -> bots.values().stream().filter(b -> b.online).forEach(this::join));
         task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
@@ -97,211 +105,175 @@ public final class FakePlayerManager implements Listener {
         tuning = new FakePlayer.Tuning(
                 Math.max(2, cfg.getDouble("fakeplayers.wander-radius", 12)),
                 Math.max(2, cfg.getDouble("fakeplayers.aggro-range", 16)),
-                Math.max(1, cfg.getInt("fakeplayers.attack-cooldown-ticks", 12)),
-                Math.clamp(cfg.getDouble("fakeplayers.walk-speed", 0.2), 0.05, 0.6),
-                Math.clamp(cfg.getDouble("fakeplayers.sprint-speed", 0.28), 0.05, 0.8));
-        for (FakePlayer b : bots.values()) {
-            Mannequin body = b.body();
-            if (body != null) body.setDescription(description());
-        }
-        if (tab != null) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                tab.hide(p, bots.values().stream().map(b -> b.profileId).toList());
-                tab.show(p, entries(bots.values()));
-            }
-        }
+                Math.max(1, cfg.getInt("fakeplayers.attack-cooldown-ticks", 12)));
     }
 
+    /** Beim Deaktivieren: alle Fake-Spieler regulär abmelden (Spielerdaten werden dabei gespeichert). */
     public void shutdown() {
         if (task != null) task.cancel();
-        if (tab != null) {
-            List<UUID> ids = bots.values().stream().map(b -> b.profileId).toList();
-            for (Player p : Bukkit.getOnlinePlayers()) tab.hide(p, ids);
-        }
+        for (FakePlayer b : bots.values()) disconnect(b, "Server stoppt");
         save();
         writer.shutdown();
     }
 
-    // ------------------------------------------------------------
-    // Ticken
-    // ------------------------------------------------------------
+    public boolean isFake(Player player) {
+        return ((CraftPlayer) player).getHandle() instanceof FakeServerPlayer;
+    }
 
     private void tick() {
-        ticks++;
         for (FakePlayer b : bots.values()) {
-            Mannequin body = b.body();
-            if (body != null) {
-                b.tick(body, tuning, this::attackable);
-            } else if (ticks % 20 == 0) {
-                respawnIfMissing(b);
-            }
+            Player body = b.bukkit();
+            if (body != null) b.tick(body, tuning, this::attackable);
         }
-        if (ticks % 1200 == 0) save();
     }
 
     private boolean attackable(Player p) {
         return (p.getGameMode() == GameMode.SURVIVAL || p.getGameMode() == GameMode.ADVENTURE)
-                && !p.isInvulnerable() && !plugin.vanish().isVanished(p) && !p.hasPermission(PERM_IGNORE);
-    }
-
-    /** Fehlt der Körper, obwohl sein Chunk samt Entities geladen ist (z.B. von einem anderen Plugin entfernt), entsteht er neu. */
-    private void respawnIfMissing(FakePlayer b) {
-        if (b.respawning) return;
-        Location at = b.lastSeen != null ? b.lastSeen : b.home;
-        if (at == null || at.getWorld() == null) return;
-        World w = at.getWorld();
-        if (!w.isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) return;
-        if (!w.getChunkAt(at).isEntitiesLoaded()) return;
-        spawnBody(b, b.home != null ? b.home : at, null);
-        save();
+                && !p.isInvulnerable() && !isFake(p) && !plugin.vanish().isVanished(p) && !p.hasPermission(PERM_IGNORE);
     }
 
     // ------------------------------------------------------------
-    // Körper & TAB
+    // Beitreten / Verlassen
     // ------------------------------------------------------------
 
-    private void spawnBody(FakePlayer b, Location at, ItemStack[] equipment) {
-        Mannequin body = at.getWorld().spawn(FakePlayer.ground(at), Mannequin.class, m -> {
-            m.setPersistent(true);
-            m.setRemoveWhenFarAway(false);
-            m.customName(Component.text(b.name));
-            m.setCustomNameVisible(true);
-            m.setDescription(description());
-            m.setProfile(profile(b));
-            m.getPersistentDataContainer().set(key, PersistentDataType.STRING, b.name);
-            if (equipment != null) applyEquipment(m.getEquipment(), equipment);
+    /** Lässt den Fake-Spieler beitreten. {@code null} bei Erfolg, sonst der Nachrichten-Schlüssel des Grundes. */
+    private String join(FakePlayer b) {
+        if (b.handle != null) return "already-online";
+        if (Bukkit.getPlayerExact(b.name) != null) return "name-in-use";
+        OfflinePlayer offline = Bukkit.getOfflinePlayer(b.id);
+        if (offline.isBanned() || plugin.punishments().activeFor(PunishmentManager.Type.BAN, b.id) != null) return "banned";
+
+        MinecraftServer server = MinecraftServer.getServer();
+        PropertyMap properties = b.textureValue == null ? PropertyMap.EMPTY
+                : new PropertyMap(ImmutableMultimap.of("textures", new Property("textures", b.textureValue, b.textureSignature)));
+        GameProfile profile = new GameProfile(b.id, b.name, properties);
+        FakeServerPlayer player;
+        // wie Paper beim echten Login (PrepareSpawnTask): gespeicherte Spielerdaten laden, dann Welt und Position bestimmen
+        try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(LoggerFactory.getLogger("SEssentials"))) {
+            Optional<ValueInput> data = server.getPlayerList().loadPlayerData(new NameAndId(b.id, b.name))
+                    .map(tag -> TagValueInput.create(reporter, server.registryAccess(), tag));
+            Location home = b.home != null && b.home.getWorld() != null ? FakePlayer.ground(b.home) : null;
+            World world = home != null ? home.getWorld() : Bukkit.getWorlds().getFirst();
+            ServerPlayer.SavedPosition saved = ServerPlayer.SavedPosition.EMPTY;
+            if (data.isPresent() && !b.placeAtHome) {
+                World savedWorld = savedWorld(data.get());
+                if (savedWorld != null) world = savedWorld;
+                saved = data.get().read(ServerPlayer.SavedPosition.MAP_CODEC).orElse(ServerPlayer.SavedPosition.EMPTY);
+            }
+            player = new FakeServerPlayer(server, ((CraftWorld) world).getHandle(), profile);
+            data.ifPresent(player::load);
+            if (saved.position().isPresent() && !b.placeAtHome) {
+                Vec2 rotation = saved.rotation().orElse(Vec2.ZERO);
+                player.snapTo(saved.position().get(), rotation.x, rotation.y);
+            } else {
+                Location at = home != null ? home : FakePlayer.ground(world.getSpawnLocation());
+                player.snapTo(new Vec3(at.getX(), at.getY(), at.getZ()), at.getYaw(), at.getPitch());
+            }
+        }
+        b.handle = player;
+        FakeConnection connection = new FakeConnection(details -> {
+            // vom Server getrennt (Kick, Ban): im nächsten Tick regulär abmelden
+            if (plugin.isEnabled()) Bukkit.getScheduler().runTask(plugin, () -> removeFromServer(b, player, details));
+            else removeFromServer(b, player, details);
         });
-        b.entityId = body.getUniqueId();
-        b.lastSeen = body.getLocation();
+        try {
+            server.getPlayerList().placeNewPlayer(connection, player, CommonListenerCookie.createInitial(profile, false));
+        } catch (RuntimeException e) {
+            b.handle = null;
+            plugin.getLogger().log(Level.SEVERE, "Fake-Spieler " + b.name + " konnte nicht beitreten", e);
+            return "join-failed";
+        }
+        b.placeAtHome = false;
+        // Fake-Spieler sollen nicht verhindern, dass die Nacht durch Schlafen übersprungen wird
+        player.getBukkitEntity().setSleepingIgnored(true);
         b.clearState();
+        return null;
     }
 
-    private static ResolvableProfile profile(FakePlayer b) {
-        if (b.textureValue != null) {
-            return ResolvableProfile.resolvableProfile().name(b.name)
-                    .addProperty(new ProfileProperty("textures", b.textureValue, b.textureSignature)).build();
-        }
-        // ohne geladene Skin-Daten löst der Client den Skin selbst über den Namen auf
-        return ResolvableProfile.resolvableProfile().name(b.skin).build();
+    /** Welt aus den Bukkit-Daten der Spielerdatei (wie Paper beim Login), {@code null} = unbekannt. */
+    private static World savedWorld(ValueInput data) {
+        Optional<Long> most = data.getLong("WorldUUIDMost"), least = data.getLong("WorldUUIDLeast");
+        if (most.isPresent() && least.isPresent()) return Bukkit.getWorld(new UUID(most.get(), least.get()));
+        return data.getString("world").map(Bukkit::getWorld).orElse(null);
     }
 
-    private Component description() {
-        String text = plugin.getConfig().getString("fakeplayers.description", "");
-        return text.isBlank() ? null : plugin.text().render(text);
+    /** Meldet den Fake-Spieler regulär ab (Quit-Event, Spielerdaten speichern). */
+    private void disconnect(FakePlayer b, String reason) {
+        FakeServerPlayer player = b.handle;
+        if (player == null) return;
+        removeFromServer(b, player, new DisconnectionDetails(net.minecraft.network.chat.Component.literal(reason)));
     }
 
-    /** Lädt den Skin (Mojang) im Hintergrund und aktualisiert danach Körper und TAB-Kopf. */
-    private void resolveSkin(FakePlayer b) {
-        String skin = b.skin;
-        ResolvableProfile.resolvableProfile().name(skin).build().resolve().whenComplete((profile, error) ->
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    if (!skin.equals(b.skin) || !bots.containsValue(b)) return;
-                    ProfileProperty textures = error != null || profile == null ? null : profile.getProperties().stream()
-                            .filter(p -> p.getName().equals("textures")).findFirst().orElse(null);
-                    if (textures == null) {
-                        plugin.getLogger().warning("Skin '" + skin + "' für Fake-Spieler " + b.name + " nicht gefunden.");
-                        return;
-                    }
-                    b.textureValue = textures.getValue();
-                    b.textureSignature = textures.getSignature();
-                    Mannequin body = b.body();
-                    if (body != null) body.setProfile(profile(b));
-                    refreshTab(b);
-                    save();
-                }));
-    }
-
-    private List<FakeTab.Entry> entries(Iterable<FakePlayer> list) {
-        String format = plugin.getConfig().getString("fakeplayers.tab-format", "<name>");
-        List<FakeTab.Entry> out = new ArrayList<>();
-        for (FakePlayer b : list) {
-            out.add(new FakeTab.Entry(b.profileId, b.name, b.textureValue, b.textureSignature, b.ping,
-                    plugin.text().render(format, TextService.placeholder("name", b.name))));
-        }
-        return out;
-    }
-
-    private void refreshTab(FakePlayer b) {
-        if (tab == null) return;
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            tab.hide(p, List.of(b.profileId));
-            tab.show(p, entries(List.of(b)));
-        }
-    }
-
-    private static ItemStack[] snapshot(EntityEquipment eq) {
-        ItemStack[] armor = eq.getArmorContents();
-        ItemStack[] all = Arrays.copyOf(armor, armor.length + 2);
-        all[armor.length] = eq.getItemInMainHand();
-        all[armor.length + 1] = eq.getItemInOffHand();
-        for (int i = 0; i < all.length; i++) all[i] = all[i] == null ? null : all[i].clone();
-        return all;
-    }
-
-    private static void applyEquipment(EntityEquipment eq, ItemStack[] all) {
-        eq.setArmorContents(Arrays.copyOf(all, all.length - 2));
-        eq.setItemInMainHand(all[all.length - 2]);
-        eq.setItemInOffHand(all[all.length - 1]);
+    private void removeFromServer(FakePlayer b, FakeServerPlayer player, DisconnectionDetails details) {
+        if (b.handle != player) return; // schon abgemeldet
+        b.handle = null;
+        player.connection.onDisconnect(details);
     }
 
     // ------------------------------------------------------------
     // Events
     // ------------------------------------------------------------
 
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        if (tab == null) return;
-        Player player = event.getPlayer();
-        // kurz warten, bis der Client seine eigene Spielerliste hat
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline()) tab.show(player, entries(bots.values()));
-        }, 5L);
-    }
-
-    /** Alte Körper (z.B. nach einem Neuerscheinen, während der Chunk entladen war) werden entfernt. */
-    @EventHandler
-    public void onEntitiesLoad(EntitiesLoadEvent event) {
-        for (Entity e : event.getEntities()) {
-            String name = e.getPersistentDataContainer().get(key, PersistentDataType.STRING);
-            if (name == null) continue;
-            FakePlayer b = bots.get(name.toLowerCase(Locale.ROOT));
-            if (b == null || !e.getUniqueId().equals(b.entityId)) e.remove();
-        }
-    }
-
-    @EventHandler
-    public void onDeath(EntityDeathEvent event) {
-        FakePlayer b = byEntity(event.getEntity());
+    /** Gekickt oder gebannt: offline bleiben, bis ein Admin /fp join nutzt. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onKick(PlayerKickEvent event) {
+        FakePlayer b = byPlayer(event.getPlayer());
         if (b == null) return;
-        event.getDrops().clear();
-        event.setDroppedExp(0);
-        ItemStack[] equipment = snapshot(event.getEntity().getEquipment());
-        b.respawning = true;
-        b.entityId = null;
-        long delay = Math.max(1, plugin.getConfig().getLong("fakeplayers.respawn-seconds", 5)) * 20L;
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            b.respawning = false;
-            if (!bots.containsValue(b) || b.home == null || b.home.getWorld() == null) return;
-            spawnBody(b, b.home, equipment);
+        b.online = false;
+        save();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onQuit(PlayerQuitEvent event) {
+        FakePlayer b = byPlayer(event.getPlayer());
+        if (b != null && b.handle != null && b.handle.getBukkitEntity() == event.getPlayer()) b.handle = null;
+    }
+
+    /** Ein echter Spieler mit demselben Namen hat Vorrang: der Fake-Spieler geht. */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPreLogin(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+        String name = event.getName().toLowerCase(Locale.ROOT);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            FakePlayer b = bots.get(name);
+            if (b == null || b.handle == null || b.id.equals(event.getUniqueId())) return;
+            plugin.getLogger().warning("Fake-Spieler " + b.name + " verlässt den Server – ein echter Spieler mit dem Namen tritt bei.");
+            b.online = false;
+            disconnect(b, "Name wird von einem echten Spieler genutzt");
             save();
+        });
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event) {
+        FakePlayer b = byPlayer(event.getPlayer());
+        if (b == null) return;
+        long delay = Math.max(1, plugin.getConfig().getLong("fakeplayers.respawn-seconds", 5)) * 20L;
+        Player player = event.getPlayer();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player.isOnline() && player.isDead()) player.spigot().respawn();
         }, delay);
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        FakePlayer b = byPlayer(event.getPlayer());
+        if (b != null && b.home != null && b.home.getWorld() != null) event.setRespawnLocation(FakePlayer.ground(b.home));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamaged(EntityDamageByEntityEvent event) {
-        FakePlayer b = byEntity(event.getEntity());
+        if (!(event.getEntity() instanceof Player victim)) return;
+        FakePlayer b = byPlayer(victim);
         if (b == null) return;
         Entity damager = event.getDamager();
         if (damager instanceof Projectile p && p.getShooter() instanceof Entity shooter) damager = shooter;
         if (damager instanceof LivingEntity attacker) b.provoke(attacker);
     }
 
-    private FakePlayer byEntity(Entity e) {
-        if (!(e instanceof Mannequin)) return null;
-        for (FakePlayer b : bots.values()) {
-            if (e.getUniqueId().equals(b.entityId)) return b;
-        }
-        return null;
+    private FakePlayer byPlayer(Player player) {
+        FakePlayer b = bots.get(player.getName().toLowerCase(Locale.ROOT));
+        return b != null && b.id.equals(player.getUniqueId()) ? b : null;
     }
 
     // ------------------------------------------------------------
@@ -313,7 +285,9 @@ public final class FakePlayerManager implements Listener {
             sender.sendMessage(msg("invalid-name", sender, tag("name", name)));
             return;
         }
-        if (bots.containsKey(name.toLowerCase(Locale.ROOT)) || Bukkit.getPlayerExact(name) != null) {
+        OfflinePlayer known = Bukkit.getOfflinePlayerIfCached(name);
+        if (bots.containsKey(name.toLowerCase(Locale.ROOT)) || Bukkit.getPlayerExact(name) != null
+                || known != null && !known.getUniqueId().equals(FakePlayer.idFor(name))) {
             sender.sendMessage(msg("exists", sender, tag("name", name)));
             return;
         }
@@ -322,26 +296,42 @@ public final class FakePlayerManager implements Listener {
             sender.sendMessage(msg("limit", sender, tag("count", String.valueOf(max))));
             return;
         }
-        FakePlayer b = new FakePlayer(name, FakePlayer.profileIdFor(name));
+        FakePlayer b = new FakePlayer(name);
         b.skin = skin != null ? skin : name;
         b.goal = FakePlayer.Goal.WANDER;
         b.home = FakePlayer.ground(sender.getLocation());
+        b.placeAtHome = true;
+        b.online = true;
         bots.put(name.toLowerCase(Locale.ROOT), b);
-        spawnBody(b, b.home, null);
-        if (tab != null) for (Player p : Bukkit.getOnlinePlayers()) tab.show(p, entries(List.of(b)));
-        resolveSkin(b);
+        String problem = join(b);
         save();
+        if (problem != null) {
+            sender.sendMessage(msg(problem, sender, tag("name", name)));
+            return;
+        }
+        resolveSkin(b);
         sender.sendMessage(msg("created", sender, tag("name", name), tag("skin", b.skin)));
-        if (tab == null) sender.sendMessage(msg("no-tab", sender));
     }
 
     private void remove(CommandSender sender, FakePlayer b) {
-        Mannequin body = b.body();
-        if (body != null) body.remove();
+        disconnect(b, "Entfernt");
         bots.remove(b.name.toLowerCase(Locale.ROOT));
-        if (tab != null) for (Player p : Bukkit.getOnlinePlayers()) tab.hide(p, List.of(b.profileId));
         save();
         sender.sendMessage(msg("removed", sender, tag("name", b.name)));
+    }
+
+    private void joinCommand(CommandSender sender, FakePlayer b) {
+        b.online = true;
+        String problem = join(b);
+        save();
+        sender.sendMessage(msg(problem != null ? problem : "joined", sender, tag("name", b.name)));
+    }
+
+    private void leaveCommand(CommandSender sender, FakePlayer b) {
+        b.online = false;
+        disconnect(b, "Verlassen");
+        save();
+        sender.sendMessage(msg("left", sender, tag("name", b.name)));
     }
 
     private void list(CommandSender sender) {
@@ -351,65 +341,99 @@ public final class FakePlayerManager implements Listener {
         }
         sender.sendMessage(msg("list-header", sender, tag("count", String.valueOf(bots.size()))));
         for (FakePlayer b : bots.values()) {
-            Mannequin body = b.body();
-            Location at = body != null ? body.getLocation() : b.lastSeen != null ? b.lastSeen : b.home;
+            Player body = b.bukkit();
+            Location at = body != null ? body.getLocation() : null;
             sender.sendMessage(msg("list-entry", sender, tag("name", b.name),
-                    tag("state", b.ai ? b.goal.label : "KI aus"),
-                    tag("location", at == null ? "?" : at.getWorld().getName() + " " + at.getBlockX() + " " + at.getBlockY() + " " + at.getBlockZ())));
+                    tag("state", body == null ? "offline" : b.ai ? b.goal.label : "KI aus"),
+                    tag("location", at == null ? "–" : at.getWorld().getName() + " " + at.getBlockX() + " " + at.getBlockY() + " " + at.getBlockZ())));
         }
     }
 
     private void setAi(CommandSender sender, FakePlayer b, boolean on) {
         b.ai = on;
-        b.clearState();
+        if (b.handle != null) b.clearState();
         save();
         sender.sendMessage(msg(on ? "ai-on" : "ai-off", sender, tag("name", b.name), tag("goal", b.goal.label)));
     }
 
     private void setGoal(CommandSender sender, FakePlayer b, FakePlayer.Goal goal) {
         b.goal = goal;
-        b.clearState();
+        if (b.handle != null) b.clearState();
         save();
         sender.sendMessage(msg("goal-set", sender, tag("name", b.name), tag("goal", goal.label)));
     }
 
     private void setSkin(CommandSender sender, FakePlayer b, String skin) {
         b.skin = skin;
-        b.textureValue = null;
-        b.textureSignature = null;
-        Mannequin body = b.body();
-        if (body != null) body.setProfile(profile(b));
         resolveSkin(b);
         save();
         sender.sendMessage(msg("skin-set", sender, tag("name", b.name), tag("skin", skin)));
     }
 
-    /** Kopiert Rüstung und Hand-Items des Absenders (Kopien – das Inventar bleibt unverändert). */
+    /** Lädt den Skin (Mojang) im Hintergrund, merkt ihn sich und zeigt ihn sofort an. */
+    private void resolveSkin(FakePlayer b) {
+        String skin = b.skin;
+        Bukkit.createProfile(skin).update().whenComplete((profile, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!skin.equals(b.skin) || !bots.containsValue(b)) return;
+            ProfileProperty textures = error != null || profile == null ? null : profile.getProperties().stream()
+                    .filter(p -> p.getName().equals("textures")).findFirst().orElse(null);
+            if (textures == null) {
+                plugin.getLogger().warning("Skin '" + skin + "' für Fake-Spieler " + b.name + " nicht gefunden.");
+                return;
+            }
+            b.textureValue = textures.getValue();
+            b.textureSignature = textures.getSignature();
+            save();
+            Player body = b.bukkit();
+            if (body != null) {
+                PlayerProfile own = body.getPlayerProfile();
+                own.setProperty(textures);
+                body.setPlayerProfile(own);
+            }
+        }));
+    }
+
+    /** Kopiert Rüstung und Hand-Items des Absenders ins Inventar des Fake-Spielers (Kopien). */
     private void equip(Player sender, FakePlayer b) {
-        Mannequin body = b.body();
+        Player body = b.bukkit();
         if (body == null) {
-            sender.sendMessage(msg("not-loaded", sender, tag("name", b.name)));
+            sender.sendMessage(msg("offline", sender, tag("name", b.name)));
             return;
         }
-        applyEquipment(body.getEquipment(), snapshot(sender.getEquipment()));
+        ItemStack[] armor = sender.getInventory().getArmorContents();
+        for (int i = 0; i < armor.length; i++) armor[i] = armor[i] == null ? null : armor[i].clone();
+        body.getInventory().setArmorContents(armor);
+        body.getInventory().setItemInMainHand(sender.getInventory().getItemInMainHand().clone());
+        body.getInventory().setItemInOffHand(sender.getInventory().getItemInOffHand().clone());
         sender.sendMessage(msg("equipped", sender, tag("name", b.name)));
     }
 
+    private void openInventory(Player sender, FakePlayer b) {
+        Player body = b.bukkit();
+        if (body == null) sender.sendMessage(msg("offline", sender, tag("name", b.name)));
+        else sender.openInventory(body.getInventory());
+    }
+
     private void teleportTo(Player sender, FakePlayer b) {
-        Mannequin body = b.body();
-        Location at = body != null ? body.getLocation() : b.lastSeen != null ? b.lastSeen : b.home;
-        if (at == null) return;
-        sender.teleportAsync(at);
+        Player body = b.bukkit();
+        if (body == null) {
+            sender.sendMessage(msg("offline", sender, tag("name", b.name)));
+            return;
+        }
+        sender.teleportAsync(body.getLocation());
         sender.sendMessage(msg("teleported", sender, tag("name", b.name)));
     }
 
     /** Holt den Fake-Spieler zum Absender und setzt dort seinen Heimatpunkt (Mitte fürs Herumlaufen, Respawn). */
     private void bringHere(Player sender, FakePlayer b) {
         b.home = FakePlayer.ground(sender.getLocation());
-        b.clearState();
-        Mannequin body = b.body();
-        if (body != null) body.teleport(b.home);
-        else if (!b.respawning) spawnBody(b, b.home, null);
+        Player body = b.bukkit();
+        if (body != null) {
+            b.clearState();
+            body.teleport(b.home);
+        } else {
+            b.placeAtHome = true;
+        }
         save();
         sender.sendMessage(msg("moved", sender, tag("name", b.name)));
     }
@@ -445,8 +469,11 @@ public final class FakePlayerManager implements Listener {
                                             StringArgumentType.getString(ctx, "skin"));
                                     return Command.SINGLE_SUCCESS;
                                 }))))
-                .then(withBot("remove", false, (sender, b) -> remove(sender, b)))
+                .then(withBot("remove", false, this::remove))
+                .then(withBot("join", false, this::joinCommand))
+                .then(withBot("leave", false, this::leaveCommand))
                 .then(withBot("equip", true, (sender, b) -> equip((Player) sender, b)))
+                .then(withBot("inv", true, (sender, b) -> openInventory((Player) sender, b)))
                 .then(withBot("tp", true, (sender, b) -> teleportTo((Player) sender, b)))
                 .then(withBot("tphere", true, (sender, b) -> bringHere((Player) sender, b)))
                 .then(Commands.literal("skin").then(botArgument()
@@ -509,17 +536,16 @@ public final class FakePlayerManager implements Listener {
         for (String name : sec.getKeys(false)) {
             ConfigurationSection s = sec.getConfigurationSection(name);
             try {
-                FakePlayer b = new FakePlayer(name, FakePlayer.profileIdFor(name));
+                FakePlayer b = new FakePlayer(name);
                 b.skin = s.getString("skin", name);
                 b.textureValue = s.getString("texture-value");
                 b.textureSignature = s.getString("texture-signature");
-                String entity = s.getString("entity");
-                b.entityId = entity == null ? null : UUID.fromString(entity);
+                b.online = s.getBoolean("online", true);
+                b.placeAtHome = s.getBoolean("place-at-home");
                 b.ai = s.getBoolean("ai");
                 FakePlayer.Goal goal = FakePlayer.Goal.byKey(s.getString("goal", "wander"));
                 b.goal = goal != null ? goal : FakePlayer.Goal.WANDER;
                 b.home = s.getLocation("home");
-                b.lastSeen = s.getLocation("last-seen");
                 bots.put(name.toLowerCase(Locale.ROOT), b);
             } catch (RuntimeException e) {
                 // z.B. Welt gelöscht – Eintrag überspringen statt das ganze Feature zu verlieren
@@ -535,11 +561,11 @@ public final class FakePlayerManager implements Listener {
             yml.set(p + "skin", b.skin);
             yml.set(p + "texture-value", b.textureValue);
             yml.set(p + "texture-signature", b.textureSignature);
-            yml.set(p + "entity", b.entityId == null ? null : b.entityId.toString());
+            yml.set(p + "online", b.online);
+            yml.set(p + "place-at-home", b.placeAtHome);
             yml.set(p + "ai", b.ai);
             yml.set(p + "goal", b.goal.key);
             yml.set(p + "home", b.home);
-            yml.set(p + "last-seen", b.lastSeen);
         }
         writer.write(file, yml.saveToString());
     }

@@ -761,36 +761,41 @@ auto-update:
 
 # ------------------------------------------------------------
 # Fake-Spieler (/fakeplayer, Aliase /fp, /bot – Recht sess.fakeplayer)
-# Sichtbar als Spielermodell mit Skin (Mannequin) und mit Eintrag im TAB. Für den TAB-Eintrag muss das
-# Plugin PacketEvents (https://modrinth.com/plugin/packetevents) installiert sein.
+# Echte Spieler ohne Client: online im TAB und in /list, laden Chunks wie ein Spieler (Pflanzen wachsen,
+# Mobs spawnen) und sind Ziel aller Befehle (/msg, /mail, /ban, /tp, /give, …). Inventar und Position
+# speichert der Server wie bei jedem Spieler.
 #   /fp create <name> [skin]   an deiner Position erstellen (Skin = Spielername, Standard: der Name)
-#   /fp remove|tp|tphere|equip <name>   entfernen, hinreisen, herholen (setzt den Heimatpunkt), deine Ausrüstung kopieren
+#   /fp join|leave <name>      beitreten / verlassen (bleibt erhalten); nach Kick oder Ban offline bis /fp join
+#   /fp remove <name>          endgültig entfernen
+#   /fp tp|tphere|equip|inv <name>   hinreisen, herholen (setzt den Heimatpunkt), deine Ausrüstung kopieren, Inventar öffnen
 #   /fp ai <name> on|off       KI ein/aus
 #   /fp goal <name> wander|mobs|players|all   Herumlaufen bzw. Mobs / Spieler / beides bekämpfen
 #   /fp skin <name> <skin>     /fp list
-# Kämpfende Fake-Spieler greifen nur Spieler im Überlebens-/Abenteuermodus an, nicht im Vanish und nicht mit
-# sess.fakeplayer.ignore. Stirbt ein Fake-Spieler, erscheint er nach respawn-seconds am Heimatpunkt neu.
+# Kämpfende Fake-Spieler greifen nur echte Spieler im Überlebens-/Abenteuermodus an, nicht im Vanish und
+# nicht mit sess.fakeplayer.ignore. Nach dem Tod erscheinen sie nach respawn-seconds am Heimatpunkt.
+# Tritt ein echter Spieler mit demselben Namen bei, verlässt der Fake-Spieler den Server.
 # Platzhalter: <name>, <skin>, <goal>, <count>, <state>, <location>
 # ------------------------------------------------------------
 fakeplayers:
   max: 20
-  tab-format: "<gray><name>"
-  description: ""              # Zeile unter dem Namen (leer = keine)
   respawn-seconds: 5
   wander-radius: 12            # Blöcke um den Heimatpunkt
   aggro-range: 16              # Suchradius für Gegner
   attack-cooldown-ticks: 12    # 20 Ticks = 1 Sekunde
-  walk-speed: 0.2              # Blöcke pro Tick beim Herumlaufen
-  sprint-speed: 0.28           # Blöcke pro Tick bei der Verfolgung
   messages:
     created: "<prefix><green>Fake-Spieler <white><name></white> erstellt (Skin: <skin>). KI: <white>/fp ai <name> on</white>"
     removed: "<prefix><gray>Fake-Spieler <white><name></white> entfernt."
+    joined: "<prefix><green><white><name></white> ist dem Server beigetreten."
+    left: "<prefix><gray><white><name></white> hat den Server verlassen."
+    already-online: "<prefix><red><white><name></white> ist schon online."
+    name-in-use: "<prefix><red>Ein Spieler namens <white><name></white> ist bereits online."
+    banned: "<prefix><red><white><name></white> ist gebannt und kann nicht beitreten."
+    join-failed: "<prefix><red><white><name></white> konnte nicht beitreten – Details in der Konsole."
+    offline: "<prefix><red><white><name></white> ist gerade offline (<white>/fp join <name></white>)."
     exists: "<prefix><red>Der Name <white><name></white> ist schon vergeben."
     invalid-name: "<prefix><red>Ungültiger Name <white><name></white> – 3 bis 16 Zeichen, nur Buchstaben, Zahlen und _."
     limit: "<prefix><red>Es gibt schon <count> Fake-Spieler (Maximum)."
     not-found: "<prefix><red>Kein Fake-Spieler namens <white><name></white>."
-    not-loaded: "<prefix><red><white><name></white> ist gerade nicht geladen."
-    no-tab: "<prefix><yellow>Hinweis: Ohne PacketEvents erscheint der Fake-Spieler nicht im TAB."
     list-empty: "<prefix><gray>Es gibt keine Fake-Spieler."
     list-header: "<prefix><gray>Fake-Spieler (<white><count></white>):"
     list-entry: "<dark_gray> - <white><name></white> <dark_gray>»</dark_gray> <gray><state></gray> <dark_gray>(<location>)"

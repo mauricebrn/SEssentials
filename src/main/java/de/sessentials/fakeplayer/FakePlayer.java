@@ -1,18 +1,13 @@
 package de.sessentials.fakeplayer;
 
-import io.papermc.paper.entity.LookAnchor;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -21,9 +16,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
 /**
- * Ein Fake-Spieler: Mannequin-Körper in der Welt plus TAB-Eintrag. Die KI steuert den Körper selbst
- * (Mannequins haben keine eigene): Herumlaufen um den Heimatpunkt, Ziele suchen, hinlaufen, zuschlagen.
- * Keine Wegfindung – Hindernisse von einem Block werden übersprungen, Abgründe und Lava gemieden.
+ * Ein Fake-Spieler: echter Spieler auf dem Server (zählt online, lädt Chunks, lässt Pflanzen wachsen,
+ * ist Ziel von Befehlen), nur ohne Client. Die KI steuert ihn über dieselben Eingaben wie eine Tastatur:
+ * vorwärts, sprinten, springen, schauen, schlagen. Keine Wegfindung – Ein-Block-Hindernisse werden
+ * übersprungen, Abgründe über 3 Blöcke, Wasser und Lava gemieden.
  */
 final class FakePlayer {
 
@@ -56,47 +52,49 @@ final class FakePlayer {
     }
 
     /** Einstellungen aus der Config, für alle Fake-Spieler gleich. */
-    record Tuning(double wanderRadius, double aggroRange, int attackCooldown, double walkSpeed, double sprintSpeed) {}
+    record Tuning(double wanderRadius, double aggroRange, int attackCooldown) {}
 
-    private static final double REACH = 2.6;
+    private static final double REACH = 2.8;
     private static final double LOSE_TARGET_RANGE = 24;
     private static final int MAX_DROP = 3;
 
     final String name;
-    /** UUID des TAB-Eintrags (stabil pro Name, nie die eines echten Spielers). */
-    final UUID profileId;
+    /** UUID des Spielers – stabil pro Name, damit Inventar und Position (Spielerdaten) erhalten bleiben. */
+    final UUID id;
     String skin;
-    /** Signierte Skin-Daten für den TAB-Kopf; {@code null}, solange (oder falls) der Skin nicht gefunden wurde. */
+    /** Signierte Skin-Daten; {@code null}, solange (oder falls) der Skin nicht gefunden wurde. */
     String textureValue, textureSignature;
-    UUID entityId;
     Location home;
-    /** Zuletzt bekannte Position – um zu erkennen, ob der Körper in einem geladenen Chunk fehlt. */
-    Location lastSeen;
+    /** Soll online sein (beim Serverstart wieder beitreten). {@code false} nach /fp leave oder einem Kick. */
+    boolean online;
+    /** Beim ersten Beitritt an den Heimatpunkt setzen statt an den Welt-Spawn. */
+    boolean placeAtHome;
     boolean ai;
     Goal goal;
-    final int ping = 15 + ThreadLocalRandom.current().nextInt(50);
+
+    /** Der laufende Spieler oder {@code null}, wenn offline. */
+    FakeServerPlayer handle;
 
     // KI-Zustand (nur Main-Thread)
     private LivingEntity target;
     private Location waypoint;
-    private int pauseTicks, cooldown, stuckTicks, retargetTicks, regenTicks;
+    private int pauseTicks, cooldown, stuckTicks, retargetTicks;
     private double lastDistance = Double.MAX_VALUE;
-    boolean respawning;
 
-    FakePlayer(String name, UUID profileId) {
+    FakePlayer(String name) {
         this.name = name;
-        this.profileId = profileId;
+        this.id = idFor(name);
     }
 
-    static UUID profileIdFor(String name) {
+    static UUID idFor(String name) {
         return UUID.nameUUIDFromBytes(("SEssentials-FakePlayer:" + name.toLowerCase()).getBytes());
     }
 
-    Mannequin body() {
-        return entityId != null && Bukkit.getEntity(entityId) instanceof Mannequin m && m.isValid() ? m : null;
+    Player bukkit() {
+        return handle != null && !handle.isRemoved() ? handle.getBukkitEntity() : null;
     }
 
-    /** Von außen gesetztes Ziel (Gegenangriff), sofern das aktuelle Ziel es erlaubt. */
+    /** Von außen gesetztes Ziel (Gegenangriff), sofern das Ziel es erlaubt. */
     void provoke(LivingEntity attacker) {
         if (ai && allowed(attacker)) target = attacker;
     }
@@ -105,27 +103,24 @@ final class FakePlayer {
         target = null;
         waypoint = null;
         pauseTicks = 0;
+        if (handle != null) stop();
     }
 
     // ------------------------------------------------------------
     // KI
     // ------------------------------------------------------------
 
-    void tick(Mannequin body, Tuning t, Predicate<Player> attackable) {
-        lastSeen = body.getLocation();
-        // ins Wasser geraten (Rückstoß, geschoben): nach oben paddeln, statt zu ertrinken
-        if (body.isInWater()) {
-            Vector v = body.getVelocity();
-            body.setVelocity(v.setY(Math.max(v.getY(), 0.08)));
-        }
-        if (++regenTicks >= 40) {
-            regenTicks = 0;
-            AttributeInstance max = body.getAttribute(Attribute.MAX_HEALTH);
-            if (max != null && body.getHealth() < max.getValue()) body.setHealth(Math.min(max.getValue(), body.getHealth() + 1));
-        }
+    void tick(Player body, Tuning t, Predicate<Player> attackable) {
+        // satt halten: so regeneriert er wie ein Spieler und verhungert nicht
+        if (body.getFoodLevel() < 20) body.setFoodLevel(20);
         if (cooldown > 0) cooldown--;
+        if (body.isDead()) return;
 
-        if (!ai) {
+        // im Wasser nach oben schwimmen statt zu ertrinken
+        boolean swim = body.isInWater();
+        if (!ai || body.getGameMode() == GameMode.SPECTATOR) {
+            stop();
+            handle.setJumping(swim);
             lookAtNearestPlayer(body);
             return;
         }
@@ -139,25 +134,29 @@ final class FakePlayer {
             target = null;
             wander(body, t);
         }
+        if (swim) handle.setJumping(true);
     }
 
-    private void fight(Mannequin body, Tuning t) {
-        Location eye = target.getEyeLocation();
-        body.lookAt(eye.getX(), eye.getY(), eye.getZ(), LookAnchor.EYES);
+    private void fight(Player body, Tuning t) {
+        look(body, target.getEyeLocation());
         double distance = body.getLocation().distance(target.getLocation());
         if (distance > REACH) {
             Vector to = target.getLocation().toVector().subtract(body.getLocation().toVector());
-            move(body, to, t.sprintSpeed());
-        } else if (cooldown <= 0 && body.hasLineOfSight(target)) {
-            body.swingMainHand();
-            body.attack(target);
-            cooldown = t.attackCooldown();
+            if (!walk(body, to, true)) stop();
+        } else {
+            stop();
+            if (cooldown <= 0 && body.hasLineOfSight(target)) {
+                body.swingMainHand();
+                body.attack(target);
+                cooldown = t.attackCooldown();
+            }
         }
     }
 
-    private void wander(Mannequin body, Tuning t) {
+    private void wander(Player body, Tuning t) {
         if (pauseTicks > 0) {
             pauseTicks--;
+            stop();
             lookAtNearestPlayer(body);
             return;
         }
@@ -185,11 +184,12 @@ final class FakePlayer {
             arrive();
             return;
         }
-        if (!move(body, to, t.walkSpeed())) arrive();
+        if (!walk(body, to, false)) arrive();
     }
 
     private void arrive() {
         waypoint = null;
+        stop();
         pauseTicks = 40 + ThreadLocalRandom.current().nextInt(80);
     }
 
@@ -236,26 +236,28 @@ final class FakePlayer {
     }
 
     /**
-     * Ein Schritt Richtung {@code direction}. Springt über Ein-Block-Hindernisse, meidet Wasser und Lava
-     * (Mannequins können nicht schwimmen) und Abgründe über 3 Blöcke. {@code false}, wenn der Weg versperrt ist.
+     * Läuft einen Tick lang Richtung {@code direction} (Eingabe „vorwärts“, ggf. sprinten und springen).
+     * {@code false}, wenn der Weg versperrt ist (Wand, Abgrund, Wasser, Lava).
      */
-    private boolean move(Mannequin body, Vector direction, double speed) {
+    private boolean walk(Player body, Vector direction, boolean sprint) {
         Vector dir = direction.clone().setY(0);
         if (dir.lengthSquared() < 1e-6) return true;
         dir.normalize();
         Location loc = body.getLocation();
-        float yaw = (float) Math.toDegrees(Math.atan2(-dir.getX(), dir.getZ()));
-        if (target == null) body.setRotation(yaw, 0);
-        body.setBodyYaw(yaw);
+        if (target == null) {
+            handle.setYRot((float) Math.toDegrees(Math.atan2(-dir.getX(), dir.getZ())));
+            handle.setXRot(0);
+        }
+        handle.setYHeadRot(handle.getYRot());
 
         Block ahead = loc.clone().add(dir.clone().multiply(0.7)).getBlock();
-        double vy = body.getVelocity().getY();
+        boolean jump = false;
         if (!body.isInWater() && (ahead.isLiquid() || ahead.getRelative(BlockFace.DOWN).isLiquid())) return false;
         if (ahead.isSolid()) {
             boolean room = !ahead.getRelative(BlockFace.UP).isSolid() && !ahead.getRelative(0, 2, 0).isSolid()
                     && !loc.getBlock().getRelative(0, 2, 0).isSolid();
             if (!room) return false;
-            if (body.isOnGround()) vy = 0.42;
+            jump = true;
         } else {
             Block below = ahead.getRelative(BlockFace.DOWN);
             int drop = 0;
@@ -266,32 +268,49 @@ final class FakePlayer {
             }
             if (drop > MAX_DROP) return false;
         }
-        body.setVelocity(new Vector(dir.getX() * speed, vy, dir.getZ() * speed));
+        handle.zza = 1f;
+        handle.xxa = 0f;
+        handle.setSprinting(sprint);
+        handle.setJumping(jump);
         return true;
     }
 
-    private void lookAtNearestPlayer(Mannequin body) {
+    private void stop() {
+        handle.zza = 0f;
+        handle.xxa = 0f;
+        handle.setSprinting(false);
+        handle.setJumping(false);
+    }
+
+    private void look(Player body, Location at) {
+        Vector d = at.toVector().subtract(body.getEyeLocation().toVector());
+        float yaw = (float) Math.toDegrees(Math.atan2(-d.getX(), d.getZ()));
+        float pitch = (float) Math.toDegrees(-Math.atan2(d.getY(), Math.sqrt(d.getX() * d.getX() + d.getZ() * d.getZ())));
+        handle.setYRot(yaw);
+        handle.setXRot(pitch);
+        handle.setYHeadRot(yaw);
+    }
+
+    private void lookAtNearestPlayer(Player body) {
         if (body.getTicksLived() % 5 != 0) return;
         Player nearest = null;
         double best = 64;
         for (Player p : body.getWorld().getPlayers()) {
+            if (p == body || p.getGameMode() == GameMode.SPECTATOR) continue;
             double d = p.getLocation().distanceSquared(body.getLocation());
-            if (d < best && p.getGameMode() != GameMode.SPECTATOR) {
+            if (d < best) {
                 best = d;
                 nearest = p;
             }
         }
-        if (nearest != null) {
-            Location eye = nearest.getEyeLocation();
-            body.lookAt(eye.getX(), eye.getY(), eye.getZ(), LookAnchor.EYES);
-        }
+        if (nearest != null) look(body, nearest.getEyeLocation());
     }
 
     // ------------------------------------------------------------
     // Ziele
     // ------------------------------------------------------------
 
-    private LivingEntity findTarget(Mannequin body, double range, Predicate<Player> attackable) {
+    private LivingEntity findTarget(Player body, double range, Predicate<Player> attackable) {
         LivingEntity best = null;
         double bestDistance = range * range;
         for (Entity e : body.getNearbyEntities(range, range / 2, range)) {
@@ -305,14 +324,14 @@ final class FakePlayer {
         return best;
     }
 
-    private boolean validTarget(Mannequin body, LivingEntity e, double range, Predicate<Player> attackable) {
+    private boolean validTarget(Player body, LivingEntity e, double range, Predicate<Player> attackable) {
         if (e == null || !e.isValid() || e.isDead() || e == body || !e.getWorld().equals(body.getWorld())) return false;
         if (e.getLocation().distanceSquared(body.getLocation()) > range * range) return false;
         if (e instanceof Player p) return goal.players() && attackable.test(p);
         return allowed(e);
     }
 
-    /** Spieler werden zusätzlich über {@code attackable} gefiltert (Spielmodus, Vanish, Recht). */
+    /** Spieler werden zusätzlich über {@code attackable} gefiltert (Spielmodus, Vanish, Recht, andere Fake-Spieler). */
     private boolean allowed(LivingEntity e) {
         if (e instanceof Player) return goal.players();
         return goal.mobs() && e instanceof Enemy;

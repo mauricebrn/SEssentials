@@ -16,8 +16,8 @@ fi
 
 echo "==> Plugin bauen"
 # alte Builds entfernen, sonst landen alle Versionen im plugins-Ordner
-rm -f "$ROOT"/target/SEssentials-*.jar
-"$ROOT/mvnw" -B -q package
+rm -f "$ROOT"/build/libs/SEssentials-*.jar
+"$ROOT/gradlew" -q build
 
 mkdir -p "$RUN_DIR/plugins"
 
@@ -47,7 +47,7 @@ fi
 echo "eula=true" > "$RUN_DIR/eula.txt"
 
 rm -f "$RUN_DIR"/plugins/SEssentials-*.jar
-cp "$ROOT"/target/SEssentials-*.jar "$RUN_DIR/plugins/"
+cp "$ROOT"/build/libs/SEssentials-*.jar "$RUN_DIR/plugins/"
 
 echo "==> Starte Paper $PAPER_VERSION (Konsole: 'stop' zum Beenden)"
 cd "$RUN_DIR"

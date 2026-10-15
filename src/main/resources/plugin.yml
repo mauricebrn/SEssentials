@@ -4,7 +4,7 @@ main: de.sessentials.SEssentials
 api-version: '26.2'
 description: Softrestart, Chatformat, TAB, Nametags, Join/Leave, Vanish und Spieler-Befehle mit MiniMessage & LuckPerms
 author: Moritz
-softdepend: [LuckPerms, PlaceholderAPI, Vault, packetevents]
+softdepend: [LuckPerms, PlaceholderAPI, Vault]
 
 permissions:
   sess.softrestart:

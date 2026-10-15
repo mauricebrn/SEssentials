@@ -389,13 +389,15 @@ LuckPerms-Prefixe dürfen MiniMessage **oder** &-Codes (inkl. `&#RRGGBB`) enthal
 ### Bauen
 
 ```bash
-./mvnw clean package
+./gradlew build
 ```
-Ergebnis: `target/SEssentials-<version>.jar`.
-Voraussetzung: JDK 25+. Maven muss nicht installiert sein, `./mvnw` lädt es beim ersten Aufruf.
+Ergebnis: `build/libs/SEssentials-<version>.jar`.
+Voraussetzung: JDK 25+. Gradle muss nicht installiert sein, `./gradlew` lädt es beim ersten Aufruf.
+Der erste Build dauert einige Minuten: paperweight baut einmalig den Paper-Server zum Kompilieren.
 
-Kompiliert wird gegen `paper-api 26.2.build.112-stable`; das JAR läuft auch auf 26.3.
-Für einen reinen 26.3-Build `paper.version` in der `pom.xml` z.B. auf `26.3.build.143-beta` setzen.
+Kompiliert wird gegen das Paper-Dev-Bundle `26.2.build.112-stable` (in `build.gradle.kts`); getestet auf 26.2 und 26.3.
+Die Fake-Spieler nutzen Server-Interna (NMS). Nach einem Minecraft-Update deshalb das Dev-Bundle auf die
+neue Version setzen, bauen und die Fake-Spieler auf dem Testserver prüfen.
 
 ### Lokaler Testserver
 
@@ -420,12 +422,12 @@ Verbinden mit `localhost`, beenden mit `stop` in der Konsole.
 Die Pipeline liegt in `.github/workflows/build.yml` (GitHub Actions).
 
 **Build-Check:** Jeder Push auf `main` und jeder Pull Request baut das Plugin mit
-`./mvnw -B verify` (Temurin JDK 25). Schlägt das Kompilieren fehl, ist der Run rot.
+`./gradlew build` (Temurin JDK 25). Schlägt das Kompilieren fehl, ist der Run rot.
 Das fertige JAR hängt als Artifact `SEssentials` am Run (Tab *Actions* → Run → *Artifacts*).
 
 **Release veröffentlichen:**
 
-1. `<version>` in der `pom.xml` erhöhen, z.B. `1.0.1`.
+1. `version` in der `build.gradle.kts` erhöhen, z.B. `1.0.1`.
 2. Änderung committen und pushen:
    ```bash
    git commit -am "Release 1.0.1"
@@ -440,6 +442,6 @@ Das fertige JAR hängt als Artifact `SEssentials` am Run (Tab *Actions* → Run 
 Der Tag startet die Pipeline erneut. Nach erfolgreichem Build erstellt sie ein GitHub Release
 mit `SEssentials-1.0.1.jar` und automatisch generierten Release Notes (Tab *Releases*).
 
-> Der Tag muss exakt zur `pom.xml`-Version passen (`v1.0.1` ↔ `1.0.1`).
+> Der Tag muss exakt zur Version in der `build.gradle.kts` passen (`v1.0.1` ↔ `1.0.1`).
 > Sonst bricht der Release-Job ab und es wird nichts veröffentlicht.
 > Dann Tag löschen (`git tag -d v1.0.1 && git push origin :v1.0.1`), Version korrigieren, neu taggen.
