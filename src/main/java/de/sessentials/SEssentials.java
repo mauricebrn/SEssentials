@@ -616,6 +616,7 @@ public final class SEssentials extends JavaPlugin {
             fakePlayers.register(commands);
             upgrader.register(commands);
             messages.register(commands);
+            notifications.register(commands);
             mail.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);

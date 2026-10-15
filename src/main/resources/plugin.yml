@@ -178,6 +178,9 @@ permissions:
   sess.msg:
     description: Erlaubt /msg und /r
     default: true
+  sess.spy:
+    description: Erlaubt /socialspy – private Nachrichten (/msg, /r, /mail) mitlesen
+    default: op
   sess.mail:
     description: Erlaubt /mail (Nachrichten an offline Spieler)
     default: true

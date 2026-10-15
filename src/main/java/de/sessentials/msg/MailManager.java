@@ -107,6 +107,7 @@ public final class MailManager implements Listener {
         inbox.add(new Mail(from, System.currentTimeMillis(), text, false));
         save();
         sender.sendMessage(msg("sent", self, TextService.placeholder("target", name), Placeholder.unparsed("message", text)));
+        plugin.notifications().spy("mail", from, name, text);
         Player online = target.getPlayer();
         if (online != null) online.sendMessage(msg("new", online, TextService.placeholder("sender", from)));
     }

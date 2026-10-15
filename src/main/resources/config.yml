@@ -396,6 +396,18 @@ msg:
   partner-offline: "<prefix><red>Dein Gesprächspartner ist nicht mehr online."
 
 # ------------------------------------------------------------
+# Spy (/socialspy, Alias /spy – Recht sess.spy): private Nachrichten (/msg, /r) und Mails mitlesen.
+# Standardmäßig aus; an/aus mit /socialspy oder im Admin-Panel unter "Benachrichtigungen".
+# Absender und Empfänger bekommen keine Kopie. Platzhalter: <sender>, <target>, <message> (reiner Text)
+# ------------------------------------------------------------
+spy:
+  messages:
+    msg: "<dark_gray>[<light_purple>Spy</light_purple>] <gray><sender> <dark_gray>→</dark_gray> <target>:</gray> <white><message>"
+    mail: "<dark_gray>[<light_purple>Spy</light_purple>] <gray>Mail <sender> <dark_gray>→</dark_gray> <target>:</gray> <white><message>"
+    on: "<prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails."
+    off: "<prefix><gray>Spy <red>ausgeschaltet</red>."
+
+# ------------------------------------------------------------
 # Mail (/mail send <spieler> <nachricht>, /mail [read], /mail delete <nr>, /mail clear)
 # Nachrichten an Spieler, die schon einmal auf dem Server waren – auch wenn sie offline sind.
 # Beim Join erfährt der Empfänger von ungelesenen Mails. Gemutete Spieler können keine Mails senden.

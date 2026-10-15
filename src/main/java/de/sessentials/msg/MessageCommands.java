@@ -115,6 +115,7 @@ public final class MessageCommands implements Listener {
                 Placeholder.unparsed("message", message));
         sender.sendMessage(msg("sent", sender instanceof Player p ? p : null, tags));
         target.sendMessage(msg("received", target, tags));
+        plugin.notifications().spy("msg", senderName, target.getName(), message);
         if (sender instanceof Player p) {
             lastPartner.put(p.getUniqueId(), target.getUniqueId());
             lastPartner.put(target.getUniqueId(), p.getUniqueId());
