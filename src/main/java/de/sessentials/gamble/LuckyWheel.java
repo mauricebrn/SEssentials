@@ -173,6 +173,62 @@ public final class LuckyWheel {
     }
 
     // ------------------------------------------------------------
+    // Admin-Panel
+    // ------------------------------------------------------------
+
+    public void openAdmin(Player player) {
+        Settings s = settings;
+        Menu menu = new Menu(3, Component.text("Glücksrad – Verwaltung", NamedTextColor.DARK_GRAY));
+        menu.set(11, Menu.icon(Material.CHEST, Component.text("Topf: " + bank.format(bank.pot()), NamedTextColor.GOLD, TextDecoration.BOLD),
+                line("Höchster Einsatz gerade", bank.format(maxStake(s))),
+                Component.empty(),
+                Component.text("Klick", NamedTextColor.YELLOW).append(Component.text(" » Topf ändern", NamedTextColor.GRAY))),
+                this::askPot);
+
+        List<Component> fields = new ArrayList<>();
+        for (Segment seg : s.segments()) {
+            fields.add(Component.text(multiplier(seg), color(seg)).append(Component.text(" – " + percent(seg.weight(), s.totalWeight()), NamedTextColor.WHITE)));
+        }
+        if (fields.isEmpty()) fields.add(Component.text("Keine Felder – Glücksrad deaktiviert", NamedTextColor.RED));
+        fields.add(Component.empty());
+        fields.add(line("Einsatz", bank.format(s.minBet()) + " – " + bank.format(s.maxBet())));
+        fields.add(Component.text("Gebühr: ", NamedTextColor.GRAY).append(s.fee().isFree()
+                ? Component.text("keine", NamedTextColor.WHITE)
+                : plugin.text().render("<white><price>", s.fee().tags())));
+        fields.add(Component.empty());
+        fields.add(Component.text("Ändern in config.yml (gambling)", NamedTextColor.DARK_GRAY));
+        menu.set(13, Menu.icon(Material.PAPER, Component.text("Felder & Chancen", NamedTextColor.AQUA, TextDecoration.BOLD),
+                fields.toArray(Component[]::new)), p -> {});
+
+        menu.set(15, Menu.icon(Material.CLOCK, Component.text("Glücksrad öffnen", NamedTextColor.GREEN, TextDecoration.BOLD)), this::open);
+        menu.set(22, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)), plugin.adminPanel()::open);
+        menu.fillEmpty();
+        menu.open(player);
+    }
+
+    /** Topf per Chat: {@code +100}, {@code -50} oder {@code =200} (bzw. nur die Zahl). */
+    private void askPot(Player player) {
+        player.closeInventory();
+        player.sendMessage(msg("prompt-pot", player));
+        plugin.chatPrompt().ask(player, input -> {
+            String in = input.replace(" ", "");
+            char op = in.isEmpty() ? '?' : in.charAt(0);
+            long amount = parseAmount(op == '+' || op == '-' || op == '=' ? in.substring(1) : in);
+            if (amount < 0) {
+                player.sendMessage(msg("invalid-amount", player));
+            } else {
+                switch (op) {
+                    case '+' -> bank.addToPot(amount);
+                    case '-' -> bank.addToPot(-amount);
+                    default -> bank.setPot(amount);
+                }
+                player.sendMessage(msg("pot-set", player));
+            }
+            openAdmin(player);
+        }, () -> player.sendMessage(msg("cancelled", player)));
+    }
+
+    // ------------------------------------------------------------
     // Drehen
     // ------------------------------------------------------------
 

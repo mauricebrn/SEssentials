@@ -50,11 +50,18 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 public final class SEssentials extends JavaPlugin {
 
@@ -98,6 +105,7 @@ public final class SEssentials extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        addNewConfigOptions();
 
         PermissionInfo perms = PermissionInfo.NONE;
         if (getServer().getPluginManager().isPluginEnabled("LuckPerms")) {
@@ -194,6 +202,40 @@ public final class SEssentials extends JavaPlugin {
         if (punishments != null) punishments.shutdown();
         if (chestShops != null) chestShops.shutdown();
         if (bank != null) bank.shutdown();
+    }
+
+    /**
+     * Ergänzt nach einem Update fehlende Optionen aus der mitgelieferten config.yml samt Kommentaren.
+     * Vorhandene Werte bleiben unverändert; neue Optionen landen am Ende ihres Abschnitts.
+     */
+    private void addNewConfigOptions() {
+        File file = new File(getDataFolder(), "config.yml");
+        YamlConfiguration current = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration defaults;
+        try (InputStream in = getResource("config.yml")) {
+            if (in == null) return;
+            defaults = YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            getLogger().log(Level.WARNING, "Mitgelieferte config.yml nicht lesbar", e);
+            return;
+        }
+        List<String> added = new ArrayList<>();
+        for (String key : defaults.getKeys(true)) {
+            if (current.contains(key, true)) continue;
+            if (defaults.isConfigurationSection(key)) current.createSection(key);
+            else current.set(key, defaults.get(key));
+            current.setComments(key, defaults.getComments(key));
+            current.setInlineComments(key, defaults.getInlineComments(key));
+            added.add(key);
+        }
+        if (added.isEmpty()) return;
+        try {
+            current.save(file);
+            reloadConfig();
+            getLogger().info("config.yml um " + added.size() + " neue Optionen ergänzt: " + String.join(", ", added));
+        } catch (IOException e) {
+            getLogger().log(Level.WARNING, "config.yml konnte nicht ergänzt werden", e);
+        }
     }
 
     public void reloadAll() {
@@ -327,6 +369,11 @@ public final class SEssentials extends JavaPlugin {
                         Component.text("Wertvolle Items in Inventar und", NamedTextColor.GRAY),
                         Component.text("Enderchest, mit Verlauf", NamedTextColor.GRAY)),
                 p -> trackerMenu.openOverview(p, 1));
+        adminPanel.addApp(Category.ECONOMY, LuckyWheel.PERM_ADMIN,
+                p -> Menu.icon(Material.CLOCK, Component.text("Glücksrad", NamedTextColor.LIGHT_PURPLE),
+                        Component.text("Topf: " + bank.format(bank.pot()), NamedTextColor.GRAY),
+                        Component.text("Topf setzen, Chancen ansehen", NamedTextColor.GRAY)),
+                luckyWheel::openAdmin);
 
         // Server
         adminPanel.addApp(Category.SERVER, "sess.news.admin",

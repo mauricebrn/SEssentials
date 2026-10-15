@@ -279,6 +279,7 @@ enderchest:
 # Server (Kosten von /tpa, /spawn, /ec, Käufe in Admin-Shops; Item-Kosten mit ihrem Bank-Kurs) fließen
 # in den Topf; Gewinne werden aus dem Topf bezahlt. Gedreht werden kann nur, wenn der Topf den höchsten
 # möglichen Gewinn deckt. Topf ansehen: /gluecksrad topf, setzen: /gluecksrad topf setzen <betrag>
+# oder im Admin-Panel (Wirtschaft → Glücksrad, Recht sess.gamble.admin)
 # Platzhalter: <amount>, <stake>, <multiplier>, <pot>, <price>
 # ------------------------------------------------------------
 gambling:
@@ -311,6 +312,7 @@ gambling:
     cancelled: "<prefix><gray>Eingabe abgebrochen."
     pot: "<prefix><gray>Im Topf des Glücksrads: <gold><pot>"
     pot-set: "<prefix><gray>Topf auf <gold><pot></gold> gesetzt."
+    prompt-pot: "<prefix><gray>Topf ändern (aktuell <gold><pot></gold>): <white>+100</white>, <white>-50</white> oder <white>=200</white>. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
 
 # ------------------------------------------------------------
 # Chestshops – Schild an eine Kiste/ein Fass (Wandschild oder obendrauf):

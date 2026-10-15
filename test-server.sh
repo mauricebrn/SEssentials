@@ -15,6 +15,8 @@ if [ "$JAVA_MAJOR" -lt 25 ]; then
 fi
 
 echo "==> Plugin bauen"
+# alte Builds entfernen, sonst landen alle Versionen im plugins-Ordner
+rm -f "$ROOT"/target/SEssentials-*.jar
 "$ROOT/mvnw" -B -q package
 
 mkdir -p "$RUN_DIR/plugins"
