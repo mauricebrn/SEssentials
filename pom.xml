@@ -6,7 +6,7 @@
 
     <groupId>de.sessentials</groupId>
     <artifactId>SEssentials</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
     <packaging>jar</packaging>
     <name>SEssentials</name>
 

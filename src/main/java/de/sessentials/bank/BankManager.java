@@ -51,7 +51,7 @@ public final class BankManager implements Listener {
         return balances.containsKey(id);
     }
 
-    /** Legt das Konto mit Startguthaben an, falls es noch nicht existiert, und merkt sich den Namen für /baltop. */
+    /** Legt das Konto mit Startguthaben an, falls es noch nicht existiert, und merkt sich den Namen für die Bestenliste ({@link #top}: /baltop, Bank-Menü, Web-Panel). */
     public synchronized void ensureAccount(OfflinePlayer player) {
         String name = player.getName();
         boolean changed = name != null && !name.equals(names.put(player.getUniqueId(), name));
