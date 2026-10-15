@@ -682,3 +682,46 @@ auto-update:
     no-release: "<prefix><gray>Im Repository <white><repository></white> gibt es noch kein Release."
     staged: "<prefix><green>Update <white><version></white> heruntergeladen (installiert: <current>) – aktiv nach dem nächsten Neustart."
     failed: "<prefix><red>Auto-Update fehlgeschlagen: <white><error>"
+
+# ------------------------------------------------------------
+# Fake-Spieler (/fakeplayer, Aliase /fp, /bot – Recht sess.fakeplayer)
+# Sichtbar als Spielermodell mit Skin (Mannequin) und mit Eintrag im TAB. Für den TAB-Eintrag muss das
+# Plugin PacketEvents (https://modrinth.com/plugin/packetevents) installiert sein.
+#   /fp create <name> [skin]   an deiner Position erstellen (Skin = Spielername, Standard: der Name)
+#   /fp remove|tp|tphere|equip <name>   entfernen, hinreisen, herholen (setzt den Heimatpunkt), deine Ausrüstung kopieren
+#   /fp ai <name> on|off       KI ein/aus
+#   /fp goal <name> wander|mobs|players|all   Herumlaufen bzw. Mobs / Spieler / beides bekämpfen
+#   /fp skin <name> <skin>     /fp list
+# Kämpfende Fake-Spieler greifen nur Spieler im Überlebens-/Abenteuermodus an, nicht im Vanish und nicht mit
+# sess.fakeplayer.ignore. Stirbt ein Fake-Spieler, erscheint er nach respawn-seconds am Heimatpunkt neu.
+# Platzhalter: <name>, <skin>, <goal>, <count>, <state>, <location>
+# ------------------------------------------------------------
+fakeplayers:
+  max: 20
+  tab-format: "<gray><name>"
+  description: ""              # Zeile unter dem Namen (leer = keine)
+  respawn-seconds: 5
+  wander-radius: 12            # Blöcke um den Heimatpunkt
+  aggro-range: 16              # Suchradius für Gegner
+  attack-cooldown-ticks: 12    # 20 Ticks = 1 Sekunde
+  walk-speed: 0.2              # Blöcke pro Tick beim Herumlaufen
+  sprint-speed: 0.28           # Blöcke pro Tick bei der Verfolgung
+  messages:
+    created: "<prefix><green>Fake-Spieler <white><name></white> erstellt (Skin: <skin>). KI: <white>/fp ai <name> on</white>"
+    removed: "<prefix><gray>Fake-Spieler <white><name></white> entfernt."
+    exists: "<prefix><red>Der Name <white><name></white> ist schon vergeben."
+    invalid-name: "<prefix><red>Ungültiger Name <white><name></white> – 3 bis 16 Zeichen, nur Buchstaben, Zahlen und _."
+    limit: "<prefix><red>Es gibt schon <count> Fake-Spieler (Maximum)."
+    not-found: "<prefix><red>Kein Fake-Spieler namens <white><name></white>."
+    not-loaded: "<prefix><red><white><name></white> ist gerade nicht geladen."
+    no-tab: "<prefix><yellow>Hinweis: Ohne PacketEvents erscheint der Fake-Spieler nicht im TAB."
+    list-empty: "<prefix><gray>Es gibt keine Fake-Spieler."
+    list-header: "<prefix><gray>Fake-Spieler (<white><count></white>):"
+    list-entry: "<dark_gray> - <white><name></white> <dark_gray>»</dark_gray> <gray><state></gray> <dark_gray>(<location>)"
+    ai-on: "<prefix><green>KI von <white><name></white> eingeschaltet: <goal>."
+    ai-off: "<prefix><gray>KI von <white><name></white> ausgeschaltet."
+    goal-set: "<prefix><gray>Ziel von <white><name></white>: <white><goal></white>."
+    skin-set: "<prefix><gray>Skin von <white><name></white> auf <white><skin></white> gesetzt."
+    equipped: "<prefix><gray><white><name></white> trägt jetzt eine Kopie deiner Ausrüstung."
+    teleported: "<prefix><gray>Zu <white><name></white> teleportiert."
+    moved: "<prefix><gray><white><name></white> ist jetzt hier (neuer Heimatpunkt)."

@@ -4,7 +4,7 @@ main: de.sessentials.SEssentials
 api-version: '26.2'
 description: Softrestart, Chatformat, TAB, Nametags, Join/Leave, Vanish und Spieler-Befehle mit MiniMessage & LuckPerms
 author: Moritz
-softdepend: [LuckPerms, PlaceholderAPI, Vault]
+softdepend: [LuckPerms, PlaceholderAPI, Vault, packetevents]
 
 permissions:
   sess.softrestart:
@@ -13,6 +13,12 @@ permissions:
   sess.reload:
     description: Erlaubt /sessentials reload
     default: op
+  sess.fakeplayer:
+    description: Erlaubt /fakeplayer (Fake-Spieler erstellen, steuern, entfernen)
+    default: op
+  sess.fakeplayer.ignore:
+    description: Wird von kämpfenden Fake-Spielern nicht angegriffen
+    default: false
   sess.update:
     description: Erlaubt /autoupdate und das Auto-Update im Admin-Panel; bekommt Update-Meldungen
     default: op

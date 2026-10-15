@@ -18,6 +18,7 @@ import de.sessentials.creativelog.CreativeLog;
 import de.sessentials.creativelog.CreativeLogMenu;
 import de.sessentials.detector.ClientDetector;
 import de.sessentials.dimension.DimensionCommands;
+import de.sessentials.fakeplayer.FakePlayerManager;
 import de.sessentials.gamble.LuckyWheel;
 import de.sessentials.help.HelpCommand;
 import de.sessentials.hook.LuckPermsHook;
@@ -90,6 +91,7 @@ public final class SEssentials extends JavaPlugin {
     private EnderChestCommand enderChest;
     private LuckyWheel luckyWheel;
     private AutoUpdater autoUpdater;
+    private FakePlayerManager fakePlayers;
     private ChestShopManager chestShops;
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
@@ -148,6 +150,7 @@ public final class SEssentials extends JavaPlugin {
         tpa = new TpaManager(this);
         enderChest = new EnderChestCommand(this);
         luckyWheel = new LuckyWheel(this);
+        fakePlayers = new FakePlayerManager(this);
         chestShops = new ChestShopManager(this);
         shopCreator = new ShopCreatorMenu(this, chestShops);
         messages = new MessageCommands(this);
@@ -186,6 +189,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chestShops, this);
         getServer().getPluginManager().registerEvents(messages, this);
         getServer().getPluginManager().registerEvents(tab, this);
+        getServer().getPluginManager().registerEvents(fakePlayers, this);
         tab.reload();
 
         registerCommands();
@@ -198,6 +202,7 @@ public final class SEssentials extends JavaPlugin {
     public void onDisable() {
         if (webPanel != null) webPanel.stop();
         if (autoUpdater != null) autoUpdater.shutdown();
+        if (fakePlayers != null) fakePlayers.shutdown();
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
@@ -260,6 +265,7 @@ public final class SEssentials extends JavaPlugin {
         enderChest.reload();
         luckyWheel.reload();
         autoUpdater.reload();
+        fakePlayers.reload();
         tab.reload();
         // Webpanel neu starten, damit Port/Adresse greifen; Sitzungen bleiben erhalten
         webPanel.stop();
@@ -588,6 +594,7 @@ public final class SEssentials extends JavaPlugin {
             enderChest.register(commands);
             luckyWheel.register(commands);
             autoUpdater.register(commands);
+            fakePlayers.register(commands);
             messages.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);
