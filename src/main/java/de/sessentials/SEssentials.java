@@ -58,6 +58,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -71,6 +72,7 @@ import java.util.logging.Level;
 
 public final class SEssentials extends JavaPlugin {
 
+    private Modules modules;
     private TextService text;
     private SoftRestartManager softRestart;
     private ChatListener chat;
@@ -118,6 +120,7 @@ public final class SEssentials extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         addNewConfigOptions();
+        modules = new Modules(getConfig(), getLogger());
 
         PermissionInfo perms = PermissionInfo.NONE;
         if (getServer().getPluginManager().isPluginEnabled("LuckPerms")) {
@@ -138,19 +141,22 @@ public final class SEssentials extends JavaPlugin {
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         bankMenu = new BankMenu(this, bank);
         bankCommands = new BankCommands(this, bank, bankMenu);
-        if (getServer().getPluginManager().isPluginEnabled("Vault")) {
+        if (modules.on("bank") && getServer().getPluginManager().isPluginEnabled("Vault")) {
             VaultEconomy.register(this, bank);
             getLogger().info("Vault gefunden – Bank als Economy angemeldet.");
         }
 
-        tracker = new ItemTracker(this);
-        trackerMenu = new TrackerMenu(this, tracker);
+        // Module, von denen sonst nichts abhängt, gibt es nur, wenn sie an sind (null = aus).
+        // Gemeinsam genutzte Daten (Bank, Strafen, Vanish, Reports, News) gibt es immer – bei ihnen
+        // schalten die Module nur Befehle, Listener und Kacheln.
+        tracker = modules.on("item-tracker") ? new ItemTracker(this) : null;
+        trackerMenu = tracker != null ? new TrackerMenu(this, tracker) : null;
 
         softRestart = new SoftRestartManager(this);
-        autoUpdater = new AutoUpdater(this);
+        autoUpdater = modules.on("auto-update") ? new AutoUpdater(this) : null;
         chat = new ChatListener(this);
         joinQuit = new JoinQuitListener(this);
-        tab = new TabNametagManager(this);
+        tab = modules.on("tab") ? new TabNametagManager(this) : null;
         playerCommands = new PlayerCommands(this);
         sudo = new SudoCommand(this);
         aliases = new CommandAliases(this);
@@ -159,57 +165,64 @@ public final class SEssentials extends JavaPlugin {
         help = new HelpCommand(this);
         tpa = new TpaManager(this);
         enderChest = new EnderChestCommand(this);
-        luckyWheel = new LuckyWheel(this);
-        fakePlayers = new FakePlayerManager(this);
-        upgrader = new ItemUpgrader(this);
-        chestShops = new ChestShopManager(this);
-        shopCreator = new ShopCreatorMenu(this, chestShops);
+        luckyWheel = modules.on("gambling") ? new LuckyWheel(this) : null;
+        fakePlayers = modules.on("fake-players") ? new FakePlayerManager(this) : null;
+        upgrader = modules.on("upgrader") ? new ItemUpgrader(this) : null;
+        chestShops = modules.on("chestshops") ? new ChestShopManager(this) : null;
+        shopCreator = chestShops != null ? new ShopCreatorMenu(this, chestShops) : null;
         messages = new MessageCommands(this);
-        mail = new MailManager(this);
+        mail = modules.on("mail") ? new MailManager(this) : null;
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
         notifications = new Notifications(this);
         reports = new ReportManager(this);
-        detector = new ClientDetector(this);
-        itemGuard = new ItemGuard(this);
-        itemGuardMenu = new ItemGuardMenu(this, itemGuard);
-        creativeLog = new CreativeLog(this);
-        creativeLogMenu = new CreativeLogMenu(this, creativeLog);
+        detector = modules.on("client-detector") ? new ClientDetector(this) : null;
+        itemGuard = modules.on("itemguard") ? new ItemGuard(this) : null;
+        itemGuardMenu = itemGuard != null ? new ItemGuardMenu(this, itemGuard) : null;
+        creativeLog = modules.on("creativelog") ? new CreativeLog(this) : null;
+        creativeLogMenu = creativeLog != null ? new CreativeLogMenu(this, creativeLog) : null;
         punishments = new PunishmentManager(this);
         punishCommands = new PunishCommands(this, punishments);
         punishmentMenu = new PunishmentMenu(this, punishments, punishCommands);
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
-        getServer().getPluginManager().registerEvents(softRestart, this);
-        getServer().getPluginManager().registerEvents(chat, this);
-        getServer().getPluginManager().registerEvents(joinQuit, this);
-        getServer().getPluginManager().registerEvents(vanish, this);
-        getServer().getPluginManager().registerEvents(playerCommands, this);
         getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
-        getServer().getPluginManager().registerEvents(reports, this);
-        getServer().getPluginManager().registerEvents(detector, this);
-        getServer().getPluginManager().registerEvents(itemGuard, this);
-        getServer().getPluginManager().registerEvents(creativeLog, this);
-        getServer().getPluginManager().registerEvents(punishments, this);
-        getServer().getPluginManager().registerEvents(spawn, this);
-        getServer().getPluginManager().registerEvents(tpa, this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
-        getServer().getPluginManager().registerEvents(news, this);
-        getServer().getPluginManager().registerEvents(bank, this);
-        getServer().getPluginManager().registerEvents(tracker, this);
-        getServer().getPluginManager().registerEvents(chestShops, this);
-        getServer().getPluginManager().registerEvents(messages, this);
-        getServer().getPluginManager().registerEvents(mail, this);
-        getServer().getPluginManager().registerEvents(tab, this);
-        getServer().getPluginManager().registerEvents(fakePlayers, this);
-        getServer().getPluginManager().registerEvents(upgrader, this);
-        tab.reload();
+        listen("softrestart", softRestart);
+        listen("chat", chat);
+        listen("join-quit", joinQuit);
+        listen("vanish", vanish);
+        listen("player-commands", playerCommands);
+        listen("reports", reports);
+        listen("client-detector", detector);
+        listen("itemguard", itemGuard);
+        listen("creativelog", creativeLog);
+        listen("punishments", punishments);
+        listen("spawn", spawn);
+        listen("tpa", tpa);
+        listen("news", news);
+        listen("bank", bank);
+        listen("item-tracker", tracker);
+        listen("chestshops", chestShops);
+        listen("messages", messages);
+        listen("mail", mail);
+        listen("tab", tab);
+        listen("fake-players", fakePlayers);
+        listen("upgrader", upgrader);
+        if (tab != null) tab.reload();
 
         registerCommands();
 
-        webPanel = new WebPanel(this);
-        webPanel.start();
+        if (modules.on("webpanel")) {
+            webPanel = new WebPanel(this);
+            webPanel.start();
+        }
+    }
+
+    /** Meldet den Listener nur an, wenn sein Modul an ist (und es ihn gibt). */
+    private void listen(String module, Listener listener) {
+        if (listener != null && modules.on(module)) getServer().getPluginManager().registerEvents(listener, this);
     }
 
     @Override
@@ -270,23 +283,29 @@ public final class SEssentials extends JavaPlugin {
         chat.reload();
         joinQuit.reload();
         vanish.reload();
-        detector.reload();
-        itemGuard.reload();
-        creativeLog.reload();
+        if (detector != null) detector.reload();
+        if (itemGuard != null) itemGuard.reload();
+        if (creativeLog != null) creativeLog.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
-        tracker.reload();
+        if (tracker != null) tracker.reload();
         spawn.reload();
         help.reload();
         tpa.reload();
         enderChest.reload();
-        luckyWheel.reload();
-        autoUpdater.reload();
-        fakePlayers.reload();
-        upgrader.reload();
-        tab.reload();
+        if (luckyWheel != null) luckyWheel.reload();
+        if (autoUpdater != null) autoUpdater.reload();
+        if (fakePlayers != null) fakePlayers.reload();
+        if (upgrader != null) upgrader.reload();
+        if (tab != null) tab.reload();
         // Webpanel neu starten, damit Port/Adresse greifen; Sitzungen bleiben erhalten
-        webPanel.stop();
-        webPanel.start();
+        if (webPanel != null) {
+            webPanel.stop();
+            webPanel.start();
+        }
+    }
+
+    public Modules modules() {
+        return modules;
     }
 
     public TextService text() {
@@ -321,14 +340,17 @@ public final class SEssentials extends JavaPlugin {
         return punishments;
     }
 
+    /** {@code null}, wenn das Modul aus ist. */
     public ItemGuard itemGuard() {
         return itemGuard;
     }
 
+    /** {@code null}, wenn das Modul aus ist. */
     public ChestShopManager chestShops() {
         return chestShops;
     }
 
+    /** {@code null}, wenn das Modul aus ist. */
     public ItemTracker tracker() {
         return tracker;
     }
@@ -337,6 +359,7 @@ public final class SEssentials extends JavaPlugin {
         return news;
     }
 
+    /** {@code null}, wenn das Modul aus ist. */
     public CreativeLog creativeLog() {
         return creativeLog;
     }
@@ -354,6 +377,7 @@ public final class SEssentials extends JavaPlugin {
         return getFile();
     }
 
+    /** {@code null}, wenn das Modul aus ist. */
     public LuckyWheel luckyWheel() {
         return luckyWheel;
     }
@@ -365,81 +389,105 @@ public final class SEssentials extends JavaPlugin {
     /** Kacheln im Admin-Panel. Reihenfolge innerhalb einer Kategorie = Position in der Zeile. */
     private void registerAdminApps() {
         // Moderation
-        adminPanel.addApp(Category.MODERATION, PunishmentMenu.PERM,
-                p -> Menu.icon(Material.IRON_BARS, Component.text("Strafen", NamedTextColor.DARK_RED),
-                        Component.text("Aktiv: " + punishments.active().size(), NamedTextColor.GRAY),
-                        Component.text("Bans, Mutes, IP-Bans", NamedTextColor.GRAY)),
-                punishmentMenu::open);
-        adminPanel.addApp(Category.MODERATION, "sess.vanish",
-                p -> Menu.icon(Material.ENDER_EYE, Component.text("Vanish", NamedTextColor.LIGHT_PURPLE), status(vanish.isVanished(p))),
-                p -> vanish.toggle(p, true));
-        adminPanel.addApp(Category.MODERATION, "sess.reports.admin",
-                p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
-                        Component.text("Offen: " + reports.openCount(), NamedTextColor.GRAY)),
-                p -> reports.menu().openList(p, 1));
-        adminPanel.addApp(Category.MODERATION, ItemGuardMenu.PERM,
-                p -> Menu.icon(Material.SHIELD, Component.text("ItemGuard", NamedTextColor.RED),
-                        status(itemGuard.enabled()),
-                        Component.text("Verbotene Items: " + itemGuard.banned().size(), NamedTextColor.GRAY),
-                        Component.text("Entfernt seit Start: " + itemGuard.removedSinceStart(), NamedTextColor.GRAY)),
-                itemGuardMenu::open);
-        adminPanel.addApp(Category.MODERATION, CreativeLogMenu.PERM,
-                p -> Menu.icon(Material.GRASS_BLOCK, Component.text("CreativeLog", NamedTextColor.GREEN),
-                        status(creativeLog.enabled()),
-                        Component.text("Aktionen im Kreativmodus", NamedTextColor.GRAY)),
-                creativeLogMenu::open);
+        if (modules.on("punishments")) {
+            adminPanel.addApp(Category.MODERATION, PunishmentMenu.PERM,
+                    p -> Menu.icon(Material.IRON_BARS, Component.text("Strafen", NamedTextColor.DARK_RED),
+                            Component.text("Aktiv: " + punishments.active().size(), NamedTextColor.GRAY),
+                            Component.text("Bans, Mutes, IP-Bans", NamedTextColor.GRAY)),
+                    punishmentMenu::open);
+        }
+        if (modules.on("vanish")) {
+            adminPanel.addApp(Category.MODERATION, "sess.vanish",
+                    p -> Menu.icon(Material.ENDER_EYE, Component.text("Vanish", NamedTextColor.LIGHT_PURPLE), status(vanish.isVanished(p))),
+                    p -> vanish.toggle(p, true));
+        }
+        if (modules.on("reports")) {
+            adminPanel.addApp(Category.MODERATION, "sess.reports.admin",
+                    p -> Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
+                            Component.text("Offen: " + reports.openCount(), NamedTextColor.GRAY)),
+                    p -> reports.menu().openList(p, 1));
+        }
+        if (modules.on("itemguard")) {
+            adminPanel.addApp(Category.MODERATION, ItemGuardMenu.PERM,
+                    p -> Menu.icon(Material.SHIELD, Component.text("ItemGuard", NamedTextColor.RED),
+                            status(itemGuard.enabled()),
+                            Component.text("Verbotene Items: " + itemGuard.banned().size(), NamedTextColor.GRAY),
+                            Component.text("Entfernt seit Start: " + itemGuard.removedSinceStart(), NamedTextColor.GRAY)),
+                    itemGuardMenu::open);
+        }
+        if (modules.on("creativelog")) {
+            adminPanel.addApp(Category.MODERATION, CreativeLogMenu.PERM,
+                    p -> Menu.icon(Material.GRASS_BLOCK, Component.text("CreativeLog", NamedTextColor.GREEN),
+                            status(creativeLog.enabled()),
+                            Component.text("Aktionen im Kreativmodus", NamedTextColor.GRAY)),
+                    creativeLogMenu::open);
+        }
 
         // Spieler & Teleport
-        adminPanel.addApp(Category.PLAYERS, p -> COMMAND_PERMS.stream().anyMatch(p::hasPermission),
+        adminPanel.addApp(Category.PLAYERS, p -> COMMAND_PERMS.stream().anyMatch(perm -> canUse(p, perm)),
                 p -> Menu.icon(Material.COMMAND_BLOCK, Component.text("Befehle", NamedTextColor.AQUA),
                         Component.text("Fly, God, Heal, Feed, Enderchest", NamedTextColor.GRAY),
                         Component.text("Spawn, Nether, End", NamedTextColor.GRAY)),
                 this::openCommandsMenu);
 
         // Wirtschaft
-        adminPanel.addApp(Category.ECONOMY, "sess.bank.admin",
-                p -> Menu.icon(Material.GOLD_BLOCK, Component.text("Bank", NamedTextColor.GOLD),
-                        Component.text("Im Umlauf: " + bank.format(bank.total()), NamedTextColor.GRAY),
-                        Component.text("Konten ansehen und ändern", NamedTextColor.GRAY)),
-                bankMenu::openAdmin);
-        adminPanel.addApp(Category.ECONOMY, TrackerMenu.PERM,
-                p -> Menu.icon(Material.SPYGLASS, Component.text("Item-Tracker", NamedTextColor.AQUA),
-                        Component.text("Wertvolle Items in Inventar und", NamedTextColor.GRAY),
-                        Component.text("Enderchest, mit Verlauf", NamedTextColor.GRAY)),
-                p -> trackerMenu.openOverview(p, 1));
-        adminPanel.addApp(Category.ECONOMY, ItemUpgrader.PERM_ADMIN,
-                p -> Menu.icon(Material.SMITHING_TABLE, Component.text("Item-Upgrader", NamedTextColor.AQUA),
-                        Component.text("Item-Werte und Sperrliste", NamedTextColor.GRAY)),
-                upgrader::openAdmin);
-        adminPanel.addApp(Category.ECONOMY, LuckyWheel.PERM_ADMIN,
-                p -> Menu.icon(Material.CLOCK, Component.text("Glücksrad", NamedTextColor.LIGHT_PURPLE),
-                        Component.text("Topf: " + bank.format(bank.pot()), NamedTextColor.GRAY),
-                        Component.text("Topf setzen, Chancen ansehen", NamedTextColor.GRAY)),
-                luckyWheel::openAdmin);
+        if (modules.on("bank")) {
+            adminPanel.addApp(Category.ECONOMY, "sess.bank.admin",
+                    p -> Menu.icon(Material.GOLD_BLOCK, Component.text("Bank", NamedTextColor.GOLD),
+                            Component.text("Im Umlauf: " + bank.format(bank.total()), NamedTextColor.GRAY),
+                            Component.text("Konten ansehen und ändern", NamedTextColor.GRAY)),
+                    bankMenu::openAdmin);
+        }
+        if (modules.on("item-tracker")) {
+            adminPanel.addApp(Category.ECONOMY, TrackerMenu.PERM,
+                    p -> Menu.icon(Material.SPYGLASS, Component.text("Item-Tracker", NamedTextColor.AQUA),
+                            Component.text("Wertvolle Items in Inventar und", NamedTextColor.GRAY),
+                            Component.text("Enderchest, mit Verlauf", NamedTextColor.GRAY)),
+                    p -> trackerMenu.openOverview(p, 1));
+        }
+        if (modules.on("upgrader")) {
+            adminPanel.addApp(Category.ECONOMY, ItemUpgrader.PERM_ADMIN,
+                    p -> Menu.icon(Material.SMITHING_TABLE, Component.text("Item-Upgrader", NamedTextColor.AQUA),
+                            Component.text("Item-Werte und Sperrliste", NamedTextColor.GRAY)),
+                    upgrader::openAdmin);
+        }
+        if (modules.on("gambling")) {
+            adminPanel.addApp(Category.ECONOMY, LuckyWheel.PERM_ADMIN,
+                    p -> Menu.icon(Material.CLOCK, Component.text("Glücksrad", NamedTextColor.LIGHT_PURPLE),
+                            Component.text("Topf: " + bank.format(bank.pot()), NamedTextColor.GRAY),
+                            Component.text("Topf setzen, Chancen ansehen", NamedTextColor.GRAY)),
+                    luckyWheel::openAdmin);
+        }
 
         // Server
-        adminPanel.addApp(Category.SERVER, "sess.news.admin",
-                p -> Menu.icon(Material.OAK_SIGN, Component.text("News", NamedTextColor.GOLD),
-                        Component.text("News erstellen und verwalten", NamedTextColor.GRAY)),
-                p -> news.menu().openPanel(p));
-        adminPanel.addApp(Category.SERVER, "sess.softrestart",
-                p -> Menu.icon(Material.CLOCK, Component.text("Softrestart", NamedTextColor.RED),
-                        softRestart.isRunning()
-                                ? text.render("<gray>Neustart in <white><time>", softRestart.time(softRestart.remainingSeconds()))
-                                : Component.text("Kein Neustart geplant", NamedTextColor.GRAY)),
-                this::openSoftRestartMenu);
-        adminPanel.addApp(Category.SERVER, AutoUpdater.PERM,
-                p -> Menu.icon(Material.HOPPER_MINECART, Component.text("Auto-Update", NamedTextColor.AQUA),
-                        status(autoUpdater.enabled()),
-                        Component.text(autoUpdater.repository() + " · täglich " + autoUpdater.time(), NamedTextColor.GRAY),
-                        Component.text(autoUpdater.lastResult(), NamedTextColor.GRAY),
-                        Component.empty(),
-                        Component.text("Klick", NamedTextColor.YELLOW).append(Component.text(" » an/aus", NamedTextColor.GRAY)),
-                        Component.text("/autoupdate check", NamedTextColor.YELLOW).append(Component.text(" » sofort prüfen", NamedTextColor.GRAY))),
-                p -> {
-                    autoUpdater.setEnabled(p, !autoUpdater.enabled());
-                    adminPanel.open(p);
-                });
+        if (modules.on("news")) {
+            adminPanel.addApp(Category.SERVER, "sess.news.admin",
+                    p -> Menu.icon(Material.OAK_SIGN, Component.text("News", NamedTextColor.GOLD),
+                            Component.text("News erstellen und verwalten", NamedTextColor.GRAY)),
+                    p -> news.menu().openPanel(p));
+        }
+        if (modules.on("softrestart")) {
+            adminPanel.addApp(Category.SERVER, "sess.softrestart",
+                    p -> Menu.icon(Material.CLOCK, Component.text("Softrestart", NamedTextColor.RED),
+                            softRestart.isRunning()
+                                    ? text.render("<gray>Neustart in <white><time>", softRestart.time(softRestart.remainingSeconds()))
+                                    : Component.text("Kein Neustart geplant", NamedTextColor.GRAY)),
+                    this::openSoftRestartMenu);
+        }
+        if (modules.on("auto-update")) {
+            adminPanel.addApp(Category.SERVER, AutoUpdater.PERM,
+                    p -> Menu.icon(Material.HOPPER_MINECART, Component.text("Auto-Update", NamedTextColor.AQUA),
+                            status(autoUpdater.enabled()),
+                            Component.text(autoUpdater.repository() + " · täglich " + autoUpdater.time(), NamedTextColor.GRAY),
+                            Component.text(autoUpdater.lastResult(), NamedTextColor.GRAY),
+                            Component.empty(),
+                            Component.text("Klick", NamedTextColor.YELLOW).append(Component.text(" » an/aus", NamedTextColor.GRAY)),
+                            Component.text("/autoupdate check", NamedTextColor.YELLOW).append(Component.text(" » sofort prüfen", NamedTextColor.GRAY))),
+                    p -> {
+                        autoUpdater.setEnabled(p, !autoUpdater.enabled());
+                        adminPanel.open(p);
+                    });
+        }
         adminPanel.addApp(Category.SERVER, "sess.reload",
                 p -> Menu.icon(Material.COMPARATOR, Component.text("Config neu laden", NamedTextColor.GREEN)),
                 p -> {
@@ -456,49 +504,64 @@ public final class SEssentials extends JavaPlugin {
 
     private static final List<String> COMMAND_PERMS = List.of("sess.fly", "sess.god", "sess.heal", "sess.feed", "sess.enderchest", "sess.nether", "sess.end", "sess.spawn", "sess.setspawn");
 
+    /** Modul zu einem Recht aus {@link #COMMAND_PERMS}. */
+    private static String moduleOf(String perm) {
+        return switch (perm) {
+            case "sess.enderchest" -> "enderchest";
+            case "sess.nether", "sess.end" -> "dimensions";
+            case "sess.spawn", "sess.setspawn" -> "spawn";
+            default -> "player-commands";
+        };
+    }
+
+    /** Recht und Modul des Eintrags im Menü „Befehle“. */
+    private boolean canUse(Player player, String perm) {
+        return modules.on(moduleOf(perm)) && player.hasPermission(perm);
+    }
+
     /** Untermenü „Befehle“: Spieler- und Teleport-Befehle, jede Kachel nur mit ihrem Recht. */
     private void openCommandsMenu(Player player) {
         List<Menu.Entry> self = new ArrayList<>();
-        if (player.hasPermission("sess.fly")) {
+        if (canUse(player, "sess.fly")) {
             self.add(new Menu.Entry(Menu.icon(Material.FEATHER, Component.text("Fly", NamedTextColor.AQUA), status(player.getAllowFlight())),
                     p -> playerCommands.execute("fly", p)));
         }
-        if (player.hasPermission("sess.god")) {
+        if (canUse(player, "sess.god")) {
             self.add(new Menu.Entry(Menu.icon(Material.TOTEM_OF_UNDYING, Component.text("God", NamedTextColor.GOLD), status(playerCommands.isGod(player))),
                     p -> playerCommands.execute("god", p)));
         }
-        if (player.hasPermission("sess.heal")) {
+        if (canUse(player, "sess.heal")) {
             self.add(new Menu.Entry(Menu.icon(Material.GOLDEN_APPLE, Component.text("Heal", NamedTextColor.RED)),
                     p -> playerCommands.execute("heal", p)));
         }
-        if (player.hasPermission("sess.feed")) {
+        if (canUse(player, "sess.feed")) {
             self.add(new Menu.Entry(Menu.icon(Material.COOKED_BEEF, Component.text("Feed", NamedTextColor.YELLOW)),
                     p -> playerCommands.execute("feed", p)));
         }
-        if (player.hasPermission(EnderChestCommand.PERM_USE)) {
+        if (canUse(player, EnderChestCommand.PERM_USE)) {
             self.add(new Menu.Entry(Menu.icon(Material.ENDER_CHEST, Component.text("Enderchest", NamedTextColor.DARK_PURPLE)),
                     enderChest::open));
         }
 
         List<Menu.Entry> teleport = new ArrayList<>();
-        if (player.hasPermission("sess.spawn")) {
+        if (canUse(player, "sess.spawn")) {
             teleport.add(new Menu.Entry(Menu.icon(Material.COMPASS, Component.text("Spawn", NamedTextColor.GREEN)), p -> {
                 p.closeInventory();
                 spawn.teleport(p);
             }));
         }
-        if (player.hasPermission("sess.setspawn")) {
+        if (canUse(player, "sess.setspawn")) {
             teleport.add(new Menu.Entry(Menu.icon(Material.RED_BED, Component.text("Spawn setzen", NamedTextColor.GOLD),
                     Component.text("Setzt den Spawn auf deine Position", NamedTextColor.GRAY)), spawn::setSpawn));
         }
-        if (player.hasPermission("sess.nether")) {
+        if (canUse(player, "sess.nether")) {
             teleport.add(new Menu.Entry(Menu.icon(Material.NETHERRACK, Component.text("Nether", NamedTextColor.RED),
                     Component.text("Im Nether: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
                 p.closeInventory();
                 dimensions.toggle(p, World.Environment.NETHER);
             }));
         }
-        if (player.hasPermission("sess.end")) {
+        if (canUse(player, "sess.end")) {
             teleport.add(new Menu.Entry(Menu.icon(Material.END_STONE, Component.text("End", NamedTextColor.LIGHT_PURPLE),
                     Component.text("Im End: zurück in die Oberwelt", NamedTextColor.GRAY)), p -> {
                 p.closeInventory();
@@ -541,7 +604,7 @@ public final class SEssentials extends JavaPlugin {
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands commands = event.registrar();
 
-            commands.register(
+            if (modules.on("softrestart")) commands.register(
                     Commands.literal("softrestart")
                             .requires(src -> src.getSender().hasPermission("sess.softrestart"))
                             .then(Commands.argument("minuten", IntegerArgumentType.integer(1, 1440))
@@ -584,7 +647,7 @@ public final class SEssentials extends JavaPlugin {
                     "SEssentials-Verwaltung",
                     List.of("sess"));
 
-            commands.register(
+            if (modules.on("vanish")) commands.register(
                     Commands.literal("vanish")
                             .requires(src -> src.getExecutor() instanceof Player p && p.hasPermission("sess.vanish"))
                             .executes(ctx -> {
@@ -606,31 +669,32 @@ public final class SEssentials extends JavaPlugin {
                     "Macht dich unsichtbar / wieder sichtbar",
                     List.of("v"));
 
-            playerCommands.register(commands);
-            sudo.register(commands);
-            aliases.register(commands);
-            reports.register(commands);
-            dimensions.register(commands);
-            spawn.register(commands);
-            help.register(commands);
-            tpa.register(commands);
-            enderChest.register(commands);
-            luckyWheel.register(commands);
-            autoUpdater.register(commands);
-            fakePlayers.register(commands);
-            upgrader.register(commands);
-            messages.register(commands);
-            notifications.register(commands);
-            mail.register(commands);
-            shopCreator.register(commands);
-            itemGuard.register(commands);
-            creativeLog.register(commands);
-            punishCommands.register(commands);
-            webPanel.register(commands);
-            news.register(commands);
-            bankCommands.register(commands);
+            if (modules.on("player-commands")) playerCommands.register(commands);
+            if (modules.on("sudo")) sudo.register(commands);
+            if (modules.on("command-aliases")) aliases.register(commands);
+            if (modules.on("reports")) reports.register(commands);
+            if (modules.on("dimensions")) dimensions.register(commands);
+            if (modules.on("spawn")) spawn.register(commands);
+            if (modules.on("help")) help.register(commands);
+            if (modules.on("tpa")) tpa.register(commands);
+            if (modules.on("enderchest")) enderChest.register(commands);
+            if (modules.on("messages")) messages.register(commands);
+            if (modules.on("spy")) notifications.register(commands);
+            if (modules.on("punishments")) punishCommands.register(commands);
+            if (modules.on("news")) news.register(commands);
+            if (modules.on("bank")) bankCommands.register(commands);
+            // Module, die es nur gibt, wenn sie an sind
+            if (luckyWheel != null) luckyWheel.register(commands);
+            if (autoUpdater != null) autoUpdater.register(commands);
+            if (fakePlayers != null) fakePlayers.register(commands);
+            if (upgrader != null) upgrader.register(commands);
+            if (mail != null) mail.register(commands);
+            if (shopCreator != null) shopCreator.register(commands);
+            if (itemGuard != null) itemGuard.register(commands);
+            if (creativeLog != null) creativeLog.register(commands);
+            if (webPanel != null) webPanel.register(commands);
 
-            commands.register(
+            if (modules.on("admin-panel")) commands.register(
                     Commands.literal("admin")
                             .requires(src -> src.getExecutor() instanceof Player p && p.hasPermission("sess.admin"))
                             .executes(ctx -> {

@@ -205,3 +205,8 @@ function syncInputs() {
   bind();
   load();
 })();
+
+// Navigation: Glücksrad nur zeigen, wenn das Modul an ist
+fetch("/api/me", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).then(me => {
+  if (me && me.gambling) document.getElementById("nav-gambling").hidden = false;
+}).catch(() => {});

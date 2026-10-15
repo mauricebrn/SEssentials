@@ -141,7 +141,7 @@ public final class WebPanel {
         String token = randomToken();
         pendingLinks.put(token, new Login(player != null ? player.getUniqueId() : null,
                 player != null ? player.getName() : "Konsole", now + LINK_MILLIS,
-                player == null || player.hasPermission(CreativeLog.PERM_VIEW)));
+                plugin.creativeLog() != null && (player == null || player.hasPermission(CreativeLog.PERM_VIEW))));
         String url = baseUrl() + "/login?token=" + token;
         sender.sendMessage(msg("link", player, TextService.placeholder("url", url)));
         // in der Konsole ist der Link nicht klickbar – deshalb zusätzlich als Text
@@ -181,7 +181,9 @@ public final class WebPanel {
                     else resource(ex, "web/app.js", "text/javascript");
                 }
                 case "/gambling", "/gambling.js" -> {
-                    if (session(ex) == null) {
+                    if (plugin.luckyWheel() == null) {
+                        send(ex, 404, "text/plain", "Das Glücksrad ist ausgeschaltet.");
+                    } else if (session(ex) == null) {
                         if (path.equals("/gambling")) resource(ex, "web/login.html", "text/html");
                         else send(ex, 401, "text/plain", "Unauthorized");
                     } else if (path.equals("/gambling")) resource(ex, "web/gambling.html", "text/html");
@@ -200,6 +202,7 @@ public final class WebPanel {
                         JsonObject me = new JsonObject();
                         me.addProperty("name", s.name());
                         me.addProperty("creativeLog", s.creativeLog());
+                        me.addProperty("gambling", plugin.luckyWheel() != null);
                         send(ex, 200, "application/json", me.toString());
                     }
                 }

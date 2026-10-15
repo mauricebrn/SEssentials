@@ -20,6 +20,46 @@
 prefix: "<dark_gray>[<gradient:#00c6ff:#0072ff>SEssentials</gradient>]</dark_gray> "
 
 # ------------------------------------------------------------
+# Module – jedes Feature einzeln an (true) oder aus (false). Ausgeschaltete Module haben keine Befehle,
+# keine Kachel im Admin-Panel und laufen nicht im Hintergrund; ihre gespeicherten Daten bleiben erhalten.
+# Änderungen gelten nach einem Neustart. Glücksrad und Chestshops brauchen die Bank.
+# Kosten in Geld (spawn.cost, tpa.cost, …) buchen auch ohne Bank-Modul vom Konto ab – dann besser
+# type: item oder amount: 0 nutzen.
+# ------------------------------------------------------------
+modules:
+  admin-panel: true      # /admin
+  chat: true             # Chatformat
+  join-quit: true        # Join-/Quit-Nachrichten
+  tab: true              # TAB-Liste und Nametags
+  vanish: true           # /vanish
+  help: true             # /help als Menü
+  command-aliases: true  # eigene Befehle (command-aliases)
+  player-commands: true  # /fly, /god, /heal, /feed
+  sudo: true             # /sudo
+  enderchest: true       # /enderchest, /ec
+  spawn: true            # /spawn, /setspawn
+  dimensions: true       # /nether, /end
+  tpa: true              # /tpa, /tpaccept, /tpdeny
+  messages: true         # /msg, /r
+  mail: true             # /mail
+  spy: true              # /socialspy
+  bank: true             # /bank, /balance, /pay, /baltop, /eco, Vault
+  chestshops: true       # Chestshops, /shop
+  gambling: true         # Glücksrad (/gluecksrad)
+  upgrader: true         # Item-Upgrader (/upgrader)
+  item-tracker: true     # Item-Tracker im Admin-Panel
+  punishments: true      # /ban, /mute, /ipban, /history, …
+  reports: true          # /report, /reports
+  itemguard: true        # ItemGuard (verbotene Items)
+  creativelog: true      # CreativeLog
+  client-detector: true  # Client-Detector
+  news: true             # /news
+  softrestart: true      # /softrestart
+  auto-update: true      # /autoupdate (das Update selbst steuert auto-update.enabled)
+  fake-players: true     # /fakeplayer
+  webpanel: true         # Webpanel und /webpanel
+
+# ------------------------------------------------------------
 # Softrestart
 # ------------------------------------------------------------
 softrestart:

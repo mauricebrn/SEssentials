@@ -44,7 +44,7 @@ final class WebStats {
         root.add("moderation", moderation());
         root.add("economy", economy());
         root.add("news", news());
-        root.add("gambling", gambling());
+        if (plugin.luckyWheel() != null) root.add("gambling", gambling());
         return root;
     }
 
@@ -108,8 +108,9 @@ final class WebStats {
         }
         o.add("activePunishments", punishments);
 
-        o.addProperty("itemGuardEnabled", plugin.itemGuard().enabled());
-        o.addProperty("itemGuardRemoved", plugin.itemGuard().removedSinceStart());
+        // ausgeschaltete Module zählen als "aus" bzw. 0
+        o.addProperty("itemGuardEnabled", plugin.itemGuard() != null && plugin.itemGuard().enabled());
+        o.addProperty("itemGuardRemoved", plugin.itemGuard() != null ? plugin.itemGuard().removedSinceStart() : 0);
         long creative = Bukkit.getOnlinePlayers().stream().filter(p -> p.getGameMode() == GameMode.CREATIVE).count();
         o.addProperty("playersInCreative", creative);
         return o;
@@ -122,7 +123,7 @@ final class WebStats {
         o.addProperty("currencyPlural", bank.currencyName(2));
         o.addProperty("total", bank.total());
         o.addProperty("accounts", bank.accounts());
-        o.addProperty("chestShops", plugin.chestShops().count());
+        o.addProperty("chestShops", plugin.chestShops() != null ? plugin.chestShops().count() : 0);
 
         JsonArray top = new JsonArray();
         for (BankManager.Account a : bank.top(10)) {
@@ -134,6 +135,11 @@ final class WebStats {
         o.add("top", top);
 
         ItemTracker tracker = plugin.tracker();
+        if (tracker == null) {
+            o.add("trackedItems", new JsonArray());
+            o.add("valueHistory", new JsonArray());
+            return o;
+        }
         List<Snapshot> history = tracker.serverHistory();
         Snapshot latest = history.isEmpty() ? null : history.getLast();
         Snapshot weekAgo = ItemTracker.atOrBefore(history, System.currentTimeMillis() - WEEK);

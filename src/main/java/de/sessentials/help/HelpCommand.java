@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -107,10 +108,17 @@ public final class HelpCommand {
         List<Category> out = new ArrayList<>();
         for (Category c : categories) {
             if (!allowed(sender, c.permission())) continue;
-            List<Entry> entries = c.entries().stream().filter(e -> allowed(sender, e.permission())).toList();
+            List<Entry> entries = c.entries().stream().filter(e -> allowed(sender, e.permission()) && exists(e)).toList();
             if (!entries.isEmpty()) out.add(new Category(c.name(), c.description(), c.icon(), c.permission(), entries));
         }
         return out;
+    }
+
+    /** Befehle ausgeschalteter Module (oder fehlender Plugins) nicht anbieten. */
+    private static boolean exists(Entry e) {
+        if (e.command().isBlank()) return true;
+        String label = e.command().strip().replaceFirst("^/+", "").split("\\s+", 2)[0];
+        return Bukkit.getCommandMap().getCommand(label) != null;
     }
 
     private static boolean allowed(CommandSender sender, String permission) {

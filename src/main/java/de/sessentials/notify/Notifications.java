@@ -60,12 +60,12 @@ public final class Notifications {
     }
 
     public boolean wantsReports(Player player) {
-        return player.hasPermission(PERM_REPORTS)
+        return plugin.modules().on("reports") && player.hasPermission(PERM_REPORTS)
                 && player.getPersistentDataContainer().getOrDefault(reportsKey, PersistentDataType.BOOLEAN, true);
     }
 
     public DetectorLevel detectorLevel(Player player) {
-        if (!player.hasPermission(PERM_DETECTOR)) return DetectorLevel.OFF;
+        if (!plugin.modules().on("client-detector") || !player.hasPermission(PERM_DETECTOR)) return DetectorLevel.OFF;
         String stored = player.getPersistentDataContainer().get(detectorKey, PersistentDataType.STRING);
         try {
             return stored != null ? DetectorLevel.valueOf(stored) : DetectorLevel.HACK;
@@ -76,7 +76,7 @@ public final class Notifications {
 
     /** Spy ist standardmäßig aus und muss bewusst eingeschaltet werden. */
     public boolean wantsSpy(Player player) {
-        return player.hasPermission(PERM_SPY)
+        return plugin.modules().on("spy") && player.hasPermission(PERM_SPY)
                 && player.getPersistentDataContainer().getOrDefault(spyKey, PersistentDataType.BOOLEAN, false);
     }
 
@@ -120,27 +120,39 @@ public final class Notifications {
 
     /** Sieht der Spieler die Kachel „Benachrichtigungen“? */
     public boolean canConfigure(Player player) {
-        return player.hasPermission(PERM_REPORTS) || player.hasPermission(PERM_DETECTOR) || player.hasPermission(PERM_SPY);
+        return showReports(player) || showDetector(player) || showSpy(player);
+    }
+
+    private boolean showReports(Player player) {
+        return plugin.modules().on("reports") && player.hasPermission(PERM_REPORTS);
+    }
+
+    private boolean showDetector(Player player) {
+        return plugin.modules().on("client-detector") && player.hasPermission(PERM_DETECTOR);
+    }
+
+    private boolean showSpy(Player player) {
+        return plugin.modules().on("spy") && player.hasPermission(PERM_SPY);
     }
 
     public void openMenu(Player player) {
         Menu menu = new Menu(1, Component.text("Benachrichtigungen"));
         PersistentDataContainer data = player.getPersistentDataContainer();
-        if (player.hasPermission(PERM_REPORTS)) {
+        if (showReports(player)) {
             boolean on = wantsReports(player);
             menu.set(0, Menu.icon(Material.WRITABLE_BOOK, Component.text("Reports", NamedTextColor.RED),
                             on ? Component.text("Status: An", NamedTextColor.GREEN) : Component.text("Status: Aus", NamedTextColor.GRAY),
                             Component.text("Neue /report-Meldungen im Chat", NamedTextColor.DARK_GRAY)),
                     p -> data.set(reportsKey, PersistentDataType.BOOLEAN, !on));
         }
-        if (player.hasPermission(PERM_DETECTOR)) {
+        if (showDetector(player)) {
             DetectorLevel level = detectorLevel(player);
             menu.set(1, Menu.icon(Material.SPYGLASS, Component.text("Client-Detector", NamedTextColor.AQUA),
                             Component.text("Meldet: " + level.label, NamedTextColor.YELLOW),
                             Component.text("Klicken zum Wechseln", NamedTextColor.DARK_GRAY)),
                     p -> data.set(detectorKey, PersistentDataType.STRING, level.next().name()));
         }
-        if (player.hasPermission(PERM_SPY)) {
+        if (showSpy(player)) {
             boolean on = wantsSpy(player);
             menu.set(2, Menu.icon(Material.ENDER_EYE, Component.text("Spy (/msg, /mail)", NamedTextColor.LIGHT_PURPLE),
                             on ? Component.text("Status: An", NamedTextColor.GREEN) : Component.text("Status: Aus", NamedTextColor.GRAY),
