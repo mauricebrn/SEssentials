@@ -169,39 +169,57 @@ dimensions:
     world-missing: "<prefix><red>Diese Dimension ist auf dem Server nicht aktiviert."
 
 # ------------------------------------------------------------
-# Hilfe (/help [seite], Alias /?) – ersetzt die Vanilla-Hilfe
-# Eine Zeile ist entweder Text oder {text: "...", permission: "..."} (nur mit dem Recht sichtbar).
-# Seiten ohne sichtbare Zeile werden übersprungen. In allen Texten: <page>, <pages>.
-# Klickbare Befehle: <click:suggest_command:'/spawn'>...</click> oder <click:run_command:'/spawn'>...</click>
+# Hilfe (/help, Alias /?) – ersetzt die Vanilla-Hilfe durch ein Menü. Die Konsole bekommt sie als Text.
+# Kategorien erscheinen als Kacheln, darin die Befehle. Pro Befehl:
+#   command: der Befehl            name / description: Anzeige (MiniMessage)     icon: Item, z.B. ENDER_PEARL
+#   click: run = beim Klick ausführen, suggest = zum Ergänzen in den Chat schreiben (Standard),
+#          url = Link anzeigen (dazu url: "https://…"), none = nur Info
+#   permission: nur mit diesem Recht sichtbar (auch für ganze Kategorien)
+# Kategorien oder Einträge ohne sichtbaren Befehl werden ausgeblendet.
 # ------------------------------------------------------------
 help:
-  header: "<dark_gray>────── <gold>Hilfe</gold> <gray>(<page>/<pages>)</gray> ──────"
-  footer: "<dark_gray>──────</dark_gray> <previous> <next> <dark_gray>──────"
-  previous: "<click:run_command:'/help <target>'><hover:show_text:'<gray>Seite <target>'><yellow>[« Zurück]</yellow></hover></click>"
-  next: "<click:run_command:'/help <target>'><hover:show_text:'<gray>Seite <target>'><yellow>[Weiter »]</yellow></hover></click>"
+  title: "<dark_gray>Hilfe"
   empty: "<prefix><gray>Keine Hilfe verfügbar."
-  pages:
-    - - "<click:suggest_command:'/spawn'><gold>/spawn</gold></click> <gray>– Zum Spawn teleportieren"
-      - "<click:suggest_command:'/news'><gold>/news</gold></click> <gray>– Aktuelle Neuigkeiten"
-      - "<click:suggest_command:'/bank'><gold>/bank</gold></click> <gray>– Items einzahlen, Kontostand, Auszahlen"
-      - "<click:suggest_command:'/pay '><gold>/pay <spieler> <betrag></gold></click> <gray>– Geld überweisen"
-      - "<click:suggest_command:'/shop'><gold>/shop</gold></click> <gray>– Chestshop per Menü erstellen (auf eine Kiste schauen)"
-      - "<click:suggest_command:'/msg '><gold>/msg <spieler> <text></gold></click> <gray>– Private Nachricht, <gold>/r</gold> antwortet"
-      - "<click:suggest_command:'/ec'><gold>/ec</gold></click> <gray>– Enderchest öffnen"
-      - "<click:suggest_command:'/tpa '><gold>/tpa <spieler></gold></click> <gray>– Teleport-Anfrage senden"
-      - "<click:suggest_command:'/report '><gold>/report <spieler> <grund></gold></click> <gray>– Spieler melden"
-      - "<click:suggest_command:'/help 2'><gold>/help <seite></gold></click> <gray>– Weitere Seiten"
-      - "<gray>Discord: <click:open_url:'https://discord.gg/DEIN-LINK'><aqua><u>discord.gg/DEIN-LINK</u></aqua></click>"
-    - - text: "<click:suggest_command:'/admin'><red>/admin</red></click> <gray>– Admin-Panel"
-        permission: sess.admin
-      - text: "<click:suggest_command:'/vanish'><red>/vanish</red></click> <gray>– Unsichtbar ein/aus"
-        permission: sess.vanish
-      - text: "<click:suggest_command:'/reports'><red>/reports</red></click> <gray>– Offene Reports"
-        permission: sess.reports.admin
-      - text: "<click:suggest_command:'/fly'><red>/fly</red></click> <gray>, /god, /heal, /feed – Spieler-Befehle"
-        permission: sess.fly
-      - text: "<click:suggest_command:'/softrestart '><red>/softrestart <minuten></red></click> <gray>– Neustart planen"
-        permission: sess.softrestart
+  suggest: "<prefix><gray>Klicke hier: <click:suggest_command:'<command>'><hover:show_text:'<gray>In den Chat übernehmen'><gold><command></gold></hover></click>"
+  link: "<prefix><gray>Link: <click:open_url:'<url>'><aqua><u><url></u></aqua></click>"
+  text-entry: "<gray> <name> <dark_gray>–</dark_gray> <description>"
+  categories:
+    allgemein:
+      name: "<gold><bold>Allgemein"
+      icon: COMPASS
+      description: ["<gray>Spawn, Nachrichten, Teleport"]
+      commands:
+        - {command: "/spawn", name: "<gold>/spawn", description: "<gray>Zum Spawn teleportieren", icon: ENDER_PEARL, click: run}
+        - {command: "/news", name: "<gold>/news", description: "<gray>Aktuelle Neuigkeiten", icon: OAK_SIGN, click: run}
+        - {command: "/msg", name: "<gold>/msg <spieler> <text>", description: "<gray>Private Nachricht, /r antwortet", icon: PAPER}
+        - {command: "/mail send", name: "<gold>/mail send <spieler> <text>", description: "<gray>Nachricht für offline Spieler", icon: WRITABLE_BOOK}
+        - {command: "/mail", name: "<gold>/mail", description: "<gray>Deine Mails lesen", icon: BOOK, click: run}
+        - {command: "/tpa", name: "<gold>/tpa <spieler>", description: "<gray>Teleport-Anfrage senden", icon: COMPASS}
+        - {command: "/ec", name: "<gold>/ec", description: "<gray>Enderchest öffnen", icon: ENDER_CHEST, click: run}
+        - {command: "/report", name: "<gold>/report <spieler> <grund>", description: "<gray>Spieler melden", icon: BELL}
+        - {name: "<aqua>Discord", description: "<gray>discord.gg/DEIN-LINK", icon: AMETHYST_SHARD, click: url, url: "https://discord.gg/DEIN-LINK"}
+    wirtschaft:
+      name: "<yellow><bold>Wirtschaft"
+      icon: GOLD_INGOT
+      description: ["<gray>Bank, Shops, Glücksspiel"]
+      commands:
+        - {command: "/bank", name: "<gold>/bank", description: "<gray>Einzahlen, Kontostand, Auszahlen", icon: GOLD_BLOCK, click: run}
+        - {command: "/pay", name: "<gold>/pay <spieler> <betrag>", description: "<gray>Geld überweisen", icon: GOLD_NUGGET}
+        - {command: "/baltop", name: "<gold>/baltop", description: "<gray>Die reichsten Spieler", icon: DIAMOND, click: run}
+        - {command: "/shop", name: "<gold>/shop", description: "<gray>Chestshop erstellen (auf eine Kiste schauen)", icon: CHEST, click: run}
+        - {command: "/gluecksrad", name: "<gold>/gluecksrad", description: "<gray>Glücksrad drehen", icon: CLOCK, click: run}
+        - {command: "/upgrader", name: "<gold>/upgrader", description: "<gray>Items upgraden – mit Risiko", icon: SMITHING_TABLE, click: run}
+    team:
+      name: "<red><bold>Team"
+      icon: NETHER_STAR
+      description: ["<gray>Befehle für das Team"]
+      commands:
+        - {command: "/admin", name: "<red>/admin", description: "<gray>Admin-Panel", icon: COMMAND_BLOCK, click: run, permission: sess.admin}
+        - {command: "/vanish", name: "<red>/vanish", description: "<gray>Unsichtbar ein/aus", icon: ENDER_EYE, click: run, permission: sess.vanish}
+        - {command: "/reports", name: "<red>/reports", description: "<gray>Offene Reports", icon: WRITABLE_BOOK, click: run, permission: sess.reports.admin}
+        - {command: "/socialspy", name: "<red>/socialspy", description: "<gray>/msg und /mail mitlesen", icon: SPYGLASS, click: run, permission: sess.spy}
+        - {command: "/fly", name: "<red>/fly, /god, /heal, /feed", description: "<gray>Spieler-Befehle", icon: FEATHER, permission: sess.fly}
+        - {command: "/fp", name: "<red>/fp", description: "<gray>Fake-Spieler verwalten", icon: ARMOR_STAND, permission: sess.fakeplayer}
 
 # ------------------------------------------------------------
 # Spawn (/spawn, /setspawn)
