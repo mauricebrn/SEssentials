@@ -119,6 +119,33 @@ player-commands:
     player-only: "<prefix><red>Nur für Spieler – nutze /<command> <spieler>."
 
 # ------------------------------------------------------------
+# Befehls-Aliase: eigene Befehle, die andere Befehle ausführen.
+#   alias: "befehl"                       ein Befehl
+#   alias: ["befehl 1", "befehl 2"]       mehrere Befehle nacheinander
+#   alias:                                mit Recht und Beschreibung (für /help)
+#     commands: ["befehl"]
+#     permission: sess.alias.beispiel     leer = jeder (die Rechte der ausgeführten Befehle gelten trotzdem)
+#     description: "Was der Befehl tut"
+# Platzhalter: $1, $2, … = Argumente, $1- = ab dem 1. Argument alles, <player> = wer den Alias nutzt.
+# Spieler führen die Befehle wie selbst getippt aus (eigene Rechte, Mute-Sperren). "console:" vor einem
+# Befehl lässt ihn die Konsole ausführen – dann sind als Argumente nur einfache Wörter erlaubt (kein @a).
+# Ein Alias darf keinen anderen Alias aufrufen (sonst wären Endlosschleifen möglich).
+# Neue oder gelöschte Aliase gelten nach einem Neustart, geänderte Befehle schon nach /sessentials reload.
+# Beispiele:
+#   gmc: "gamemode creative $1-"
+#   gms: "gamemode survival $1-"
+#   discord:
+#     commands: ["console:tellraw <player> {\"text\":\"discord.gg/deinserver\",\"color\":\"aqua\"}"]
+#     description: "Zeigt den Discord-Link"
+# ------------------------------------------------------------
+command-aliases: {}
+command-aliases-messages:
+  missing-argument: "<prefix><red>Für /<alias> fehlen Angaben."
+  unsafe-argument: "<prefix><red>/<alias> erlaubt nur einfache Angaben (Buchstaben, Zahlen, _ . : -)."
+  removed: "<prefix><red>/<alias> gibt es nicht mehr."
+  nested: "<prefix><red>/<alias> ruft einen anderen Alias auf und wird deshalb nicht ausgeführt."
+
+# ------------------------------------------------------------
 # /sudo <spieler> <befehl> bzw. /sudo <spieler> c:<text> (Recht sess.sudo)
 # Läuft wie eine echte Eingabe des Spielers: mit seinen Rechten, Mute-Sperren und Chatformat.
 # Auch Selektoren (@a, @p) und Fake-Spieler gehen. Spieler mit sess.sudo.exempt steuert nur die Konsole.
@@ -404,8 +431,8 @@ spy:
   messages:
     msg: "<dark_gray>[<light_purple>Spy</light_purple>] <gray><sender> <dark_gray>→</dark_gray> <target>:</gray> <white><message>"
     mail: "<dark_gray>[<light_purple>Spy</light_purple>] <gray>Mail <sender> <dark_gray>→</dark_gray> <target>:</gray> <white><message>"
-    on: "<prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails."
-    off: "<prefix><gray>Spy <red>ausgeschaltet</red>."
+    enabled: "<prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails."
+    disabled: "<prefix><gray>Spy <red>ausgeschaltet</red>."
 
 # ------------------------------------------------------------
 # Mail (/mail send <spieler> <nachricht>, /mail [read], /mail delete <nr>, /mail clear)

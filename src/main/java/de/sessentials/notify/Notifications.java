@@ -83,7 +83,7 @@ public final class Notifications {
     private void toggleSpy(Player player) {
         boolean on = !wantsSpy(player);
         player.getPersistentDataContainer().set(spyKey, PersistentDataType.BOOLEAN, on);
-        player.sendMessage(spyMsg(on ? "on" : "off", player));
+        player.sendMessage(spyMsg(on ? "enabled" : "disabled", player));
     }
 
     /**

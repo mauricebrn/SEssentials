@@ -3,6 +3,7 @@ package de.sessentials;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import de.sessentials.admin.AdminPanel;
+import de.sessentials.alias.CommandAliases;
 import de.sessentials.bank.BankCommands;
 import de.sessentials.bank.BankExchange;
 import de.sessentials.bank.BankManager;
@@ -78,6 +79,7 @@ public final class SEssentials extends JavaPlugin {
     private VanishManager vanish;
     private PlayerCommands playerCommands;
     private SudoCommand sudo;
+    private CommandAliases aliases;
     private AdminPanel adminPanel;
     private ReportManager reports;
     private Notifications notifications;
@@ -151,6 +153,7 @@ public final class SEssentials extends JavaPlugin {
         tab = new TabNametagManager(this);
         playerCommands = new PlayerCommands(this);
         sudo = new SudoCommand(this);
+        aliases = new CommandAliases(this);
         dimensions = new DimensionCommands(this);
         spawn = new SpawnManager(this);
         help = new HelpCommand(this);
@@ -605,6 +608,7 @@ public final class SEssentials extends JavaPlugin {
 
             playerCommands.register(commands);
             sudo.register(commands);
+            aliases.register(commands);
             reports.register(commands);
             dimensions.register(commands);
             spawn.register(commands);
