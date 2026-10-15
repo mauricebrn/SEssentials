@@ -383,6 +383,33 @@ msg:
   partner-offline: "<prefix><red>Dein Gesprächspartner ist nicht mehr online."
 
 # ------------------------------------------------------------
+# Mail (/mail send <spieler> <nachricht>, /mail [read], /mail delete <nr>, /mail clear)
+# Nachrichten an Spieler, die schon einmal auf dem Server waren – auch wenn sie offline sind.
+# Beim Join erfährt der Empfänger von ungelesenen Mails. Gemutete Spieler können keine Mails senden.
+# Platzhalter: <sender>, <target>, <message> (immer reiner Text), <count>, <number>, <time>, <max>
+# ------------------------------------------------------------
+mail:
+  max-per-inbox: 50
+  max-length: 256
+  messages:
+    sent: "<prefix><gray>Mail an <white><target></white> gesendet: <gray><message>"
+    new: "<prefix><gray>Neue Mail von <white><sender></white>. <click:run_command:'/mail read'><hover:show_text:'<gray>Mails lesen'><green>[Lesen]</green></hover></click>"
+    unread: "<prefix><gray>Du hast <white><count></white> ungelesene Mail(s). <click:run_command:'/mail read'><hover:show_text:'<gray>Mails lesen'><green>[Lesen]</green></hover></click>"
+    header: "<dark_gray>────── <gold><bold>Mails</bold></gold> <gray>(<count>)</gray> ──────"
+    entry: "<dark_gray><number>. <gray><time></gray> <white><sender></white><dark_gray>:</dark_gray> <gray><message>"
+    entry-unread: "<yellow><number>. <gray><time></gray> <white><sender></white><dark_gray>:</dark_gray> <white><message>"
+    footer: "<dark_gray>Antworten: <gray>/mail send <spieler> …</gray> · Löschen: <click:suggest_command:'/mail delete '><gray>/mail delete <nr></gray></click> · <click:run_command:'/mail clear'><red>[Alle löschen]</red></click>"
+    empty: "<prefix><gray>Du hast keine Mails."
+    deleted: "<prefix><gray>Mail <white><number></white> gelöscht."
+    cleared: "<prefix><gray>Alle Mails gelöscht."
+    no-such-mail: "<prefix><red>Es gibt keine Mail Nummer <number>."
+    unknown-player: "<prefix><red>Der Spieler <white><target></white> war noch nie auf dem Server."
+    self: "<prefix><red>Du kannst dir nicht selbst eine Mail schreiben."
+    too-long: "<prefix><red>Die Mail ist zu lang (höchstens <max> Zeichen)."
+    inbox-full: "<prefix><red>Das Postfach von <white><target></white> ist voll."
+    muted: "<prefix><red>Du bist gemutet und kannst keine Mails senden."
+
+# ------------------------------------------------------------
 # Teleport-Anfragen (/tpa <spieler>, /tpaccept [spieler], /tpdeny [spieler])
 # Der Anfragende zahlt erst, wenn die Anfrage angenommen wird. Mit sess.tpa.free kostenlos.
 # Platzhalter: <requester>, <target>, <seconds>, <price> (z.B. "500 Taler" oder "5x Diamant"), <amount>, <item>

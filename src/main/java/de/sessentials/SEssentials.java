@@ -25,6 +25,7 @@ import de.sessentials.hook.LuckPermsHook;
 import de.sessentials.itemguard.ItemGuard;
 import de.sessentials.itemguard.ItemGuardMenu;
 import de.sessentials.joinquit.JoinQuitListener;
+import de.sessentials.msg.MailManager;
 import de.sessentials.msg.MessageCommands;
 import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
@@ -105,6 +106,7 @@ public final class SEssentials extends JavaPlugin {
     private PunishmentMenu punishmentMenu;
     private WebPanel webPanel;
     private MessageCommands messages;
+    private MailManager mail;
     private TrackerMenu trackerMenu;
     private NewsManager news;
 
@@ -157,6 +159,7 @@ public final class SEssentials extends JavaPlugin {
         chestShops = new ChestShopManager(this);
         shopCreator = new ShopCreatorMenu(this, chestShops);
         messages = new MessageCommands(this);
+        mail = new MailManager(this);
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
         notifications = new Notifications(this);
@@ -191,6 +194,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tracker, this);
         getServer().getPluginManager().registerEvents(chestShops, this);
         getServer().getPluginManager().registerEvents(messages, this);
+        getServer().getPluginManager().registerEvents(mail, this);
         getServer().getPluginManager().registerEvents(tab, this);
         getServer().getPluginManager().registerEvents(fakePlayers, this);
         getServer().getPluginManager().registerEvents(upgrader, this);
@@ -208,6 +212,7 @@ public final class SEssentials extends JavaPlugin {
         if (autoUpdater != null) autoUpdater.shutdown();
         if (fakePlayers != null) fakePlayers.shutdown();
         if (upgrader != null) upgrader.shutdown();
+        if (mail != null) mail.shutdown();
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
         if (vanish != null) vanish.shutdown();
@@ -607,6 +612,7 @@ public final class SEssentials extends JavaPlugin {
             fakePlayers.register(commands);
             upgrader.register(commands);
             messages.register(commands);
+            mail.register(commands);
             shopCreator.register(commands);
             itemGuard.register(commands);
             creativeLog.register(commands);
