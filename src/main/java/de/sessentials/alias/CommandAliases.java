@@ -3,6 +3,7 @@ package de.sessentials.alias;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.sessentials.SEssentials;
+import de.sessentials.player.TypedCommand;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -126,7 +127,7 @@ public final class CommandAliases {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), line.substring(CONSOLE_PREFIX.length()));
             } else if (sender instanceof Player p) {
                 // wie selbst getippt: mit eigenen Rechten, Mute-Sperren und Befehls-Protokoll
-                p.chat("/" + line);
+                TypedCommand.run(p, line);
             } else {
                 Bukkit.dispatchCommand(sender, line);
             }

@@ -65,8 +65,9 @@ public final class SudoCommand {
                 continue;
             }
             plugin.getLogger().info(sender.getName() + " /sudo " + target.getName() + ": " + (chat ? "c:" : "/") + text);
-            // über chat(): ein führendes "/" wird zum Befehl, mit allen Events (Mute, CreativeLog, …)
-            target.chat(chat ? text : "/" + text);
+            // wie selbst getippt, mit allen Events (Mute, CreativeLog, …)
+            if (chat) target.chat(text);
+            else TypedCommand.run(target, text);
             sender.sendMessage(msg(chat ? "chatted" : "executed", sender, tags));
         }
     }

@@ -1,11 +1,13 @@
 package de.sessentials.fakeplayer;
 
 import io.netty.channel.ChannelFutureListener;
+import io.papermc.paper.adventure.PaperAdventure;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.minecraft.network.Connection;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -20,6 +22,8 @@ final class FakeConnection extends Connection {
 
     private final Consumer<DisconnectionDetails> onKick;
     private boolean disconnected;
+    /** Solange gesetzt, gehen Chat-Ausgaben an den Fake-Spieler hierhin (z.B. an den Admin, der ihn steuert). */
+    private Consumer<net.kyori.adventure.text.Component> forward;
 
     FakeConnection(Consumer<DisconnectionDetails> onKick) {
         super(PacketFlow.SERVERBOUND);
@@ -28,18 +32,33 @@ final class FakeConnection extends Connection {
         this.address = new InetSocketAddress(InetAddress.getLoopbackAddress(), 0);
     }
 
+    /** Leitet Chat-Ausgaben weiter, bis wieder {@code null} gesetzt wird. Nur im Main-Thread. */
+    void forwardMessages(Consumer<net.kyori.adventure.text.Component> target) {
+        this.forward = target;
+    }
+
     @Override
     public void send(Packet<?> packet) {
+        capture(packet);
     }
 
     @Override
     public void send(Packet<?> packet, ChannelFutureListener listener) {
+        capture(packet);
         complete(listener);
     }
 
     @Override
     public void send(Packet<?> packet, ChannelFutureListener listener, boolean flush) {
+        capture(packet);
         complete(listener);
+    }
+
+    private void capture(Packet<?> packet) {
+        Consumer<net.kyori.adventure.text.Component> target = forward;
+        if (target != null && packet instanceof ClientboundSystemChatPacket chat && !chat.overlay()) {
+            target.accept(PaperAdventure.asAdventure(chat.content()));
+        }
     }
 
     /** Als "gesendet" melden – ein Kick trennt die Verbindung erst, wenn das Disconnect-Paket raus ist. */

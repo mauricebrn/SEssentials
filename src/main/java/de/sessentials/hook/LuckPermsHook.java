@@ -6,6 +6,11 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import org.bukkit.entity.Player;
 
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 /** Wird nur instanziert, wenn LuckPerms installiert ist. Nutzt die (thread-sicheren) gecachten Daten. */
 public final class LuckPermsHook implements PermissionInfo {
 
@@ -13,6 +18,20 @@ public final class LuckPermsHook implements PermissionInfo {
 
     public LuckPermsHook() {
         this.api = LuckPermsProvider.get();
+    }
+
+    /** Wartet höchstens 5 s – bei lokalem Speicher dauert das Millisekunden. Legt neue Spieler in LuckPerms an. */
+    @Override
+    public void loadUser(UUID id, String name) {
+        try {
+            // wie LuckPerms beim Login: Name ↔ UUID merken (sonst findet /lp user <name> ihn nicht), dann laden
+            api.getUserManager().savePlayerData(id, name).get(5, TimeUnit.SECONDS);
+            api.getUserManager().loadUser(id, name).get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("LuckPerms-Daten für " + name + " nicht geladen", e);
+        }
     }
 
     private CachedMetaData meta(Player player) {

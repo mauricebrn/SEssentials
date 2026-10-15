@@ -20,6 +20,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -51,6 +52,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -58,6 +60,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -186,6 +189,12 @@ public final class FakePlayerManager implements Listener {
             if (plugin.isEnabled()) Bukkit.getScheduler().runTask(plugin, () -> removeFromServer(b, player, details));
             else removeFromServer(b, player, details);
         });
+        String denied = login(b, player);
+        if (denied != null) {
+            b.handle = null;
+            plugin.getLogger().info("Fake-Spieler " + b.name + " darf nicht beitreten: " + denied);
+            return "login-denied";
+        }
         try {
             server.getPlayerList().placeNewPlayer(connection, player, CommonListenerCookie.createInitial(profile, false));
         } catch (RuntimeException e) {
@@ -193,11 +202,30 @@ public final class FakePlayerManager implements Listener {
             plugin.getLogger().log(Level.SEVERE, "Fake-Spieler " + b.name + " konnte nicht beitreten", e);
             return "join-failed";
         }
+        b.connection = connection;
         b.placeAtHome = false;
         // Fake-Spieler sollen nicht verhindern, dass die Nacht durch Schlafen übersprungen wird
         player.getBukkitEntity().setSleepingIgnored(true);
         b.clearState();
         return null;
+    }
+
+    /**
+     * Der Login-Schritt, den Fake-Spieler sonst überspringen: Rechte-Daten laden (LuckPerms legt ihn dabei an)
+     * und das Login-Event auslösen – darüber hängt LuckPerms seine Rechte ein, Whitelist- und Ban-Plugins
+     * können ihn ablehnen. {@code null} = darf beitreten, sonst der Grund.
+     */
+    private String login(FakePlayer b, FakeServerPlayer player) {
+        try {
+            plugin.permissions().loadUser(b.id, b.name);
+        } catch (RuntimeException e) {
+            plugin.getLogger().log(Level.WARNING, e.getMessage(), e);
+        }
+        InetAddress local = InetAddress.getLoopbackAddress();
+        PlayerLoginEvent event = new PlayerLoginEvent(player.getBukkitEntity(), "localhost", local, local);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.getResult() == PlayerLoginEvent.Result.ALLOWED) return null;
+        return PlainTextComponentSerializer.plainText().serialize(event.kickMessage());
     }
 
     /** Welt aus den Bukkit-Daten der Spielerdatei (wie Paper beim Login), {@code null} = unbekannt. */
@@ -217,6 +245,7 @@ public final class FakePlayerManager implements Listener {
     private void removeFromServer(FakePlayer b, FakeServerPlayer player, DisconnectionDetails details) {
         if (b.handle != player) return; // schon abgemeldet
         b.handle = null;
+        b.connection = null;
         player.connection.onDisconnect(details);
     }
 
@@ -587,6 +616,8 @@ public final class FakePlayerManager implements Listener {
                 b.goal = goal != null ? goal : FakePlayer.Goal.WANDER;
                 b.defense = orDefault(FakePlayer.Defense.byKey(s.getString("defense", "")), defaultDefense());
                 b.home = s.getLocation("home");
+                // Absturz während einer Animation: OP von damals zurücknehmen
+                if (s.getBoolean("temp-op")) Bukkit.getOfflinePlayer(b.id).setOp(false);
                 bots.put(name.toLowerCase(Locale.ROOT), b);
             } catch (RuntimeException e) {
                 // z.B. Welt gelöscht – Eintrag überspringen statt das ganze Feature zu verlieren
@@ -595,7 +626,7 @@ public final class FakePlayerManager implements Listener {
         }
     }
 
-    private void save() {
+    void save() {
         YamlConfiguration yml = new YamlConfiguration();
         for (FakePlayer b : bots.values()) {
             String p = "bots." + b.name + ".";
@@ -607,6 +638,7 @@ public final class FakePlayerManager implements Listener {
             yml.set(p + "ai", b.ai);
             yml.set(p + "goal", b.goal.key);
             yml.set(p + "defense", b.defense.key);
+            if (b.tempOp) yml.set(p + "temp-op", true);
             yml.set(p + "home", b.home);
         }
         writer.write(file, yml.saveToString());

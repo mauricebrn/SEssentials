@@ -885,6 +885,8 @@ auto-update:
 #   /fp skin <name> <skin>     /fp list
 #   /fp animate <name>         den Fake-Spieler selbst steuern: du wirst unsichtbar und "verlässt" den Server
 #                              (Leave-Nachricht), er übernimmt deine Bewegungen, Armschwünge und deinen Chat.
+#                              Deine Befehle (außer /fp) führt er aus – mit deinen Rechten, die er dafür erbt
+#                              (bei OP vorübergehend OP) – und du bekommst die Ausgabe.
 #                              Nochmal bzw. /fp animate beendet es (Join-Nachricht für dich). War er offline,
 #                              tritt er dafür bei und verlässt den Server danach wieder.
 # Kämpfende Fake-Spieler greifen nur echte Spieler im Überlebens-/Abenteuermodus an, nicht im Vanish und
@@ -938,3 +940,5 @@ fakeplayers:
     animate-stop: "<prefix><gray>Du steuerst <white><name></white> nicht mehr."
     animate-none: "<prefix><red>Du steuerst gerade keinen Fake-Spieler."
     animate-busy: "<prefix><red><white><name></white> wird schon von jemand anderem gesteuert."
+    animate-output: "<dark_gray>[<gray><name></gray>]</dark_gray> <output>"
+    login-denied: "<prefix><red><white><name></white> wurde beim Login abgewiesen – Grund in der Konsole."

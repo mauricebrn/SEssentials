@@ -3,6 +3,7 @@ package de.sessentials.help;
 import com.mojang.brigadier.Command;
 import de.sessentials.SEssentials;
 import de.sessentials.admin.Menu;
+import de.sessentials.player.TypedCommand;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
@@ -190,7 +191,7 @@ public final class HelpCommand {
                 player.closeInventory();
                 String command = e.command().startsWith("/") ? e.command() : "/" + e.command();
                 // wie selbst getippt: mit den eigenen Rechten
-                player.chat(command);
+                TypedCommand.run(player, command);
             }
             case SUGGEST -> {
                 player.closeInventory();

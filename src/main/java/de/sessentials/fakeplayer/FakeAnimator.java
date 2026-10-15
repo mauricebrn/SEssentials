@@ -1,10 +1,13 @@
 package de.sessentials.fakeplayer;
 
 import de.sessentials.SEssentials;
+import de.sessentials.player.TypedCommand;
 import de.sessentials.punish.PunishmentManager;
 import de.sessentials.text.TextService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
@@ -14,24 +17,33 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Animieren: Ein Admin steuert einen Fake-Spieler. Der Admin wird unsichtbar und „verlässt“ den Server
  * (Leave-Nachricht), der Fake-Spieler übernimmt Position, Blick, Schleichen, Sprinten und Armschwung;
- * Chat-Nachrichten des Admins schreibt der Fake-Spieler. Beim Beenden „kommt“ der Admin zurück
- * (Join-Nachricht); war der Fake-Spieler nur fürs Animieren online, verlässt er den Server wieder.
+ * Chat-Nachrichten des Admins schreibt der Fake-Spieler, Befehle (außer /fp) führt er aus – mit den
+ * Rechten des Admins, die er dafür erbt – und die Ausgabe geht an den Admin. Beim Beenden „kommt“ der Admin
+ * zurück (Join-Nachricht); war der Fake-Spieler nur fürs Animieren online, verlässt er den Server wieder.
  */
 final class FakeAnimator implements Listener {
 
     private record Animation(Player admin, FakePlayer bot, boolean joinedForIt, boolean vanishedByUs,
-                             boolean hiddenByUs, boolean announced) {}
+                             boolean hiddenByUs, boolean announced, PermissionAttachment permissions) {}
+
+    /** Befehle, die der Admin beim Animieren selbst ausführt (damit er es beenden und verwalten kann). */
+    private static final Set<String> OWN_COMMANDS = Set.of("fakeplayer", "fp", "bot");
 
     private final SEssentials plugin;
     private final FakePlayerManager manager;
@@ -101,13 +113,45 @@ final class FakeAnimator implements Listener {
         boolean announce = !alreadyHidden && plugin.getConfig().getBoolean("fakeplayers.animate.announce", true);
         if (announce) broadcast(plugin.joinQuit().quitMessage(admin));
 
-        byAdmin.put(admin.getUniqueId(), new Animation(admin, b, joined, vanished, hidden, announce));
+        byAdmin.put(admin.getUniqueId(), new Animation(admin, b, joined, vanished, hidden, announce, inheritPermissions(admin, b)));
         admin.sendMessage(manager.msg("animate-start", admin, TextService.placeholder("name", b.name)));
+    }
+
+    /**
+     * Der Fake-Spieler bekommt die Rechte des Admins: alle seine wirksamen Rechte (auch aus LuckPerms) als
+     * Anhang und – ist der Admin OP – vorübergehend OP, damit auch Vanilla-Befehle gehen.
+     */
+    private PermissionAttachment inheritPermissions(Player admin, FakePlayer b) {
+        Player body = b.bukkit();
+        PermissionAttachment attachment = body.addAttachment(plugin);
+        for (PermissionAttachmentInfo info : admin.getEffectivePermissions()) {
+            attachment.setPermission(info.getPermission(), info.getValue());
+        }
+        if (admin.isOp() && !body.isOp()) {
+            b.tempOp = true;
+            manager.save(); // falls der Server abstürzt: beim nächsten Start zurücknehmen
+            body.setOp(true);
+        }
+        body.updateCommands();
+        return attachment;
+    }
+
+    private void revokePermissions(Animation a) {
+        FakePlayer b = a.bot();
+        Player body = b.bukkit();
+        if (body != null) body.removeAttachment(a.permissions());
+        if (b.tempOp) {
+            Bukkit.getOfflinePlayer(b.id).setOp(false);
+            b.tempOp = false;
+            manager.save();
+        }
+        if (body != null) body.updateCommands();
     }
 
     /** @param announce false = ohne Join-Nachricht für den Admin (er verlässt den Server oder das Plugin stoppt) */
     private void stop(Animation a, boolean announce) {
         if (byAdmin.remove(a.admin().getUniqueId()) == null) return;
+        revokePermissions(a);
         FakePlayer b = a.bot();
         if (b.handle != null) {
             b.handle.setNoGravity(false);
@@ -166,6 +210,34 @@ final class FakeAnimator implements Listener {
             Player body = a.bot().bukkit();
             if (body != null) body.chat(text);
         });
+    }
+
+    /**
+     * Befehle des Admins führt der Fake-Spieler aus; was er dabei an Nachrichten bekommt, geht an den Admin.
+     * Ein gemuteter Admin führt seine Befehle selbst aus – dann greifen die Mute-Sperren wie sonst.
+     */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        Animation a = byAdmin.get(event.getPlayer().getUniqueId());
+        if (a == null) return;
+        String label = event.getMessage().substring(1).split(" ", 2)[0].toLowerCase(Locale.ROOT);
+        label = label.substring(label.indexOf(':') + 1);
+        if (OWN_COMMANDS.contains(label)) return;
+        if (plugin.punishments().activeFor(PunishmentManager.Type.MUTE, event.getPlayer().getUniqueId()) != null) return;
+        Player body = a.bot().bukkit();
+        FakeConnection connection = a.bot().connection;
+        if (body == null || connection == null) return;
+        event.setCancelled(true);
+        Player admin = a.admin();
+        TagResolver name = TextService.placeholder("name", a.bot().name);
+        connection.forwardMessages(output -> admin.sendMessage(
+                manager.msg("animate-output", admin, name, Placeholder.component("output", output))));
+        try {
+            // wie selbst getippt: mit Preprocess-Event, Befehls-Protokoll usw.
+            TypedCommand.run(body, event.getMessage());
+        } finally {
+            connection.forwardMessages(null);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

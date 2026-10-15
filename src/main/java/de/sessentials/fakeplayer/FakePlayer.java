@@ -105,6 +105,10 @@ final class FakePlayer {
 
     /** Der laufende Spieler oder {@code null}, wenn offline. */
     FakeServerPlayer handle;
+    /** Seine Verbindung (für weitergeleitete Ausgaben), solange er online ist. */
+    FakeConnection connection;
+    /** Nur fürs Animieren zum OP gemacht – wird spätestens beim nächsten Start zurückgenommen. */
+    boolean tempOp;
 
     // KI-Zustand (nur Main-Thread)
     private LivingEntity target;

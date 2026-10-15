@@ -74,6 +74,7 @@ public final class SEssentials extends JavaPlugin {
 
     private Modules modules;
     private TextService text;
+    private PermissionInfo permissions;
     private SoftRestartManager softRestart;
     private ChatListener chat;
     private JoinQuitListener joinQuit;
@@ -133,6 +134,7 @@ public final class SEssentials extends JavaPlugin {
         if (papi) getLogger().info("PlaceholderAPI gefunden – %platzhalter% und <papi:...> aktiv.");
 
         vanish = new VanishManager(this);
+        permissions = perms;
         text = new TextService(perms, papi, vanish::visibleCount);
         text.setPrefix(getConfig().getString("prefix", ""));
 
@@ -306,6 +308,11 @@ public final class SEssentials extends JavaPlugin {
 
     public Modules modules() {
         return modules;
+    }
+
+    /** Rechte-Plugin (LuckPerms) oder {@link PermissionInfo#NONE}. */
+    public PermissionInfo permissions() {
+        return permissions;
     }
 
     public TextService text() {
