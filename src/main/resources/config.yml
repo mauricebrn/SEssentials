@@ -45,6 +45,7 @@ modules:
   spy: true              # /socialspy
   bank: true             # /bank, /balance, /pay, /baltop, /eco, Vault
   chestshops: true       # Chestshops, /shop
+  bounty: true           # Kopfgeld (/kopfgeld)
   gambling: true         # Glücksrad (/gluecksrad)
   upgrader: true         # Item-Upgrader (/upgrader)
   item-tracker: true     # Item-Tracker im Admin-Panel
@@ -246,6 +247,7 @@ help:
         - {command: "/bank", name: "<gold>/bank", description: "<gray>Einzahlen, Kontostand, Auszahlen", icon: GOLD_BLOCK, click: run}
         - {command: "/pay", name: "<gold>/pay <spieler> <betrag>", description: "<gray>Geld überweisen", icon: GOLD_NUGGET}
         - {command: "/baltop", name: "<gold>/baltop", description: "<gray>Die reichsten Spieler", icon: DIAMOND, click: run}
+        - {command: "/kopfgeld", name: "<gold>/kopfgeld [spieler betrag]", description: "<gray>Kopfgeld aussetzen bzw. anzeigen", icon: SKELETON_SKULL}
         - {command: "/shop", name: "<gold>/shop", description: "<gray>Chestshop erstellen (auf eine Kiste schauen)", icon: CHEST, click: run}
         - {command: "/gluecksrad", name: "<gold>/gluecksrad", description: "<gray>Glücksrad drehen", icon: CLOCK, click: run}
         - {command: "/upgrader", name: "<gold>/upgrader", description: "<gray>Items upgraden – mit Risiko", icon: SMITHING_TABLE, click: run}
@@ -545,6 +547,33 @@ tpa:
     not-enough: "<prefix><red>Du brauchst <white><price></white> für eine Teleport-Anfrage."
     requester-cannot-pay: "<prefix><red><requester> kann <price> nicht mehr bezahlen – Teleport abgebrochen."
     failed: "<prefix><red>Teleport fehlgeschlagen."
+
+# ------------------------------------------------------------
+# Kopfgeld (/kopfgeld <spieler> <betrag>, /kopfgeld zeigt die höchsten; Alias /bounty)
+# Der Betrag wird sofort vom Bankkonto abgebucht. Wer das Ziel tötet, bekommt alle Kopfgelder,
+# die er nicht selbst ausgesetzt hat, plus das Inventar des Opfers. Gespeichert in bounties.yml.
+# Admins (sess.bounty.admin) verwalten Kopfgelder im Admin-Panel oder mit /kopfgeld entfernen <spieler>.
+# Entfernte und abgelaufene Kopfgelder gehen an den Aussetzenden zurück.
+# Platzhalter: <setter>, <killer>, <target>, <amount>, <total>, <rank>, <duration>
+# ------------------------------------------------------------
+bounty:
+  # Wie lange ein Kopfgeld gilt, z.B. 12h, 3d, 1w – 0 = unbegrenzt. Nachlegen startet die Zeit neu.
+  max-duration: 0
+  messages:
+    placed: "<prefix><green>Kopfgeld von <white><amount></white> auf <white><target></white> ausgesetzt. <dark_gray>(Gesamt: <total>, gilt: <duration>)"
+    placed-broadcast: "<prefix><white><setter></white><gray> hat <gold><amount></gold> Kopfgeld auf <white><target></white> ausgesetzt. <dark_gray>(Gesamt: <total>)"
+    claimed: "<prefix><green>Du hast <white><target></white> erledigt und <gold><amount></gold> Kopfgeld samt Inventar kassiert!"
+    claimed-broadcast: "<prefix><white><killer></white><gray> hat das Kopfgeld von <gold><amount></gold> auf <white><target></white> kassiert."
+    not-enough: "<prefix><red>Du hast keine <white><amount></white> auf dem Konto."
+    self: "<prefix><red>Du kannst kein Kopfgeld auf dich selbst aussetzen."
+    unknown-player: "<prefix><red>Spieler <white><target></white> nicht gefunden."
+    list-header: "<dark_gray>────── <gold><bold>☠ Kopfgelder</bold></gold> <dark_gray>──────"
+    list-entry: "<gray> <rank>. <white><target></white> <dark_gray>–</dark_gray> <gold><total>"
+    list-empty: "<prefix><gray>Zurzeit ist kein Kopfgeld ausgesetzt."
+    expired: "<prefix><gray>Dein Kopfgeld auf <white><target></white> ist abgelaufen. <white><amount></white> wurden zurückerstattet."
+    removed: "<prefix><gray>Dein Kopfgeld auf <white><target></white> wurde von einem Admin entfernt. <white><amount></white> wurden zurückerstattet."
+    admin-removed: "<prefix><green>Kopfgeld von <white><amount></white> auf <white><target></white> entfernt und erstattet."
+    none: "<prefix><red>Auf <white><target></white> ist kein Kopfgeld ausgesetzt."
 
 # ------------------------------------------------------------
 # News (/news, /news read <id>, /newsadmin – auch im Admin-Panel unter "Server")

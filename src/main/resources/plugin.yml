@@ -115,6 +115,12 @@ permissions:
   sess.bank.pay:
     description: Erlaubt /pay
     default: true
+  sess.bounty:
+    description: Erlaubt /kopfgeld (Kopfgeld aussetzen und anzeigen)
+    default: true
+  sess.bounty.admin:
+    description: Erlaubt /kopfgeld entfernen und die Kopfgeld-Verwaltung im Admin-Panel
+    default: op
   sess.bank.admin:
     description: Erlaubt /eco und die Konten-Verwaltung im Admin-Panel
     default: op

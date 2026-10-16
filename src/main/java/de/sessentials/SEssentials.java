@@ -9,6 +9,8 @@ import de.sessentials.bank.BankExchange;
 import de.sessentials.bank.BankManager;
 import de.sessentials.bank.BankMenu;
 import de.sessentials.bank.VaultEconomy;
+import de.sessentials.bounty.BountyManager;
+import de.sessentials.bounty.BountyMenu;
 import de.sessentials.admin.AdminPanel.Category;
 import de.sessentials.admin.ChatPrompt;
 import de.sessentials.admin.Menu;
@@ -103,6 +105,8 @@ public final class SEssentials extends JavaPlugin {
     private FakePlayerManager fakePlayers;
     private ItemUpgrader upgrader;
     private ChestShopManager chestShops;
+    private BountyManager bounties;
+    private BountyMenu bountyMenu;
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
     private ItemGuardMenu itemGuardMenu;
@@ -172,6 +176,8 @@ public final class SEssentials extends JavaPlugin {
         upgrader = modules.on("upgrader") ? new ItemUpgrader(this) : null;
         chestShops = modules.on("chestshops") ? new ChestShopManager(this) : null;
         shopCreator = chestShops != null ? new ShopCreatorMenu(this, chestShops) : null;
+        bounties = modules.on("bounty") ? new BountyManager(this) : null;
+        bountyMenu = bounties != null ? new BountyMenu(this, bounties) : null;
         messages = new MessageCommands(this);
         mail = modules.on("mail") ? new MailManager(this) : null;
         chatPrompt = new ChatPrompt(this);
@@ -207,6 +213,7 @@ public final class SEssentials extends JavaPlugin {
         listen("bank", bank);
         listen("item-tracker", tracker);
         listen("chestshops", chestShops);
+        listen("bounty", bounties);
         listen("messages", messages);
         listen("mail", mail);
         listen("tab", tab);
@@ -241,6 +248,7 @@ public final class SEssentials extends JavaPlugin {
         if (creativeLog != null) creativeLog.shutdown();
         if (punishments != null) punishments.shutdown();
         if (chestShops != null) chestShops.shutdown();
+        if (bounties != null) bounties.shutdown();
         if (luckyWheel != null) luckyWheel.shutdown();
         if (bank != null) bank.shutdown();
     }
@@ -295,6 +303,7 @@ public final class SEssentials extends JavaPlugin {
         tpa.reload();
         enderChest.reload();
         if (luckyWheel != null) luckyWheel.reload();
+        if (bounties != null) bounties.reload();
         if (autoUpdater != null) autoUpdater.reload();
         if (fakePlayers != null) fakePlayers.reload();
         if (upgrader != null) upgrader.reload();
@@ -444,6 +453,13 @@ public final class SEssentials extends JavaPlugin {
                             Component.text("Im Umlauf: " + bank.format(bank.total()), NamedTextColor.GRAY),
                             Component.text("Konten ansehen und ändern", NamedTextColor.GRAY)),
                     bankMenu::openAdmin);
+        }
+        if (bounties != null) {
+            adminPanel.addApp(Category.ECONOMY, BountyManager.PERM_ADMIN,
+                    p -> Menu.icon(Material.SKELETON_SKULL, Component.text("Kopfgelder", NamedTextColor.RED),
+                            Component.text("Ziele: " + bounties.targets().size(), NamedTextColor.GRAY),
+                            Component.text("Gebote ansehen und entfernen", NamedTextColor.GRAY)),
+                    bountyMenu::openTargets);
         }
         if (modules.on("item-tracker")) {
             adminPanel.addApp(Category.ECONOMY, TrackerMenu.PERM,
@@ -697,6 +713,7 @@ public final class SEssentials extends JavaPlugin {
             if (upgrader != null) upgrader.register(commands);
             if (mail != null) mail.register(commands);
             if (shopCreator != null) shopCreator.register(commands);
+            if (bounties != null) bounties.register(commands);
             if (itemGuard != null) itemGuard.register(commands);
             if (creativeLog != null) creativeLog.register(commands);
             if (webPanel != null) webPanel.register(commands);

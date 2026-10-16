@@ -17,6 +17,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Private Nachrichten: `/msg` und `/r` zum schnellen Antworten
 - Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
 - Chestshops: Items aus Kisten für Taler kaufen und verkaufen
+- Kopfgeld: Taler auf Spieler aussetzen – wer das Ziel tötet, bekommt Kopfgeld und Inventar
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
@@ -41,7 +42,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -84,6 +85,8 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/bank auszahlen <betrag>` | `sess.bank` | Betrag in Items auszahlen (falls erlaubt) |
 | `/balance [spieler]` | – | Kontostand (Aliase `/bal`, `/money`, `/geld`, `/kontostand`) |
 | `/pay <spieler> <betrag>` | `sess.bank.pay` | Geld überweisen (Alias `/zahlen`) |
+| `/kopfgeld [<spieler> <betrag>]` | `sess.bounty` | Kopfgeld vom Konto aussetzen; ohne Argumente die höchsten anzeigen (Alias `/bounty`). Der Töter (nicht der Aussetzende) bekommt Kopfgeld und Inventar. Laufzeit über `bounty.max-duration` (0 = unbegrenzt) |
+| `/kopfgeld entfernen <spieler>` | `sess.bounty.admin` | Alle Kopfgelder auf einen Spieler entfernen und erstatten; einzelne Gebote im Admin-Panel |
 | `/baltop` | – | Die 10 reichsten Spieler |
 | `/eco give\|take\|set <spieler> <betrag>` | `sess.bank.admin` | Konten verwalten |
 | `/tpaccept [spieler]` | – | Anfrage annehmen (ohne Namen: neueste) |

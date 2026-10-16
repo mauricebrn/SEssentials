@@ -20,14 +20,15 @@ public final class Modules {
             "admin-panel", "chat", "join-quit", "tab", "vanish", "help", "command-aliases",
             "player-commands", "sudo", "enderchest", "spawn", "dimensions", "tpa",
             "messages", "mail", "spy",
-            "bank", "chestshops", "gambling", "upgrader", "item-tracker",
+            "bank", "chestshops", "bounty", "gambling", "upgrader", "item-tracker",
             "punishments", "reports", "itemguard", "creativelog", "client-detector",
             "news", "softrestart", "auto-update", "fake-players", "webpanel");
 
     /** Modul → Module, ohne die es nicht läuft. */
     private static final Map<String, List<String>> REQUIRES = Map.of(
             "gambling", List.of("bank"),
-            "chestshops", List.of("bank"));
+            "chestshops", List.of("bank"),
+            "bounty", List.of("bank"));
 
     private final Map<String, Boolean> state = new LinkedHashMap<>();
 
