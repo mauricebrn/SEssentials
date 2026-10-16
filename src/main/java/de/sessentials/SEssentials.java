@@ -142,7 +142,7 @@ public final class SEssentials extends JavaPlugin {
 
         PermissionInfo perms = PermissionInfo.NONE;
         if (getServer().getPluginManager().isPluginEnabled("LuckPerms")) {
-            perms = new LuckPermsHook();
+            perms = new LuckPermsHook(getLogger());
             getLogger().info("LuckPerms gefunden – Prefix/Suffix/Gruppen aktiv.");
         } else {
             getLogger().warning("LuckPerms nicht gefunden – <lp_*>-Platzhalter bleiben leer.");

@@ -40,6 +40,8 @@ public final class ClanManager {
     private final Map<String, Clan> byName = new HashMap<>();
     /** Spieler → Clan; concurrent, weil der Chat-Tag asynchron liest. */
     private final Map<UUID, Clan> byMember = new ConcurrentHashMap<>();
+    /** Priorität, mit der Clan-Prefixe zuletzt in LuckPerms gesetzt wurden (-1 = noch nie). */
+    private int appliedPrefixPriority = -1;
 
     public ClanManager(SEssentials plugin) {
         this.plugin = plugin;
@@ -162,6 +164,16 @@ public final class ClanManager {
         save();
     }
 
+    int appliedPrefixPriority() {
+        return appliedPrefixPriority;
+    }
+
+    void setAppliedPrefixPriority(int priority) {
+        if (appliedPrefixPriority == priority) return;
+        appliedPrefixPriority = priority;
+        save();
+    }
+
     /** {@code false}, wenn der Clan inzwischen aufgelöst wurde (z.B. während ein Menü offen war). */
     boolean exists(Clan clan) {
         return byName.get(clan.name.toLowerCase(Locale.ROOT)) == clan;
@@ -227,7 +239,9 @@ public final class ClanManager {
     // ------------------------------------------------------------
 
     private void load() {
-        ConfigurationSection root = YamlConfiguration.loadConfiguration(file).getConfigurationSection("clans");
+        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        appliedPrefixPriority = data.getInt("luckperms-prefix-priority", -1);
+        ConfigurationSection root = data.getConfigurationSection("clans");
         if (root == null) return;
         for (String key : root.getKeys(false)) {
             ConfigurationSection sec = root.getConfigurationSection(key);
@@ -258,6 +272,7 @@ public final class ClanManager {
     /** Schnappschuss im Main-Thread (auch die Truhen), Schreiben asynchron. */
     void save() {
         YamlConfiguration yml = new YamlConfiguration();
+        yml.set("luckperms-prefix-priority", appliedPrefixPriority);
         for (Clan clan : byName.values()) {
             String p = "clans." + clan.name.toLowerCase(Locale.ROOT) + ".";
             yml.set(p + "name", clan.name);

@@ -22,6 +22,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -53,6 +54,7 @@ public final class ClanCommands implements Listener {
     private final ClanManager clans;
     private final ClanChest chest;
     private final ClanFriendlyFire friendlyFire;
+    private final ClanPrefixSync prefixSync;
     /** Eingeladener → (Clan-Name klein → Ablaufzeit ms), neueste zuletzt. */
     private final Map<UUID, LinkedHashMap<String, Long>> invites = new HashMap<>();
     private final Map<Clan, Vote> votes = new HashMap<>();
@@ -67,6 +69,7 @@ public final class ClanCommands implements Listener {
         this.clans = clans;
         this.chest = new ClanChest(plugin, clans, this);
         this.friendlyFire = new ClanFriendlyFire(plugin, clans);
+        this.prefixSync = new ClanPrefixSync(plugin, clans);
         reload();
     }
 
@@ -76,6 +79,7 @@ public final class ClanCommands implements Listener {
         homeCost = Cost.fromConfig(cfg, "clans.home.cost", plugin.bank(), plugin.bankExchange(), plugin.getLogger());
         remoteCost = Cost.fromConfig(cfg, "clans.chest.remote-cost", plugin.bank(), plugin.bankExchange(), plugin.getLogger());
         tagFormat = cfg.getString("clans.tag-format");
+        prefixSync.reload();
     }
 
     /** Truhe für das Admin-Panel (am Block geöffnet, also mit Einlagern). */
@@ -96,7 +100,8 @@ public final class ClanCommands implements Listener {
     /** {@code <clan>} für Chat, TAB und Nametags: formatierter Clan-Tag oder leer. Auch asynchron aufrufbar. */
     public Component tag(Player player) {
         Clan clan = clans.of(player.getUniqueId());
-        if (clan == null) return Component.empty();
+        // steht der Tag schon im LuckPerms-Prefix, käme er über <lp_prefix> sonst doppelt
+        if (clan == null || prefixSync.active()) return Component.empty();
         return plugin.text().render(tagFormat, Placeholder.component("name", Component.text(clan.name, clan.color)));
     }
 
@@ -128,6 +133,7 @@ public final class ClanCommands implements Listener {
             return;
         }
         Clan clan = clans.create(name, color, player.getUniqueId());
+        prefixSync.sync(player.getUniqueId());
         player.sendMessage(msg("created", player, clanTags(clan), cost.tags()));
     }
 
@@ -137,6 +143,7 @@ public final class ClanCommands implements Listener {
         NamedTextColor color = color(player, colorName);
         if (color == null) return;
         clans.setColor(clan, color);
+        prefixSync.sync(clan.members);
         notify(clan, "color-changed", clanTags(clan));
     }
 
@@ -215,6 +222,7 @@ public final class ClanCommands implements Listener {
         }
         invites.remove(player.getUniqueId());
         clans.join(clan, player.getUniqueId());
+        prefixSync.sync(player.getUniqueId());
         notify(clan, "joined", tags);
     }
 
@@ -227,6 +235,7 @@ public final class ClanCommands implements Listener {
         }
         TagResolver tags = TagResolver.resolver(clanTags(clan), TextService.placeholder("target", player.getName()));
         clans.leave(clan, player.getUniqueId());
+        prefixSync.sync(player.getUniqueId());
         player.sendMessage(msg("left", player, tags));
         notify(clan, "left-clan", tags);
     }
@@ -247,6 +256,7 @@ public final class ClanCommands implements Listener {
     void removeMember(Clan clan, UUID target) {
         TagResolver tags = TagResolver.resolver(clanTags(clan), TextService.placeholder("target", nameOf(target)));
         clans.leave(clan, target);
+        prefixSync.sync(target);
         notify(clan, "kicked", tags);
         Player online = Bukkit.getPlayer(target);
         if (online != null) online.sendMessage(msg("kicked-target", online, tags));
@@ -279,7 +289,9 @@ public final class ClanCommands implements Listener {
         TagResolver tags = TagResolver.resolver(clanTags(clan), money("amount", clan.balance));
         notify(clan, "disbanded", tags);
         forget(clan);
+        List<UUID> members = List.copyOf(clan.members);
         clans.disband(clan);
+        prefixSync.sync(members);
     }
 
     /** Admin: auflösen erzwingen; Truheninhalt geht an den Admin (von der Konsole nur bei leerer Truhe). */
@@ -299,7 +311,9 @@ public final class ClanCommands implements Listener {
         TagResolver tags = TagResolver.resolver(clanTags(clan), money("amount", clan.balance));
         notify(clan, "disbanded", tags);
         forget(clan);
+        List<UUID> members = List.copyOf(clan.members);
         clans.disband(clan);
+        prefixSync.sync(members);
         sender.sendMessage(msg("admin-disbanded", self, tags));
     }
 
@@ -630,6 +644,12 @@ public final class ClanCommands implements Listener {
 
     Component msg(String key, Player player, TagResolver... extra) {
         return plugin.text().render(plugin.getConfig().getString("clans.messages." + key), player, extra);
+    }
+
+    /** Prefix beim Join prüfen – holt verpasste Änderungen nach und räumt ihn ab, wenn die Funktion aus ist. */
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        prefixSync.sync(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

@@ -21,6 +21,17 @@ public interface PermissionInfo {
      */
     default void loadUser(UUID id, String name) {}
 
+    /** {@code true}, wenn {@link #setOwnPrefix} Prefixe im Rechte-Plugin speichern kann. */
+    default boolean supportsOwnPrefix() {
+        return false;
+    }
+
+    /**
+     * Setzt einen eigenen Prefix direkt am Spieler (auch offline): entfernt seine Prefixe mit {@code priority} und
+     * {@code oldPriority} und setzt {@code value} mit {@code priority} ({@code null} = nur entfernen). Läuft asynchron.
+     */
+    default void setOwnPrefix(UUID player, int priority, int oldPriority, String value) {}
+
     PermissionInfo NONE = new PermissionInfo() {
         @Override public String prefix(Player player) { return ""; }
         @Override public String suffix(Player player) { return ""; }
