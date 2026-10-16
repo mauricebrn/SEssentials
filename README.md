@@ -17,6 +17,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Private Nachrichten: `/msg` und `/r` zum schnellen Antworten
 - Digitale Bank: Items einzahlen, mit dem Konto bezahlen, `/pay`, optional als Vault-Economy
 - Chestshops: Items aus Kisten für Taler kaufen und verkaufen
+- Clans: gründen mit Farbe, Einladungen, Home per Abstimmung, gemeinsame Truhe und Clan-Konto
 - Kopfgeld: Taler auf Spieler aussetzen – wer das Ziel tötet, bekommt Kopfgeld und Inventar
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
@@ -42,7 +43,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -86,6 +87,13 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/balance [spieler]` | – | Kontostand (Aliase `/bal`, `/money`, `/geld`, `/kontostand`) |
 | `/pay <spieler> <betrag>` | `sess.bank.pay` | Geld überweisen (Alias `/zahlen`) |
 | `/kopfgeld [<spieler> <betrag>]` | `sess.bounty` | Kopfgeld vom Konto aussetzen; ohne Argumente die höchsten anzeigen (Alias `/bounty`). Der Töter (nicht der Aussetzende) bekommt Kopfgeld und Inventar. Laufzeit über `bounty.max-duration` (0 = unbegrenzt) |
+| `/clan erstellen <name> <farbe>` | `sess.clan` | Clan gründen (kostet `clans.create-cost`); `/clan farbe` ändert die Farbe |
+| `/clan einladen\|kicken\|leiter <spieler>` | `sess.clan` | Mitglieder verwalten; `/clan annehmen\|ablehnen [clan]`, `/clan verlassen`, `/clan aufloesen` |
+| `/clan info [clan]`, `/clan liste` | `sess.clan` | Clan-Infos bzw. alle Clans |
+| `/clan home [vorschlagen]` | `sess.clan` | Zum Clan-Home (kostet `clans.home.cost`) bzw. aktuellen Ort zur Abstimmung stellen; `/clan abstimmen ja\|nein` |
+| `/clan truhe [kaufen]` | `sess.clan` | Truhe aus der Ferne öffnen (`clans.chest.remote-cost`) bzw. vom Clan-Konto kaufen und nahe dem Home aufstellen |
+| `/clan bank`, `/clan einzahlen\|auszahlen <betrag>` | `sess.clan` | Gemeinsames Clan-Konto |
+| `/clan admin aufloesen <clan>` | `sess.clan.admin` | Clan zwangsweise auflösen (Truheninhalt geht an den Admin). Alles Weitere im Admin-Panel unter „Clans“: Home/Truhe besuchen, Truhe öffnen, Clan-Konto ändern, Mitglieder rauswerfen, Leiter bestimmen |
 | `/kopfgeld entfernen <spieler>` | `sess.bounty.admin` | Alle Kopfgelder auf einen Spieler entfernen und erstatten; einzelne Gebote im Admin-Panel |
 | `/baltop` | – | Die 10 reichsten Spieler |
 | `/eco give\|take\|set <spieler> <betrag>` | `sess.bank.admin` | Konten verwalten |

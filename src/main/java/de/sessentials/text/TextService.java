@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.IntSupplier;
 
 /**
@@ -26,6 +27,8 @@ public final class TextService {
     private final boolean papi;
     private final IntSupplier onlineCount;
     private volatile String prefix = "";
+    /** Inhalt von {@code <clan>}; leer, solange das Clan-Modul aus ist. */
+    private volatile Function<Player, Component> clanTag = p -> Component.empty();
 
     /** @param onlineCount Wert für {@code <online>} (z.B. ohne versteckte Spieler) */
     public TextService(PermissionInfo perms, boolean papi, IntSupplier onlineCount) {
@@ -36,6 +39,11 @@ public final class TextService {
 
     public void setPrefix(String prefix) {
         this.prefix = prefix == null ? "" : prefix;
+    }
+
+    /** Liefert {@code <clan>} für Texte mit Spielerkontext (muss auch asynchron funktionieren, z.B. im Chat). */
+    public void setClanTag(Function<Player, Component> clanTag) {
+        this.clanTag = clanTag;
     }
 
     public PermissionInfo perms() {
@@ -67,6 +75,7 @@ public final class TextService {
             resolvers.add(Placeholder.component("lp_prefix", parse(perms.prefix(player))));
             resolvers.add(Placeholder.component("lp_suffix", parse(perms.suffix(player))));
             resolvers.add(placeholder("lp_group", perms.primaryGroup(player)));
+            resolvers.add(Placeholder.component("clan", clanTag.apply(player)));
             resolvers.add(TagResolver.resolver("lp_meta", (args, ctx) -> {
                 String key = args.popOr("lp_meta benötigt einen Schlüssel, z.B. <lp_meta:color>").value();
                 return Tag.selfClosingInserting(parse(perms.meta(player, key)));

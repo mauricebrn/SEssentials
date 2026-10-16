@@ -11,6 +11,9 @@ import de.sessentials.bank.BankMenu;
 import de.sessentials.bank.VaultEconomy;
 import de.sessentials.bounty.BountyManager;
 import de.sessentials.bounty.BountyMenu;
+import de.sessentials.clan.ClanCommands;
+import de.sessentials.clan.ClanManager;
+import de.sessentials.clan.ClanMenu;
 import de.sessentials.admin.AdminPanel.Category;
 import de.sessentials.admin.ChatPrompt;
 import de.sessentials.admin.Menu;
@@ -107,6 +110,9 @@ public final class SEssentials extends JavaPlugin {
     private ChestShopManager chestShops;
     private BountyManager bounties;
     private BountyMenu bountyMenu;
+    private ClanManager clans;
+    private ClanCommands clanCommands;
+    private ClanMenu clanMenu;
     private ShopCreatorMenu shopCreator;
     private ItemGuard itemGuard;
     private ItemGuardMenu itemGuardMenu;
@@ -178,6 +184,10 @@ public final class SEssentials extends JavaPlugin {
         shopCreator = chestShops != null ? new ShopCreatorMenu(this, chestShops) : null;
         bounties = modules.on("bounty") ? new BountyManager(this) : null;
         bountyMenu = bounties != null ? new BountyMenu(this, bounties) : null;
+        clans = modules.on("clans") ? new ClanManager(this) : null;
+        clanCommands = clans != null ? new ClanCommands(this, clans) : null;
+        if (clanCommands != null) text.setClanTag(clanCommands::tag);
+        clanMenu = clanCommands != null ? new ClanMenu(this, clans, clanCommands) : null;
         messages = new MessageCommands(this);
         mail = modules.on("mail") ? new MailManager(this) : null;
         chatPrompt = new ChatPrompt(this);
@@ -214,6 +224,8 @@ public final class SEssentials extends JavaPlugin {
         listen("item-tracker", tracker);
         listen("chestshops", chestShops);
         listen("bounty", bounties);
+        listen("clans", clanCommands);
+        if (clanCommands != null) listen("clans", clanCommands.chestListener());
         listen("messages", messages);
         listen("mail", mail);
         listen("tab", tab);
@@ -249,6 +261,7 @@ public final class SEssentials extends JavaPlugin {
         if (punishments != null) punishments.shutdown();
         if (chestShops != null) chestShops.shutdown();
         if (bounties != null) bounties.shutdown();
+        if (clans != null) clans.shutdown();
         if (luckyWheel != null) luckyWheel.shutdown();
         if (bank != null) bank.shutdown();
     }
@@ -304,6 +317,7 @@ public final class SEssentials extends JavaPlugin {
         enderChest.reload();
         if (luckyWheel != null) luckyWheel.reload();
         if (bounties != null) bounties.reload();
+        if (clanCommands != null) clanCommands.reload();
         if (autoUpdater != null) autoUpdater.reload();
         if (fakePlayers != null) fakePlayers.reload();
         if (upgrader != null) upgrader.reload();
@@ -445,6 +459,14 @@ public final class SEssentials extends JavaPlugin {
                         Component.text("Fly, God, Heal, Feed, Enderchest", NamedTextColor.GRAY),
                         Component.text("Spawn, Nether, End", NamedTextColor.GRAY)),
                 this::openCommandsMenu);
+
+        if (clanMenu != null) {
+            adminPanel.addApp(Category.PLAYERS, ClanMenu.PERM,
+                    p -> Menu.icon(Material.WHITE_BANNER, Component.text("Clans", NamedTextColor.GOLD),
+                            Component.text("Clans: " + clans.all().size(), NamedTextColor.GRAY),
+                            Component.text("Home, Truhe, Konto, Mitglieder", NamedTextColor.GRAY)),
+                    clanMenu::openList);
+        }
 
         // Wirtschaft
         if (modules.on("bank")) {
@@ -714,6 +736,7 @@ public final class SEssentials extends JavaPlugin {
             if (mail != null) mail.register(commands);
             if (shopCreator != null) shopCreator.register(commands);
             if (bounties != null) bounties.register(commands);
+            if (clanCommands != null) clanCommands.register(commands);
             if (itemGuard != null) itemGuard.register(commands);
             if (creativeLog != null) creativeLog.register(commands);
             if (webPanel != null) webPanel.register(commands);

@@ -46,6 +46,7 @@ modules:
   bank: true             # /bank, /balance, /pay, /baltop, /eco, Vault
   chestshops: true       # Chestshops, /shop
   bounty: true           # Kopfgeld (/kopfgeld)
+  clans: true            # Clans (/clan), Platzhalter <clan>
   gambling: true         # Glücksrad (/gluecksrad)
   upgrader: true         # Item-Upgrader (/upgrader)
   item-tracker: true     # Item-Tracker im Admin-Panel
@@ -97,7 +98,7 @@ softrestart:
 chat:
   enabled: true
   # <message> = die Nachricht des Spielers
-  default-format: "<lp_prefix><gray><player></gray><lp_suffix> <dark_gray>»</dark_gray> <white><message>"
+  default-format: "<clan><lp_prefix><gray><player></gray><lp_suffix> <dark_gray>»</dark_gray> <white><message>"
   # Eigene Formate pro LuckPerms-Primärgruppe
   group-formats:
     admin: "<lp_prefix><red><hover:show_text:'<gray>Gruppe: <lp_group>'><player></hover></red> <dark_gray>»</dark_gray> <white><message>"
@@ -247,6 +248,7 @@ help:
         - {command: "/bank", name: "<gold>/bank", description: "<gray>Einzahlen, Kontostand, Auszahlen", icon: GOLD_BLOCK, click: run}
         - {command: "/pay", name: "<gold>/pay <spieler> <betrag>", description: "<gray>Geld überweisen", icon: GOLD_NUGGET}
         - {command: "/baltop", name: "<gold>/baltop", description: "<gray>Die reichsten Spieler", icon: DIAMOND, click: run}
+        - {command: "/clan", name: "<gold>/clan", description: "<gray>Dein Clan: Home, Truhe, Clan-Konto", icon: WHITE_BANNER, click: run}
         - {command: "/kopfgeld", name: "<gold>/kopfgeld [spieler betrag]", description: "<gray>Kopfgeld aussetzen bzw. anzeigen", icon: SKELETON_SKULL}
         - {command: "/shop", name: "<gold>/shop", description: "<gray>Chestshop erstellen (auf eine Kiste schauen)", icon: CHEST, click: run}
         - {command: "/gluecksrad", name: "<gold>/gluecksrad", description: "<gray>Glücksrad drehen", icon: CLOCK, click: run}
@@ -574,6 +576,132 @@ bounty:
     removed: "<prefix><gray>Dein Kopfgeld auf <white><target></white> wurde von einem Admin entfernt. <white><amount></white> wurden zurückerstattet."
     admin-removed: "<prefix><green>Kopfgeld von <white><amount></white> auf <white><target></white> entfernt und erstattet."
     none: "<prefix><red>Auf <white><target></white> ist kein Kopfgeld ausgesetzt."
+
+# ------------------------------------------------------------
+# Clans (/clan) – Kosten-Format wie bei spawn.cost (type money = Bankkonto, item = Items, amount 0 = kostenlos).
+# Befehle: erstellen <name> <farbe>, farbe, einladen, annehmen, ablehnen, verlassen, kicken, leiter,
+#          aufloesen, info [clan], liste, home, home vorschlagen, abstimmen ja|nein,
+#          truhe, truhe kaufen, bank, einzahlen, auszahlen, admin aufloesen <clan> (sess.clan.admin)
+# Der Platzhalter <clan> (Clan-Tag nach tag-format) funktioniert in Chat, TAB, Nametags usw.
+# Gespeichert in clans.yml. Einladungen und Home-Abstimmungen verfallen bei einem Neustart.
+# ------------------------------------------------------------
+clans:
+  create-cost:
+    type: money
+    amount: 10000
+    item: DIAMOND
+  name:
+    min-length: 3
+    max-length: 12
+  max-members: 10             # 0 = unbegrenzt
+  invite-expire-seconds: 120
+  # Erlaubte Farben für /clan erstellen und /clan farbe (Minecraft-Farbnamen)
+  colors: [red, dark_red, gold, yellow, green, dark_green, aqua, dark_aqua, blue, dark_blue, light_purple, dark_purple, white, gray]
+  # Clan-Tag für <clan>; <name> = farbiger Clan-Name
+  tag-format: "<dark_gray>[<name><dark_gray>]</dark_gray> "
+  # true = nur der Leiter darf das, false = alle Mitglieder (kicken, Leiter, Farbe, Auflösen: immer nur der Leiter)
+  leader-only:
+    invite: true
+    propose-home: false
+    buy-chest: true
+    withdraw: true
+  home:
+    # Mehr als so viel Prozent aller Mitglieder müssen mit Ja stimmen (50 = einfache Mehrheit)
+    vote-percent: 50
+    vote-minutes: 10
+    cost:                     # pro /clan home
+      type: money
+      amount: 250
+      item: DIAMOND
+  chest:
+    price: 5000               # einmalig, vom Clan-Konto
+    rows: 3                   # 1–6; Verkleinern löscht keine Items
+    max-distance-from-home: 16
+    remote-enabled: true      # /clan truhe von überall
+    remote-deposit: false     # false = aus der Ferne nur entnehmen, nicht einlagern
+    remote-cost:              # pro /clan truhe aus der Ferne; am Block ist es kostenlos
+      type: money
+      amount: 100
+      item: DIAMOND
+    item-name: "<light_purple>Clan-Truhe"
+    title: "<dark_gray>Clan-Truhe: <clan>"
+  messages:
+    no-clan: "<prefix><red>Du bist in keinem Clan. <gray>Gründen: <white>/clan erstellen <name> <farbe>"
+    already-in-clan: "<prefix><red>Du bist schon in einem Clan."
+    not-leader: "<prefix><red>Das darf nur der Clan-Leiter."
+    not-member: "<prefix><red><target> ist nicht in deinem Clan."
+    self: "<prefix><red>Das geht nicht mit dem Clan-Leiter."
+    invalid-name: "<prefix><red>Clan-Namen: <min>–<max> Zeichen, nur Buchstaben, Zahlen und _."
+    name-taken: "<prefix><red>Den Clan <white><name></white> gibt es schon."
+    invalid-color: "<prefix><red>Ungültige Farbe. Erlaubt: <white><colors>"
+    unknown-clan: "<prefix><red>Clan <white><name></white> nicht gefunden."
+    player-not-found: "<prefix><red><target> ist nicht online."
+    not-enough: "<prefix><red>Du brauchst <white><price></white>."
+    not-enough-own: "<prefix><red>Du hast keine <white><amount></white> auf deinem Konto."
+    not-enough-clan: "<prefix><red>Auf dem Clan-Konto fehlen Taler – nötig: <white><amount></white>."
+    created: "<prefix><green>Clan <clan> gegründet! <dark_gray>(-<price>)"
+    color-changed: "<prefix><gray>Die Clan-Farbe ist jetzt: <clan>"
+    invite-sent: "<prefix><gray>Einladung an <white><target></white> gesendet. Sie verfällt in <seconds> Sekunden."
+    invited: "<prefix><white><inviter></white><gray> lädt dich in den Clan <clan> ein. <click:run_command:'/clan annehmen <clan_name>'><hover:show_text:'<green>Beitreten'><green>[Annehmen]</green></hover></click> <click:run_command:'/clan ablehnen <clan_name>'><hover:show_text:'<red>Ablehnen'><red>[Ablehnen]</red></hover></click>"
+    invite-not-found: "<prefix><red>Keine offene Clan-Einladung."
+    target-in-clan: "<prefix><red><target> ist schon in einem Clan."
+    clan-full: "<prefix><red>Der Clan <clan> ist voll."
+    joined: "<prefix><green><target> ist dem Clan <clan> beigetreten."
+    declined: "<prefix><gray>Einladung von <clan> abgelehnt."
+    declined-clan: "<prefix><gray><target> hat die Einladung abgelehnt."
+    left: "<prefix><gray>Du hast den Clan <clan> verlassen."
+    left-clan: "<prefix><gray><target> hat den Clan verlassen."
+    leader-cannot-leave: "<prefix><red>Als Leiter musst du erst einen neuen Leiter bestimmen (<white>/clan leiter <spieler></white>) oder den Clan auflösen."
+    kicked: "<prefix><gray><target> wurde aus dem Clan geworfen."
+    kicked-target: "<prefix><red>Du wurdest aus dem Clan <clan> geworfen."
+    new-leader: "<prefix><gold><target> ist jetzt Leiter von <clan>."
+    disband-confirm: "<prefix><red>Clan wirklich auflösen? Das Clan-Konto geht an dich, die Truhe muss leer sein. <click:run_command:'/clan aufloesen bestaetigen'><hover:show_text:'<red>Endgültig auflösen'><dark_red>[Bestätigen]</dark_red></hover></click>"
+    disbanded: "<prefix><red>Der Clan <clan> wurde aufgelöst. <gray>Clan-Konto (<amount>) ging an den Leiter."
+    admin-disbanded: "<prefix><green>Clan <clan> aufgelöst."
+    chest-not-empty: "<prefix><red>Leere zuerst die Clan-Truhe."
+    info: "<dark_gray>────── <clan> <dark_gray>──────<newline><gray>Leiter: <white><leader><newline><gray>Mitglieder (<count>): <white><members><newline><gray>Clan-Konto: <gold><balance><newline><gray>Home: <white><home><newline><gray>Truhe: <white><chest>"
+    home-none: "nicht gesetzt"
+    chest-state-none: "nicht gekauft"
+    chest-state-unplaced: "gekauft, nicht aufgestellt"
+    chest-state-placed: "aufgestellt"
+    list-header: "<dark_gray>────── <gold><bold>Clans</bold></gold> <gray>(<count>)</gray> <dark_gray>──────"
+    list-entry: "<gray> <clan> <dark_gray>–</dark_gray> <white><count></white> Mitglieder, Leiter <white><leader>"
+    list-empty: "<prefix><gray>Es gibt noch keine Clans."
+    home-not-set: "<prefix><red>Euer Clan hat noch kein Home. <gray>Vorschlagen: <white>/clan home vorschlagen"
+    home-teleported: "<prefix><green>Zum Clan-Home teleportiert."
+    home-teleported-paid: "<prefix><green>Zum Clan-Home teleportiert. <dark_gray>(-<price>)"
+    teleport-failed: "<prefix><red>Teleport fehlgeschlagen."
+    vote-started: "<prefix><white><proposer></white><gray> schlägt <white><location></white> als Clan-Home vor (<minutes> Min.). <click:run_command:'/clan abstimmen ja'><hover:show_text:'<green>Dafür'><green>[Ja]</green></hover></click> <click:run_command:'/clan abstimmen nein'><hover:show_text:'<red>Dagegen'><red>[Nein]</red></hover></click>"
+    vote-running: "<prefix><red>Es läuft schon eine Abstimmung (<yes> Ja / <no> Nein)."
+    no-vote: "<prefix><red>Zurzeit läuft keine Home-Abstimmung."
+    voted-yes: "<prefix><green>Du stimmst dafür. <gray>(<yes> Ja / <no> Nein von <count>)"
+    voted-no: "<prefix><red>Du stimmst dagegen. <gray>(<yes> Ja / <no> Nein von <count>)"
+    home-set: "<prefix><green>Abgestimmt: Das Clan-Home ist jetzt bei <white><location></white>."
+    vote-failed: "<prefix><red>Abstimmung über das Home bei <location> gescheitert."
+    vote-expired: "<prefix><gray>Die Home-Abstimmung ist abgelaufen."
+    chest-bought: "<prefix><green><target> hat die Clan-Truhe für <amount> vom Clan-Konto gekauft."
+    chest-given: "<prefix><gray>Stelle die Clan-Truhe höchstens <white><distance></white> Blöcke vom Clan-Home entfernt auf."
+    chest-not-bought: "<prefix><red>Euer Clan hat noch keine Truhe gekauft."
+    chest-already-placed: "<prefix><red>Eure Clan-Truhe steht schon. Baue sie ab, um sie zu versetzen."
+    no-home: "<prefix><red>Setzt zuerst ein Clan-Home – die Truhe muss in seiner Nähe stehen."
+    chest-too-far: "<prefix><red>Zu weit vom Clan-Home entfernt."
+    chest-placed: "<prefix><green>Clan-Truhe aufgestellt. <gray>Von überall: <white>/clan truhe"
+    chest-picked-up: "<prefix><gray>Clan-Truhe abgebaut – der Inhalt bleibt erhalten."
+    chest-foreign: "<prefix><red>Diese Truhe gehört dem Clan <clan>."
+    chest-not-placed: "<prefix><red>Eure Clan-Truhe ist nicht aufgestellt."
+    chest-remote-disabled: "<prefix><red>Die Clan-Truhe lässt sich nur am Block öffnen."
+    chest-remote-paid: "<prefix><gray>Clan-Truhe aus der Ferne geöffnet. <dark_gray>(-<price>)"
+    chest-remote-no-deposit: "<prefix><red>Aus der Ferne kannst du nur entnehmen."
+    bank-balance: "<prefix><gray>Clan-Konto von <clan>: <gold><balance>"
+    bank-deposited: "<prefix><white><target></white><gray> hat <gold><amount></gold> eingezahlt. <dark_gray>(Clan-Konto: <balance>)"
+    bank-withdrawn: "<prefix><white><target></white><gray> hat <gold><amount></gold> abgehoben. <dark_gray>(Clan-Konto: <balance>)"
+    # Admin-Panel
+    admin-updated: "<prefix><green>Clan <clan> aktualisiert."
+    admin-balance-prompt: "<prefix><gray>Clan-Konto von <clan> ändern: <white>+100</white>, <white>-50</white> oder <white>=200</white>. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    admin-balance: "<prefix><green>Clan-Konto von <clan>: <gold><balance>"
+    admin-invalid-amount: "<prefix><red>Ungültiger Betrag."
+    admin-cancelled: "<prefix><gray>Eingabe abgebrochen."
+    admin-no-position: "<prefix><red>Nicht gesetzt."
 
 # ------------------------------------------------------------
 # News (/news, /news read <id>, /newsadmin – auch im Admin-Panel unter "Server")

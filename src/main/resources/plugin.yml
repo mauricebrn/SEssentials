@@ -118,6 +118,12 @@ permissions:
   sess.bounty:
     description: Erlaubt /kopfgeld (Kopfgeld aussetzen und anzeigen)
     default: true
+  sess.clan:
+    description: Erlaubt /clan (gründen, beitreten, Home, Truhe, Clan-Konto)
+    default: true
+  sess.clan.admin:
+    description: Erlaubt /clan admin aufloesen, die Clan-Verwaltung im Admin-Panel und das Abbauen fremder Clan-Truhen
+    default: op
   sess.bounty.admin:
     description: Erlaubt /kopfgeld entfernen und die Kopfgeld-Verwaltung im Admin-Panel
     default: op
