@@ -194,7 +194,7 @@ permissions:
     description: Erlaubt /gluecksrad
     default: true
   sess.gamble.admin:
-    description: Erlaubt /gluecksrad topf setzen und das Glücksrad im Admin-Panel
+    description: Erlaubt /gluecksrad topf setzen, das Glücksrad im Admin-Panel und Chancen pro Spieler im Webpanel
     default: op
   sess.chestshop.create:
     description: Chestshops erstellen

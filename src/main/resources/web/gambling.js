@@ -149,7 +149,87 @@ async function load() {
   }
 }
 
+// ------------------------------------------------------------
+// Chancen pro Spieler (nur mit sess.gamble.admin)
+// ------------------------------------------------------------
+
+const odds = { player: null, segments: [] };
+
+function oddsStatus(text, bad = false) {
+  const p = document.getElementById("odds-status");
+  p.textContent = text;
+  p.className = bad ? "down" : "muted";
+}
+
+async function oddsRequest(url, body) {
+  const res = await fetch(url, body ? {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "X-SEssentials": "1" },
+    body: JSON.stringify(body),
+  } : { credentials: "same-origin", cache: "no-store" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Fehler ${res.status}`);
+  return data;
+}
+
+function renderOdds(data) {
+  odds.player = data.player;
+  odds.segments = data.segments;
+  const inputs = data.segments.map(s => el("input", { type: "number", min: "0", step: "1", value: String(s.weight), "aria-label": multi(s.multiplier, s.jackpot) }));
+  const shares = data.segments.map(() => el("span"));
+  const update = () => {
+    const total = inputs.reduce((a, i) => a + Math.max(0, Number(i.value) || 0), 0);
+    inputs.forEach((i, n) => { shares[n].textContent = total > 0 ? pf.format(Math.max(0, Number(i.value) || 0) / total) : "–"; });
+  };
+  inputs.forEach(i => i.addEventListener("input", update));
+  update();
+  const defTotal = data.segments.reduce((a, s) => a + s.defaultWeight, 0);
+  const save = el("button", { class: "button", type: "button" }, "Speichern");
+  const reset = el("button", { class: "button", type: "button" }, "Auf Standard zurücksetzen");
+  save.addEventListener("click", async () => {
+    const weights = {};
+    data.segments.forEach((s, n) => { weights[s.key] = Math.trunc(Number(inputs[n].value) || 0); });
+    try {
+      renderOdds(await oddsRequest("/api/gambling/odds", { player: odds.player, weights }));
+      oddsStatus(`Gespeichert für ${odds.player}.`);
+    } catch (e) { oddsStatus(e.message, true); }
+  });
+  reset.addEventListener("click", async () => {
+    try {
+      renderOdds(await oddsRequest("/api/gambling/odds", { player: odds.player, reset: true }));
+      oddsStatus(`${odds.player} nutzt wieder die Standard-Chancen.`);
+    } catch (e) { oddsStatus(e.message, true); }
+  });
+  replace("odds-editor", el("div", {},
+    el("p", {}, data.player, el("span", { class: "badge" }, data.custom ? "eigene Chancen" : "Standard")),
+    table(["Feld", "Standard", "Gewicht", "Chance"],
+      data.segments.map((s, n) => [multi(s.multiplier, s.jackpot), pf.format(s.defaultWeight / defTotal), inputs[n], shares[n]]),
+      [1, 2, 3]),
+    el("div", { class: "filter-row actions" }, save, reset)));
+}
+
+async function loadOdds() {
+  const name = document.getElementById("odds-player").value.trim();
+  if (!name) return;
+  try {
+    renderOdds(await oddsRequest(`/api/gambling/odds?player=${encodeURIComponent(name)}`));
+    oddsStatus("");
+  } catch (e) { oddsStatus(e.message, true); }
+}
+
+async function initOdds() {
+  document.getElementById("odds-card").hidden = false;
+  document.getElementById("odds-load").addEventListener("click", loadOdds);
+  document.getElementById("odds-player").addEventListener("keydown", e => { if (e.key === "Enter") loadOdds(); });
+  try {
+    const names = await oddsRequest("/api/gambling/odds/players");
+    document.getElementById("odds-players").replaceChildren(...names.map(n => el("option", { value: n })));
+  } catch (e) { oddsStatus(e.message, true); }
+}
+
 fetch("/api/me", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).then(me => {
+  if (me && me.gamblingAdmin) initOdds();
   if (me && me.creativeLog) document.getElementById("nav-creativelog").hidden = false;
   if (me && me.gambling && document.getElementById("nav-gambling")) document.getElementById("nav-gambling").hidden = false;
   if (me && me.fairplay) document.getElementById("nav-fairplay").hidden = false;

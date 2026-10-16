@@ -419,7 +419,7 @@ gambling:
     item: DIAMOND     # nur bei type: item
   # Felder des Rads: multiplier = Gewinn als Vielfaches des Einsatzes (0 = verloren),
   # jackpot: true = Gewinn ist der ganze Topf (danach ist der Topf leer),
-  # weight = Gewichtung; Wahrscheinlichkeit = weight / Summe aller weights (hier 100 = Prozent)
+  # weight = Gewichtung; Wahrscheinlichkeit = weight / Summe aller weights (hier 100 = Prozent) – Standard für alle Spieler
   segments:
     - {multiplier: 0, weight: 44}
     - {multiplier: 0.5, weight: 20}
@@ -429,6 +429,17 @@ gambling:
     - {multiplier: 5, weight: 2}
     - {multiplier: 10, weight: 1}
     - {jackpot: true, weight: 1}
+  # Spieler sehen keine Chancen. Eigene Gewichte pro Spieler: Webpanel → Glücksrad (Recht sess.gamble.admin).
+  # Anlauf: Felder ab high-multiplier und der Jackpot haben zu Beginn einer Sitzung nur min-factor ihrer
+  # Gewichtung und erreichen die volle erst nach full-after-spins Drehungen UND full-after-staked Einsatz.
+  # Eine Sitzung endet nach session-timeout-minutes ohne Drehung oder beim Verlassen des Servers.
+  warmup:
+    enabled: true
+    high-multiplier: 2
+    min-factor: 0.25
+    full-after-spins: 10
+    full-after-staked: 1000
+    session-timeout-minutes: 30
   messages:
     won: "<prefix><green>Das Rad bleibt auf <white><multiplier></white> stehen – du bekommst <gold><amount></gold>. <dark_gray>(Einsatz <stake>)"
     jackpot: "<prefix><light_purple><bold>JACKPOT!</bold></light_purple> <green>Du gewinnst den ganzen Topf: <gold><amount></gold>."

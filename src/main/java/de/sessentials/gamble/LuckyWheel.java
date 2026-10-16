@@ -64,12 +64,19 @@ public final class LuckyWheel {
     private final Set<UUID> spinning = new HashSet<>();
     private volatile Settings settings;
     private final GambleStats stats;
+    private final GambleOdds odds;
 
     public LuckyWheel(SEssentials plugin) {
         this.plugin = plugin;
         this.bank = plugin.bank();
         this.stats = new GambleStats(plugin);
+        this.odds = new GambleOdds(plugin);
         reload();
+    }
+
+    /** Gewichte pro Spieler (Webpanel) und Anlauf-Dämpfung; als Listener anmelden. */
+    public GambleOdds odds() {
+        return odds;
     }
 
     public void reload() {
@@ -113,6 +120,7 @@ public final class LuckyWheel {
 
     public void shutdown() {
         stats.shutdown();
+        odds.shutdown();
     }
 
     // ------------------------------------------------------------
@@ -170,8 +178,8 @@ public final class LuckyWheel {
                 continue;
             }
             Segment seg = s.segments().get(Math.floorMod(offset + i - STRIP_CENTER, n));
+            // Chancen bekommen Spieler bewusst nicht zu sehen (sie hängen vom Spieler und der Sitzung ab)
             menu.set(STRIP_START + i, Menu.icon(material(seg, s), Component.text(multiplier(seg), color(seg), TextDecoration.BOLD),
-                    line("Chance", percent(seg.weight(), s.totalWeight())),
                     line("Gewinn", seg.jackpot() ? "der ganze Topf (" + bank.format(bank.pot() + stake) + ")"
                             : bank.format(win(stake, seg.multiplier())))), p -> {});
         }
@@ -224,6 +232,7 @@ public final class LuckyWheel {
                 : plugin.text().render("<white><price>", s.fee().tags())));
         fields.add(Component.empty());
         fields.add(Component.text("Ändern in config.yml (gambling)", NamedTextColor.DARK_GRAY));
+        fields.add(Component.text("Pro Spieler: Webpanel → Glücksrad", NamedTextColor.DARK_GRAY));
         menu.set(13, Menu.icon(Material.PAPER, Component.text("Felder & Chancen", NamedTextColor.AQUA, TextDecoration.BOLD),
                 fields.toArray(Component[]::new)), p -> {});
 
@@ -283,7 +292,8 @@ public final class LuckyWheel {
             return;
         }
 
-        int index = pick(s);
+        int index = pick(odds.effectiveWeights(id, s.segments()));
+        odds.recordSpin(id, stake);
         Segment result = s.segments().get(index);
         long win = result.jackpot() ? bank.wagerJackpot(id, stake) : win(stake, result.multiplier());
         if (win < 0 || !result.jackpot() && !bank.wager(id, stake, maxWin, win)) {
@@ -322,13 +332,16 @@ public final class LuckyWheel {
         });
     }
 
-    private static int pick(Settings s) {
-        int roll = ThreadLocalRandom.current().nextInt(s.totalWeight());
-        for (int i = 0; i < s.segments().size(); i++) {
-            roll -= s.segments().get(i).weight();
+    /** Zufälliges Feld nach Gewicht; Summe muss > 0 sein (sichern Config-Prüfung und {@link GambleOdds#setCustom}). */
+    private static int pick(double[] weights) {
+        double total = 0;
+        for (double w : weights) total += w;
+        double roll = ThreadLocalRandom.current().nextDouble(total);
+        for (int i = 0; i < weights.length; i++) {
+            roll -= weights[i];
             if (roll < 0) return i;
         }
-        throw new IllegalStateException("weights");
+        return weights.length - 1;
     }
 
     // ------------------------------------------------------------

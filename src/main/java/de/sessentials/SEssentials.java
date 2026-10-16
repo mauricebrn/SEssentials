@@ -245,6 +245,7 @@ public final class SEssentials extends JavaPlugin {
         listen("tab", tab);
         listen("fake-players", fakePlayers);
         listen("upgrader", upgrader);
+        if (luckyWheel != null) listen("gambling", luckyWheel.odds());
         if (tab != null) tab.reload();
 
         registerCommands();

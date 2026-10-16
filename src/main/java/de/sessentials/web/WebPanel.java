@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import de.sessentials.SEssentials;
 import de.sessentials.creativelog.CreativeLog;
+import de.sessentials.gamble.LuckyWheel;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
@@ -34,7 +35,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 
 /**
- * Webpanel: zeigt Statistiken aus dem Admin-Panel im Browser – nur lesend.
+ * Webpanel: zeigt Statistiken aus dem Admin-Panel im Browser. Einzige Änderung: Glücksrad-Chancen pro Spieler
+ * (POST, nur mit {@code sess.gamble.admin}, Pflicht-Header gegen Cross-Site-Anfragen).
  * Login über einen Einmal-Link aus /webpanel (5 Minuten gültig), danach Sitzung per HttpOnly-Cookie.
  * Die Daten werden regelmäßig im Main-Thread als JSON-Schnappschuss gebaut; Anfragen lesen nur diesen.
  */
@@ -45,12 +47,16 @@ public final class WebPanel {
     private static final long LINK_MILLIS = 5 * 60 * 1000;
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    /** {@code creativeLog}: Recht für den CreativeLog-Viewer, festgehalten beim Erzeugen des Links. */
-    private record Login(UUID player, String name, long expires, boolean creativeLog) {}
+    /** Rechte, festgehalten beim Erzeugen des Links: CreativeLog-Viewer und Glücksrad-Chancen ändern. */
+    private record Login(UUID player, String name, long expires, boolean creativeLog, boolean gamblingAdmin) {}
+
+    /** Muss bei POST gesetzt sein – fremde Seiten können ihn ohne CORS-Freigabe nicht mitschicken. */
+    private static final String CSRF_HEADER = "X-SEssentials";
 
     private final SEssentials plugin;
     private final WebStats stats;
     private final CreativeLogApi creativeLogApi;
+    private final GamblingOddsApi gamblingOddsApi;
     /** Einmal-Token aus /webpanel → wird beim ersten Aufruf verbraucht. {@code player} ist bei der Konsole {@code null}. */
     private final Map<String, Login> pendingLinks = new ConcurrentHashMap<>();
     /** Sitzungs-ID (Cookie) → angemeldeter Admin. */
@@ -63,6 +69,7 @@ public final class WebPanel {
         this.plugin = plugin;
         this.stats = new WebStats(plugin);
         this.creativeLogApi = new CreativeLogApi(plugin);
+        this.gamblingOddsApi = new GamblingOddsApi(plugin);
     }
 
     // ------------------------------------------------------------
@@ -141,7 +148,8 @@ public final class WebPanel {
         String token = randomToken();
         pendingLinks.put(token, new Login(player != null ? player.getUniqueId() : null,
                 player != null ? player.getName() : "Konsole", now + LINK_MILLIS,
-                plugin.creativeLog() != null && (player == null || player.hasPermission(CreativeLog.PERM_VIEW))));
+                plugin.creativeLog() != null && (player == null || player.hasPermission(CreativeLog.PERM_VIEW)),
+                plugin.luckyWheel() != null && (player == null || player.hasPermission(LuckyWheel.PERM_ADMIN))));
         String url = baseUrl() + "/login?token=" + token;
         sender.sendMessage(msg("link", player, TextService.placeholder("url", url)));
         // in der Konsole ist der Link nicht klickbar – deshalb zusätzlich als Text
@@ -162,11 +170,12 @@ public final class WebPanel {
     private void handle(HttpExchange ex) throws IOException {
         try (ex) {
             securityHeaders(ex);
-            if (!"GET".equals(ex.getRequestMethod())) {
+            String path = ex.getRequestURI().getPath();
+            boolean post = "POST".equals(ex.getRequestMethod()) && path.equals("/api/gambling/odds");
+            if (!"GET".equals(ex.getRequestMethod()) && !post) {
                 send(ex, 405, "text/plain", "Method Not Allowed");
                 return;
             }
-            String path = ex.getRequestURI().getPath();
             switch (path) {
                 case "/login" -> login(ex);
                 case "/logout" -> {
@@ -198,6 +207,21 @@ public final class WebPanel {
                     } else if (path.equals("/fairplay")) resource(ex, "web/fairplay.html", "text/html");
                     else resource(ex, "web/fairplay.js", "text/javascript");
                 }
+                case "/api/gambling/odds", "/api/gambling/odds/players" -> {
+                    Login s = session(ex);
+                    if (s == null) send(ex, 401, "application/json", "{\"error\":\"unauthorized\"}");
+                    else if (plugin.luckyWheel() == null || !s.gamblingAdmin()) {
+                        send(ex, 403, "application/json", "{\"error\":\"Kein Zugriff (Recht sess.gamble.admin).\"}");
+                    } else if (post) {
+                        String type = ex.getRequestHeaders().getFirst("Content-Type");
+                        if (!"1".equals(ex.getRequestHeaders().getFirst(CSRF_HEADER)) || type == null || !type.startsWith("application/json")) {
+                            send(ex, 403, "application/json", "{\"error\":\"forbidden\"}");
+                        } else {
+                            gamblingOddsApi.post(ex, s.name());
+                        }
+                    } else if (path.endsWith("/players")) gamblingOddsApi.players(ex);
+                    else gamblingOddsApi.get(ex);
+                }
                 case "/api/stats" -> {
                     Login s = session(ex);
                     if (s == null) send(ex, 401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -212,6 +236,7 @@ public final class WebPanel {
                         me.addProperty("name", s.name());
                         me.addProperty("creativeLog", s.creativeLog());
                         me.addProperty("gambling", plugin.luckyWheel() != null);
+                        me.addProperty("gamblingAdmin", plugin.luckyWheel() != null && s.gamblingAdmin());
                         me.addProperty("fairplay", plugin.fairplay() != null);
                         send(ex, 200, "application/json", me.toString());
                     }
@@ -249,7 +274,8 @@ public final class WebPanel {
         }
         long hours = Math.max(1, plugin.getConfig().getLong("webpanel.session-hours"));
         String sid = randomToken();
-        sessions.put(sid, new Login(link.player(), link.name(), System.currentTimeMillis() + hours * 3600_000L, link.creativeLog()));
+        sessions.put(sid, new Login(link.player(), link.name(), System.currentTimeMillis() + hours * 3600_000L,
+                link.creativeLog(), link.gamblingAdmin()));
         boolean https = baseUrl().startsWith("https://");
         ex.getResponseHeaders().add("Set-Cookie", COOKIE + "=" + sid + "; Path=/; Max-Age=" + hours * 3600
                 + "; HttpOnly; SameSite=Strict" + (https ? "; Secure" : ""));

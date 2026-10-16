@@ -39,6 +39,21 @@
         <h2>Letzte Drehungen</h2>
         <div id="recent"></div>
       </article>
+
+      <article class="card wide" id="odds-card" hidden>
+        <h2>Chancen pro Spieler</h2>
+        <p class="muted">Eigene Gewichte für einen Spieler. Spieler sehen keine Chancen. Zusätzlich gilt der Anlauf aus
+          <code>gambling.warmup</code>: hohe Gewinne sind zu Beginn einer Sitzung und bei wenig Einsatz seltener.</p>
+        <div class="filter-row actions">
+          <label class="grow">Spieler
+            <input id="odds-player" list="odds-players" autocomplete="off" placeholder="Name">
+          </label>
+          <datalist id="odds-players"></datalist>
+          <button class="button" id="odds-load" type="button">Laden</button>
+        </div>
+        <div id="odds-editor"></div>
+        <p class="muted" id="odds-status"></p>
+      </article>
     </section>
   </main>
 </body>

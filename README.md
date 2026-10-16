@@ -390,7 +390,7 @@ Genutzt wird jeweils die erste geladene Welt der Dimension (Standard: `world`, `
 Texte unter `dimensions.messages`.
 
 ## Webpanel
-Zeigt Statistiken aus dem Admin-Panel im Browser – nur lesend: Online-Spieler (mit Vanish-Markierung, Ping, Kontostand),
+Zeigt Statistiken aus dem Admin-Panel im Browser – lesend bis auf die Glücksrad-Chancen (siehe unten): Online-Spieler (mit Vanish-Markierung, Ping, Kontostand),
 TPS/MSPT/Laufzeit, offene Reports, aktive Strafen, Taler im Umlauf, reichste Spieler, Item-Tracker-Bestände mit
 7-Tage-Trend und Wert-Verlauf als Diagramm sowie aktive News. Aktualisiert sich alle 30 Sekunden; IP-Adressen werden nie gezeigt.
 
@@ -400,6 +400,12 @@ Interaktion, Kampf, Befehle; mit Trefferzahl je Art), Volltext (z.B. `DIAMOND`, 
 Neueste zuerst, 100 pro Seite mit „Mehr laden“, Suchtreffer hervorgehoben, Klick auf einen Namen filtert nach diesem Spieler.
 Die Filter stehen in der Adresse (als Link teilbar); **CSV-Export** der gefilterten Einträge (bis 50.000 Zeilen).
 Das Recht wird beim Erzeugen des Login-Links festgehalten.
+
+**Glücksrad-Chancen pro Spieler** (Seite „Glücksrad“, nur mit `sess.gamble.admin`): Spieler auswählen, Gewicht je Feld
+ändern (die Chance wird live angezeigt), speichern oder auf den Standard aus `gambling.segments` zurücksetzen. Gespeichert in
+`gambling-odds.yml`, jede Änderung steht im Server-Log. Spieler sehen im `/gluecksrad`-Menü keine Chancen mehr.
+Zusätzlich dämpft `gambling.warmup` hohe Gewinne (ab `high-multiplier` und den Jackpot) zu Beginn einer Sitzung und bei
+wenig Einsatz: anfangs `min-factor` ihrer Gewichtung, voll erst nach `full-after-spins` Drehungen und `full-after-staked` Einsatz.
 
 **Login:** Im Spiel `/webpanel` (Recht `sess.webpanel`) – es kommt ein persönlicher Link, 5 Minuten gültig und nur einmal
 verwendbar. Auch in der Server-Konsole möglich; der Link erscheint dann dort. Danach bleibt man `session-hours` angemeldet (HttpOnly-Cookie). `/webpanel logout` beendet alle eigenen Sitzungen;
