@@ -40,8 +40,9 @@ public final class ClanManager {
     private final Map<String, Clan> byName = new HashMap<>();
     /** Spieler → Clan; concurrent, weil der Chat-Tag asynchron liest. */
     private final Map<UUID, Clan> byMember = new ConcurrentHashMap<>();
-    /** Priorität, mit der Clan-Prefixe zuletzt in LuckPerms gesetzt wurden (-1 = noch nie). */
-    private int appliedPrefixPriority = -1;
+    /** Art ("prefix"/"suffix") und Priorität, mit der Clan-Tags zuletzt in LuckPerms gesetzt wurden ({@code null}/-1 = noch nie). */
+    private String appliedTagType;
+    private int appliedTagPriority = -1;
 
     public ClanManager(SEssentials plugin) {
         this.plugin = plugin;
@@ -164,13 +165,18 @@ public final class ClanManager {
         save();
     }
 
-    int appliedPrefixPriority() {
-        return appliedPrefixPriority;
+    String appliedTagType() {
+        return appliedTagType;
     }
 
-    void setAppliedPrefixPriority(int priority) {
-        if (appliedPrefixPriority == priority) return;
-        appliedPrefixPriority = priority;
+    int appliedTagPriority() {
+        return appliedTagPriority;
+    }
+
+    void setAppliedTag(String type, int priority) {
+        if (type.equals(appliedTagType) && appliedTagPriority == priority) return;
+        appliedTagType = type;
+        appliedTagPriority = priority;
         save();
     }
 
@@ -240,7 +246,14 @@ public final class ClanManager {
 
     private void load() {
         YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
-        appliedPrefixPriority = data.getInt("luckperms-prefix-priority", -1);
+        if (data.isSet("luckperms-tag.type")) {
+            appliedTagType = data.getString("luckperms-tag.type");
+            appliedTagPriority = data.getInt("luckperms-tag.priority", -1);
+        } else if (data.isSet("luckperms-prefix-priority")) {
+            // aus der Version mit Clan-Prefix: dort gesetzte Prefixe beim nächsten Abgleich entfernen
+            appliedTagType = "prefix";
+            appliedTagPriority = data.getInt("luckperms-prefix-priority", -1);
+        }
         ConfigurationSection root = data.getConfigurationSection("clans");
         if (root == null) return;
         for (String key : root.getKeys(false)) {
@@ -272,7 +285,10 @@ public final class ClanManager {
     /** Schnappschuss im Main-Thread (auch die Truhen), Schreiben asynchron. */
     void save() {
         YamlConfiguration yml = new YamlConfiguration();
-        yml.set("luckperms-prefix-priority", appliedPrefixPriority);
+        if (appliedTagType != null) {
+            yml.set("luckperms-tag.type", appliedTagType);
+            yml.set("luckperms-tag.priority", appliedTagPriority);
+        }
         for (Clan clan : byName.values()) {
             String p = "clans." + clan.name.toLowerCase(Locale.ROOT) + ".";
             yml.set(p + "name", clan.name);

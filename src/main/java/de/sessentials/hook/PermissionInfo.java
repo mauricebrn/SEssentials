@@ -21,16 +21,17 @@ public interface PermissionInfo {
      */
     default void loadUser(UUID id, String name) {}
 
-    /** {@code true}, wenn {@link #setOwnPrefix} Prefixe im Rechte-Plugin speichern kann. */
-    default boolean supportsOwnPrefix() {
+    /** {@code true}, wenn {@link #setOwnTag} Prefixe/Suffixe im Rechte-Plugin speichern kann. */
+    default boolean supportsOwnTag() {
         return false;
     }
 
     /**
-     * Setzt einen eigenen Prefix direkt am Spieler (auch offline): entfernt seine Prefixe mit {@code priority} und
-     * {@code oldPriority} und setzt {@code value} mit {@code priority} ({@code null} = nur entfernen). Läuft asynchron.
+     * Setzt einen eigenen Prefix ({@code suffix = false}) bzw. Suffix direkt am Spieler (auch offline). Vorher werden
+     * seine Einträge dieser Art mit {@code priority} entfernt und die der zuletzt genutzten Art ({@code oldSuffix})
+     * mit {@code oldPriority}. {@code value == null} = nur entfernen. Läuft asynchron.
      */
-    default void setOwnPrefix(UUID player, int priority, int oldPriority, String value) {}
+    default void setOwnTag(UUID player, boolean suffix, int priority, String value, boolean oldSuffix, int oldPriority) {}
 
     PermissionInfo NONE = new PermissionInfo() {
         @Override public String prefix(Player player) { return ""; }

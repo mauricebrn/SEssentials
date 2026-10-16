@@ -6,6 +6,7 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.PrefixNode;
+import net.luckperms.api.node.types.SuffixNode;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -41,19 +42,25 @@ public final class LuckPermsHook implements PermissionInfo {
     }
 
     @Override
-    public boolean supportsOwnPrefix() {
+    public boolean supportsOwnTag() {
         return true;
     }
 
     @Override
-    public void setOwnPrefix(UUID player, int priority, int oldPriority, String value) {
+    public void setOwnTag(UUID player, boolean suffix, int priority, String value, boolean oldSuffix, int oldPriority) {
         api.getUserManager().modifyUser(player, user -> {
-            user.data().clear(NodeType.PREFIX.predicate(n -> n.getPriority() == priority || n.getPriority() == oldPriority));
-            if (value != null) user.data().add(PrefixNode.builder(value, priority).build());
+            clear(user, oldSuffix, oldPriority);
+            clear(user, suffix, priority);
+            if (value != null) user.data().add(suffix ? SuffixNode.builder(value, priority).build() : PrefixNode.builder(value, priority).build());
         }).exceptionally(e -> {
-            log.log(Level.WARNING, "LuckPerms-Prefix für " + player + " nicht gesetzt", e);
+            log.log(Level.WARNING, "LuckPerms-" + (suffix ? "Suffix" : "Prefix") + " für " + player + " nicht gesetzt", e);
             return null;
         });
+    }
+
+    private static void clear(User user, boolean suffix, int priority) {
+        if (suffix) user.data().clear(NodeType.SUFFIX.predicate(n -> n.getPriority() == priority));
+        else user.data().clear(NodeType.PREFIX.predicate(n -> n.getPriority() == priority));
     }
 
     private CachedMetaData meta(Player player) {

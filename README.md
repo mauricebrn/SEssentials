@@ -90,7 +90,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/balance [spieler]` | – | Kontostand (Aliase `/bal`, `/money`, `/geld`, `/kontostand`) |
 | `/pay <spieler> <betrag>` | `sess.bank.pay` | Geld überweisen (Alias `/zahlen`) |
 | `/kopfgeld [<spieler> <betrag>]` | `sess.bounty` | Kopfgeld vom Konto aussetzen; ohne Argumente die höchsten anzeigen (Alias `/bounty`). Der Töter (nicht der Aussetzende) bekommt Kopfgeld und Inventar. Laufzeit über `bounty.max-duration` (0 = unbegrenzt) |
-| `/clan erstellen <name> <farbe>` | `sess.clan` | Clan gründen (kostet `clans.create-cost`); `/clan farbe` ändert die Farbe. Der Clan-Tag wird als LuckPerms-Prefix gesetzt (`clans.luckperms-prefix`; für Rang + Tag LuckPerms-Meta-Stacking `["highest_own", "highest_inherited"]`) |
+| `/clan erstellen <name> <farbe>` | `sess.clan` | Clan gründen (kostet `clans.create-cost`); `/clan farbe` ändert die Farbe. Der Clan-Tag wird als LuckPerms-Suffix gesetzt (`clans.luckperms-tag`, `type: prefix` möglich; für Gruppen-Suffix + Tag LuckPerms-Meta-Stacking `["highest_own", "highest_inherited"]`) |
 | `/clan einladen\|kicken\|leiter <spieler>` | `sess.clan` | Mitglieder verwalten; `/clan annehmen\|ablehnen [clan]`, `/clan verlassen`, `/clan aufloesen` |
 | `/clan info [clan]`, `/clan liste` | `sess.clan` | Clan-Infos bzw. alle Clans |
 | `/clan home [vorschlagen]` | `sess.clan` | Zum Clan-Home (kostet `clans.home.cost`) bzw. aktuellen Ort zur Abstimmung stellen; `/clan abstimmen ja\|nein` |

@@ -633,17 +633,18 @@ clans:
   invite-expire-seconds: 120
   # Erlaubte Farben für /clan erstellen und /clan farbe (Minecraft-Farbnamen)
   colors: [red, dark_red, gold, yellow, green, dark_green, aqua, dark_aqua, blue, dark_blue, light_purple, dark_purple, white, gray]
-  # Clan-Tag für <clan>; <name> = farbiger Clan-Name. Bleibt leer, solange luckperms-prefix aktiv ist
-  # (der Tag kommt dann über <lp_prefix>, sonst stünde er doppelt da).
+  # Clan-Tag für <clan>; <name> = farbiger Clan-Name. Bleibt leer, solange luckperms-tag aktiv ist
+  # (der Tag kommt dann über <lp_suffix> bzw. <lp_prefix>, sonst stünde er doppelt da).
   tag-format: "<dark_gray>[<name><dark_gray>]</dark_gray> "
-  # Clan-Tag als echter LuckPerms-Prefix direkt am Spieler – sichtbar für alle Plugins, die LuckPerms-Prefixe lesen.
-  # Wird beim Beitreten/Verlassen/Auflösen, Farbwechsel und Join aktualisiert. Ohne LuckPerms ohne Wirkung.
-  # LuckPerms zeigt ohne Meta-Stacking nur den Prefix mit der höchsten Priorität. Damit Clan-Tag UND Rang erscheinen,
-  # in der LuckPerms-config.yml: meta-formatting → prefix → format: ["highest_own", "highest_inherited"]
-  luckperms-prefix:
+  # Clan-Tag als echter LuckPerms-Suffix (oder -Prefix) direkt am Spieler – sichtbar für alle Plugins, die LuckPerms lesen.
+  # Wird beim Beitreten/Verlassen/Auflösen, Farbwechsel, Join und Reload aktualisiert. Ohne LuckPerms ohne Wirkung.
+  # LuckPerms zeigt ohne Meta-Stacking nur den Eintrag mit der höchsten Priorität. Damit Clan-Tag UND Gruppen-Suffix
+  # erscheinen, in der LuckPerms-config.yml: meta-formatting → suffix → format: ["highest_own", "highest_inherited"]
+  luckperms-tag:
     enabled: true
-    priority: 1000            # für den Clan-Prefix reserviert – SEssentials entfernt alle Prefixe des Spielers mit dieser Priorität
-    format: "&8[<color><name>&8] "   # & -Farbcodes; <color> = Clan-Farbe, <name> = Clan-Name
+    type: suffix              # suffix oder prefix; beim Wechsel räumt SEssentials die alten Einträge ab
+    priority: 1000            # reserviert – SEssentials entfernt alle Einträge dieser Art mit dieser Priorität
+    format: " &8[<color><name>&8]"   # & -Farbcodes; <color> = Clan-Farbe, <name> = Clan-Name
   # true = nur der Leiter darf das, false = alle Mitglieder (kicken, Leiter, Farbe, Auflösen: immer nur der Leiter)
   leader-only:
     invite: true
