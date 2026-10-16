@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import de.sessentials.SEssentials;
 import de.sessentials.bank.BankManager;
+import de.sessentials.fairplay.FairplayManager;
 import de.sessentials.gamble.GambleStats;
 import de.sessentials.gamble.LuckyWheel;
 import de.sessentials.news.NewsManager;
@@ -18,9 +19,11 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Baut den Statistik-Schnappschuss für das Webpanel – nur lesend, im Main-Thread.
@@ -45,6 +48,7 @@ final class WebStats {
         root.add("economy", economy());
         root.add("news", news());
         if (plugin.luckyWheel() != null) root.add("gambling", gambling());
+        if (plugin.fairplay() != null) root.add("fairplay", fairplay());
         return root;
     }
 
@@ -164,6 +168,58 @@ final class WebStats {
             series.add(j);
         }
         o.add("valueHistory", series);
+        return o;
+    }
+
+    /** Rangliste, Einstellungen und Verstöße der letzten Zeit (ohne IPs). */
+    private JsonObject fairplay() {
+        FairplayManager fp = plugin.fairplay();
+        var cfg = plugin.getConfig();
+        JsonObject o = new JsonObject();
+        o.addProperty("startScore", fp.startScore());
+        o.addProperty("strikeThreshold", cfg.getInt("fairplay.strike-threshold"));
+        o.addProperty("strikesForPunishment", cfg.getInt("fairplay.strikes-for-punishment"));
+        o.addProperty("strikeExpireDays", cfg.getLong("fairplay.strike-expire-days"));
+        o.addProperty("punishmentTemplate", cfg.getString("fairplay.punishment-template", ""));
+
+        long weekAgo = System.currentTimeMillis() - WEEK;
+        JsonArray players = new JsonArray();
+        JsonArray recent = new JsonArray();
+        List<JsonObject> violations = new ArrayList<>();
+        Map<String, Integer> byType = new TreeMap<>();
+        long finesWeek = 0;
+        for (FairplayManager.Standing s : fp.standings()) {
+            JsonObject j = new JsonObject();
+            j.addProperty("rank", s.rank());
+            j.addProperty("name", s.name());
+            j.addProperty("uuid", s.id().toString());
+            j.addProperty("score", s.score());
+            j.addProperty("strikes", s.strikes());
+            j.addProperty("violations", s.history().size());
+            players.add(j);
+            for (FairplayManager.Violation v : s.history()) {
+                JsonObject vj = new JsonObject();
+                vj.addProperty("time", v.time());
+                vj.addProperty("name", s.name());
+                vj.addProperty("type", fp.violationName(v.type()));
+                vj.addProperty("points", v.points());
+                vj.addProperty("fine", v.fine());
+                violations.add(vj);
+                if (v.time() >= weekAgo) {
+                    byType.merge(fp.violationName(v.type()), 1, Integer::sum);
+                    finesWeek += v.fine();
+                }
+            }
+        }
+        violations.sort(Comparator.comparingLong((JsonObject j) -> j.get("time").getAsLong()).reversed());
+        violations.stream().limit(50).forEach(recent::add);
+        JsonObject week = new JsonObject();
+        byType.forEach(week::addProperty);
+        o.add("players", players);
+        o.add("recent", recent);
+        o.add("weekByType", week);
+        o.addProperty("finesWeek", finesWeek);
+        o.addProperty("strikeFine", cfg.getLong("fairplay.strike-fine"));
         return o;
     }
 

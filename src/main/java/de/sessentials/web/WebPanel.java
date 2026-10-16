@@ -189,6 +189,15 @@ public final class WebPanel {
                     } else if (path.equals("/gambling")) resource(ex, "web/gambling.html", "text/html");
                     else resource(ex, "web/gambling.js", "text/javascript");
                 }
+                case "/fairplay", "/fairplay.js" -> {
+                    if (plugin.fairplay() == null) {
+                        send(ex, 404, "text/plain", "Fairplay ist ausgeschaltet.");
+                    } else if (session(ex) == null) {
+                        if (path.equals("/fairplay")) resource(ex, "web/login.html", "text/html");
+                        else send(ex, 401, "text/plain", "Unauthorized");
+                    } else if (path.equals("/fairplay")) resource(ex, "web/fairplay.html", "text/html");
+                    else resource(ex, "web/fairplay.js", "text/javascript");
+                }
                 case "/api/stats" -> {
                     Login s = session(ex);
                     if (s == null) send(ex, 401, "application/json", "{\"error\":\"unauthorized\"}");
@@ -203,6 +212,7 @@ public final class WebPanel {
                         me.addProperty("name", s.name());
                         me.addProperty("creativeLog", s.creativeLog());
                         me.addProperty("gambling", plugin.luckyWheel() != null);
+                        me.addProperty("fairplay", plugin.fairplay() != null);
                         send(ex, 200, "application/json", me.toString());
                     }
                 }

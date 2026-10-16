@@ -148,6 +148,18 @@ permissions:
   sess.creativelog.bypass:
     description: Wird im Kreativmodus nicht protokolliert
     default: false
+  sess.fairplay:
+    description: Erlaubt /fairplay (eigene Punkte, andere Spieler, Rangliste)
+    default: true
+  sess.fairplay.admin:
+    description: Erlaubt /fairplay reset, die Fairplay-Verwaltung im Admin-Panel und zeigt den Verstoß-Verlauf in /fairplay <spieler>
+    default: op
+  sess.fairplay.notify:
+    description: Bekommt Meldungen über Fairplay-Verstöße und Strikes
+    default: op
+  sess.fairplay.exempt:
+    description: Bekommt keine Fairplay-Verstöße
+    default: false
   sess.punish.ban:
     description: /ban, /unban und Ban-Vorlagen
     default: op

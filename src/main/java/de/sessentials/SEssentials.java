@@ -23,6 +23,9 @@ import de.sessentials.chestshop.ShopCreatorMenu;
 import de.sessentials.creativelog.CreativeLog;
 import de.sessentials.creativelog.CreativeLogMenu;
 import de.sessentials.detector.ClientDetector;
+import de.sessentials.fairplay.FairplayListener;
+import de.sessentials.fairplay.FairplayManager;
+import de.sessentials.fairplay.FairplayMenu;
 import de.sessentials.dimension.DimensionCommands;
 import de.sessentials.fakeplayer.FakePlayerManager;
 import de.sessentials.gamble.LuckyWheel;
@@ -122,6 +125,8 @@ public final class SEssentials extends JavaPlugin {
     private CreativeLogMenu creativeLogMenu;
     private PunishmentManager punishments;
     private PunishCommands punishCommands;
+    private FairplayManager fairplay;
+    private FairplayMenu fairplayMenu;
     private PunishmentMenu punishmentMenu;
     private WebPanel webPanel;
     private MessageCommands messages;
@@ -206,6 +211,8 @@ public final class SEssentials extends JavaPlugin {
         punishments = new PunishmentManager(this);
         punishCommands = new PunishCommands(this, punishments);
         punishmentMenu = new PunishmentMenu(this, punishments, punishCommands);
+        fairplay = modules.on("fairplay") ? new FairplayManager(this) : null;
+        fairplayMenu = fairplay != null ? new FairplayMenu(this, fairplay) : null;
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -222,6 +229,7 @@ public final class SEssentials extends JavaPlugin {
         listen("itemguard", itemGuard);
         listen("creativelog", creativeLog);
         listen("punishments", punishments);
+        if (fairplay != null) listen("fairplay", new FairplayListener(this, fairplay));
         listen("spawn", spawn);
         listen("tpa", tpa);
         listen("news", news);
@@ -264,6 +272,7 @@ public final class SEssentials extends JavaPlugin {
         if (vanish != null) vanish.shutdown();
         if (tracker != null) tracker.shutdown();
         if (creativeLog != null) creativeLog.shutdown();
+        if (fairplay != null) fairplay.shutdown();
         if (punishments != null) punishments.shutdown();
         if (chestShops != null) chestShops.shutdown();
         if (bounties != null) bounties.shutdown();
@@ -372,6 +381,16 @@ public final class SEssentials extends JavaPlugin {
         return softRestart;
     }
 
+    /** {@code null}, wenn das Modul aus ist. */
+    public FairplayManager fairplay() {
+        return fairplay;
+    }
+
+    /** Strafen vergeben, auch automatisch (Fairplay). */
+    public PunishCommands punishCommands() {
+        return punishCommands;
+    }
+
     public PunishmentManager punishments() {
         return punishments;
     }
@@ -436,6 +455,13 @@ public final class SEssentials extends JavaPlugin {
                             Component.text("Aktiv: " + punishments.active().size(), NamedTextColor.GRAY),
                             Component.text("Bans, Mutes, IP-Bans", NamedTextColor.GRAY)),
                     punishmentMenu::open);
+        }
+        if (fairplayMenu != null) {
+            adminPanel.addApp(Category.MODERATION, FairplayMenu.PERM,
+                    p -> Menu.icon(Material.GOLDEN_HELMET, Component.text("Fairplay", NamedTextColor.GOLD),
+                            Component.text("Spieler mit Strikes: " + fairplay.standings().stream().filter(s -> s.strikes() > 0).count(), NamedTextColor.GRAY),
+                            Component.text("Rangliste, Verlauf, Strikes", NamedTextColor.GRAY)),
+                    fairplayMenu::openList);
         }
         if (modules.on("vanish")) {
             adminPanel.addApp(Category.MODERATION, "sess.vanish",
@@ -737,6 +763,7 @@ public final class SEssentials extends JavaPlugin {
             if (modules.on("messages")) messages.register(commands);
             if (modules.on("spy")) notifications.register(commands);
             if (modules.on("punishments")) punishCommands.register(commands);
+            if (fairplay != null) fairplay.register(commands);
             if (modules.on("news")) news.register(commands);
             if (modules.on("bank")) bankCommands.register(commands);
             // Module, die es nur gibt, wenn sie an sind

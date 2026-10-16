@@ -66,12 +66,13 @@ public final class PunishCommands {
             duration = Durations.parse(first);
             reason = reason.length() > first.length() ? reason.substring(first.length()).trim() : NO_REASON;
         }
-        apply(sender, type, targetArg, reason, duration, template);
+        apply(sender, null, type, targetArg, reason, duration, template);
     }
 
-    private void apply(CommandSender sender, Type type, String targetArg, String reason, Duration duration, String template) {
+    /** {@code actorName} = Name im Verlauf; {@code null} = Absender bzw. "Konsole". */
+    private void apply(CommandSender sender, String actorName, Type type, String targetArg, String reason, Duration duration, String template) {
         Player self = sender instanceof Player p ? p : null;
-        String actor = self != null ? self.getName() : "Konsole";
+        String actor = actorName != null ? actorName : self != null ? self.getName() : "Konsole";
         String ip = null;
         OfflinePlayer target = null;
 
@@ -127,7 +128,16 @@ public final class PunishCommands {
     // Vorlagen
     // ------------------------------------------------------------
 
+    /** Automatische Strafe nach Vorlage (z.B. vom Fairplay-System) – als Konsole, im Verlauf unter {@code actor}. */
+    public void punishAutomatic(String targetName, String templateId, String actor) {
+        punishTemplate(Bukkit.getConsoleSender(), actor, targetName, templateId);
+    }
+
     private void punishTemplate(CommandSender sender, String targetArg, String id) {
+        punishTemplate(sender, null, targetArg, id);
+    }
+
+    private void punishTemplate(CommandSender sender, String actor, String targetArg, String id) {
         Player self = sender instanceof Player p ? p : null;
         ConfigurationSection t = plugin.getConfig().getConfigurationSection("punishments.templates." + id);
         Type type = t == null ? null : Type.parse(t.getString("type"));
@@ -144,7 +154,7 @@ public final class PunishCommands {
         if (duration == null && !durationText.toLowerCase(Locale.ROOT).startsWith("perm")) {
             plugin.getLogger().warning("punishments.templates." + id + ".duration '" + durationText + "' ist ungültig – permanent.");
         }
-        apply(sender, type, targetArg, t.getString("reason", NO_REASON), duration, id);
+        apply(sender, actor, type, targetArg, t.getString("reason", NO_REASON), duration, id);
     }
 
     // ------------------------------------------------------------

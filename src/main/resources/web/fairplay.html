@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fairplay – SEssentials Webpanel</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/fairplay.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>SEssentials Webpanel</h1>
+      <nav class="nav"><a href="/">Dashboard</a><a href="/gambling" id="nav-gambling" hidden>Glücksrad</a><a href="/creativelog" id="nav-creativelog" hidden>CreativeLog</a><a href="/fairplay" class="active">Fairplay</a></nav>
+      <p class="muted" id="meta">Lade Daten …</p>
+    </div>
+    <a class="button" href="/logout">Abmelden</a>
+  </header>
+  <main>
+    <section class="kpis" id="kpis"></section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Kritisch</h2>
+        <p class="muted">Spieler mit Strikes oder nahe am Strike</p>
+        <div id="critical"></div>
+      </article>
+      <article class="card">
+        <h2>Verstöße (7 Tage)</h2>
+        <div id="week"></div>
+      </article>
+
+      <article class="card wide">
+        <h2>Rangliste</h2>
+        <div id="ranking"></div>
+      </article>
+
+      <article class="card wide">
+        <h2>Letzte Verstöße</h2>
+        <div id="recent"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

@@ -22,6 +22,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Item-Tracker: wertvolle Items in Inventar und Enderchest mit Verlauf
 - News-System mit Verwaltung im Admin-Panel, Planung und Laufzeit
 - Report-System (`/report`) mit Admin-Übersicht
+- Fairplay: Punkte-Rangliste, Combat-Log, Spawn-Kill und Kill-Farming, Strikes mit automatischer Strafe
 - Strafen: Bans, Mutes, IP-Bans – frei oder per Vorlage-ID, zeitlich oder permanent
 - ItemGuard: entfernt verbotene Items und Spawn-Eier, meldet automatisch
 - CreativeLog: protokolliert Aktionen im Kreativmodus
@@ -43,7 +44,7 @@ Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus de
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan`, `sess.fairplay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -67,6 +68,8 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/mute <spieler> [dauer\|perm] [grund]` | `sess.punish.mute` | Muten: blockiert Chat und `mute-blocked-commands` |
 | `/ipban <spieler\|ip> [dauer\|perm] [grund]` | `sess.punish.ipban` | IP-Bann (aktuelle oder letzte bekannte IP) |
 | `/unban`, `/unmute`, `/unbanip <spieler>` | Recht des Typs | Strafe aufheben (`/unbanip` auch mit IP) |
+| `/fairplay [spieler]`, `/fairplay top` | `sess.fairplay` | Fairplay-Punkte, Strikes und Rang bzw. Rangliste; mit `sess.fairplay.admin` auch der Verstoß-Verlauf |
+| `/fairplay reset <spieler>` | `sess.fairplay.admin` | Punkte und Strikes zurücksetzen |
 | `/history <spieler>` | `sess.punish.history` | Strafen-Verlauf eines Spielers |
 | `/itemscan [spieler]` | `sess.itemguard.scan` | Inventare sofort nach verbotenen Items scannen (Alias `/iscan`) |
 | `/creativelog <spieler> [seite]` | `sess.creativelog.view` | Kreativ-Aktionen eines Spielers (Alias `/clog`) |
@@ -162,6 +165,26 @@ Spieler mit `sess.report.notify` bekommen jede Meldung sofort mit Sound (abschal
 Ein Klick öffnet die Details mit **Teleportieren**, **Als erledigt markieren** und **Löschen**.
 Reports liegen in `plugins/SEssentials/reports.yml`; erledigte bleiben dort mit `status: resolved` erhalten.
 Texte unter `reports.messages`, zusätzlich mit `<id>`, `<target>`, `<reporter>` und `<reason>`.
+
+## Fairplay
+Jeder Spieler hat Fairplay-Punkte (`fairplay.start-score`, Standard 100); `/fairplay top` zeigt die Rangliste.
+Verstöße kosten Punkte (`fairplay.violations`, `points: 0` schaltet einen Verstoß ab):
+
+- **Combat-Log** – Server verlassen bis `combat-tag-seconds` nach einem PvP-Treffer. Mit `combat-log-kill` stirbt der Spieler dabei (Items fallen). Kicks zählen nie, Timeouts nur mit `count-timeouts`.
+- **Spawn-Kill** – einen Spieler bis `spawn-kill.seconds` nach seinem Respawn töten.
+- **Kill-Farming** – denselben Spieler `kill-farming.kills`-mal in `kill-farming.minutes` töten.
+
+Bei `strike-threshold` Punkten oder weniger gibt es einen Strike, danach beginnt der Stand wieder beim Startwert.
+Ab `strikes-for-punishment` aktiven Strikes (sie verfallen nach `strike-expire-days`) wird automatisch die Strafvorlage
+`punishment-template` vergeben (Standard: Vorlage 8, 1 Tag Ban) – im Verlauf mit „Fairplay“ als Urheber.
+Fair spielen bringt alle `recovery.interval-minutes` `recovery.points` Punkte zurück.
+
+Geldstrafen: jeder Verstoß kann zusätzlich `fine` kosten, jeder Strike `strike-fine`. Abgezogen wird vom Bankkonto
+in den Server-Topf, höchstens bis 0 (nie ins Minus); ohne Bank-Modul gibt es keine Geldstrafen.
+
+Im Admin-Panel (Kachel „Fairplay“, Recht `sess.fairplay.admin`) gibt es die Rangliste mit Verlauf pro Spieler,
+Strike entfernen und Zurücksetzen. Das Webpanel zeigt unter „Fairplay“ Kennzahlen, auffällige Spieler, die Rangliste
+und die letzten Verstöße.
 
 ## Strafen
 Bans, Mutes und IP-Bans, zeitlich begrenzt oder permanent:

@@ -51,6 +51,7 @@ modules:
   upgrader: true         # Item-Upgrader (/upgrader)
   item-tracker: true     # Item-Tracker im Admin-Panel
   punishments: true      # /ban, /mute, /ipban, /history, …
+  fairplay: true         # Fairplay-Punkte, Combat-Log, /fairplay
   reports: true          # /report, /reports
   itemguard: true        # ItemGuard (verbotene Items)
   creativelog: true      # CreativeLog
@@ -812,6 +813,65 @@ webpanel:
     logged-out: "<prefix><gray>Alle deine Webpanel-Sitzungen wurden beendet."
 
 # ------------------------------------------------------------
+# Fairplay (/fairplay [spieler], /fairplay top, /fairplay reset <spieler>)
+# Jeder startet mit start-score Punkten. Verstöße kosten Punkte; bei strike-threshold oder weniger gibt es einen
+# Strike und der Stand beginnt wieder bei start-score. Bei strikes-for-punishment aktiven Strikes wird die
+# Strafvorlage punishment-template (siehe punishments.templates) vergeben und die Strikes verfallen.
+# Wer fair spielt, bekommt alle recovery.interval-minutes recovery.points zurück (nur online, höchstens bis start-score).
+# sess.fairplay.exempt = keine Verstöße, sess.fairplay.notify = Meldungen fürs Team. Gespeichert in fairplay.yml.
+# Platzhalter: <target>, <score>, <max>, <strikes>, <strikes_max>, <threshold>, <violation>, <points>, <fine>, <victim>, <rank>
+# ------------------------------------------------------------
+fairplay:
+  start-score: 100
+  strike-threshold: 50
+  strikes-for-punishment: 3     # 0 = nie bestrafen
+  strike-expire-days: 30        # 0 = Strikes verfallen nie
+  punishment-template: "8"      # "" = keine Strafe, nur Strikes
+  # Geldstrafen gehen vom Bankkonto in den Server-Topf – höchstens so viel, wie auf dem Konto ist (nie ins Minus)
+  strike-fine: 1000             # zusätzlich bei jedem Strike; 0 = keine
+  strike-name: "Strike"         # Anzeige im Verlauf
+  recovery:
+    interval-minutes: 30
+    points: 5
+  # Combat-Log: wer nach einem PvP-Treffer (als Angreifer oder Opfer) so lange den Server verlässt
+  combat-tag-seconds: 15        # 0 = kein Combat-Log
+  combat-log-kill: true         # Combat-Logger sterben beim Verlassen (Items fallen wie bei einem Tod)
+  count-timeouts: false         # true = auch Verbindungsabbrüche (Timeout) zählen; Kicks zählen nie
+  # Punkte und Geldstrafe pro Verstoß; points und fine beide 0 = Verstoß aus
+  violations:
+    combat-log:
+      name: "Combat-Log"
+      points: 25
+      fine: 500
+    spawn-kill:
+      name: "Spawn-Kill"
+      points: 15
+      fine: 250
+      seconds: 10               # Kill innerhalb so vieler Sekunden nach dem Respawn des Opfers
+    kill-farming:
+      name: "Kill-Farming"
+      points: 20
+      fine: 250
+      kills: 3                  # so oft denselben Spieler töten …
+      minutes: 10               # … innerhalb dieser Zeit
+  messages:
+    combat-tagged: "<prefix><red>Du bist im Kampf! <gray>Verlasse den Server nicht in den nächsten <white><seconds></white> Sekunden."
+    violation: "<prefix><red>Fairplay-Verstoß: <white><violation></white> <dark_gray>(-<points>)</dark_gray> <gray>– Stand <white><score>/<max></white>, Strike bei <threshold>."
+    violation-notify: "<prefix><gold>Fairplay</gold> <gray>» <white><target></white>: <violation> (-<points>, Geldstrafe <fine>), Stand <score>, Strikes <strikes>/<strikes_max>"
+    strike: "<prefix><dark_red><bold>Fairplay-Strike!</bold></dark_red> <gray>Du hast jetzt <white><strikes>/<strikes_max></white> Strikes – danach folgt eine Strafe."
+    strike-notify: "<prefix><gold>Fairplay</gold> <gray>» <red><target> hat einen Strike bekommen</red> (<strikes>/<strikes_max>, Geldstrafe <fine>)"
+    fined: "<prefix><red>Geldstrafe: <white><fine></white> wurden von deinem Konto abgezogen."
+    info: "<dark_gray>────── <gold><bold>Fairplay</bold></gold> <white><target></white> <dark_gray>──────<newline><gray>Punkte: <white><score>/<max></white> <dark_gray>(Strike bei <threshold>)<newline><gray>Strikes: <white><strikes>/<strikes_max><newline><gray>Rang: <white><rank>"
+    history-entry: "<dark_gray> <date></dark_gray> <red><violation></red> <gray>-<points> Punkte, -<fine>"
+    top-header: "<dark_gray>────── <gold><bold>Fairplay-Rangliste</bold></gold> <dark_gray>──────"
+    top-entry: "<gray> <rank>. <white><target></white> <dark_gray>–</dark_gray> <green><score></green> <gray>Punkte, <strikes> Strikes"
+    top-empty: "<prefix><gray>Noch keine Einträge."
+    reset: "<prefix><green>Fairplay von <white><target></white> zurückgesetzt."
+    unknown-player: "<prefix><red>Spieler <white><target></white> nicht gefunden."
+    admin-strike-removed: "<prefix><green>Ein Strike von <white><target></white> entfernt."
+    admin-no-strike: "<prefix><gray><target> hat keine aktiven Strikes."
+
+# ------------------------------------------------------------
 # Strafen: Bans, Mutes, IP-Bans – frei (/ban, /mute, /ipban <spieler> [dauer|perm] [grund])
 # oder nach Vorlage (/punish <spieler> <id>). Dauer z.B. 30m, 2h, 7d, 1d12h, 1mo, 1y; ohne Dauer = permanent.
 # Aufheben: /unban, /unmute, /unbanip; Verlauf: /history <spieler>; Admin-Panel → Moderation → Strafen.
@@ -830,6 +890,7 @@ punishments:
     "5": { type: ban, duration: 3d, reason: "Ausnutzen von Bugs" }
     "6": { type: ban, duration: permanent, reason: "Schwerer Regelverstoß" }
     "7": { type: ipban, duration: permanent, reason: "Ban-Umgehung" }
+    "8": { type: ban, duration: 1d, reason: "Wiederholt unfaires Verhalten (Fairplay)" }
   messages:
     ban-screen: "<red><bold>Du wurdest vom Server gebannt</bold></red><newline><newline><gray>Grund: <white><reason></white><newline><gray>Dauer: <white><remaining></white><newline><gray>Ablauf: <white><expires></white><newline><newline><dark_gray>ID #<id>"
     ipban-screen: "<red><bold>Deine IP wurde vom Server gebannt</bold></red><newline><newline><gray>Grund: <white><reason></white><newline><gray>Dauer: <white><remaining></white><newline><newline><dark_gray>ID #<id>"

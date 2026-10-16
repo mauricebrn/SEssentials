@@ -21,7 +21,7 @@ public final class Modules {
             "player-commands", "sudo", "enderchest", "spawn", "dimensions", "tpa",
             "messages", "mail", "spy",
             "bank", "chestshops", "bounty", "clans", "gambling", "upgrader", "item-tracker",
-            "punishments", "reports", "itemguard", "creativelog", "client-detector",
+            "punishments", "fairplay", "reports", "itemguard", "creativelog", "client-detector",
             "news", "softrestart", "auto-update", "fake-players", "webpanel");
 
     /** Modul → Module, ohne die es nicht läuft. */

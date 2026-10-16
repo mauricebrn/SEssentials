@@ -163,6 +163,7 @@ async function load() {
 fetch("/api/me", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).then(me => {
   if (me && me.creativeLog) document.getElementById("nav-creativelog").hidden = false;
   if (me && me.gambling && document.getElementById("nav-gambling")) document.getElementById("nav-gambling").hidden = false;
+  if (me && me.fairplay) document.getElementById("nav-fairplay").hidden = false;
 }).catch(() => {});
 
 load();
