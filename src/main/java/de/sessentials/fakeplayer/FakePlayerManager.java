@@ -18,6 +18,7 @@ import de.sessentials.storage.AsyncFileWriter;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -34,6 +35,8 @@ import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.BlockState;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -115,7 +118,8 @@ public final class FakePlayerManager implements Listener {
                 Math.max(1, cfg.getInt("fakeplayers.attack-cooldown-ticks", 12)),
                 Math.max(2, cfg.getDouble("fakeplayers.defense.flee-distance", 16)),
                 Math.max(1, cfg.getInt("fakeplayers.defense.flee-seconds", 10)) * 20,
-                Math.max(0, cfg.getDouble("fakeplayers.defense.flee-below-health", 6)));
+                Math.max(0, cfg.getDouble("fakeplayers.defense.flee-below-health", 6)),
+                Math.clamp(cfg.getInt("fakeplayers.mining.radius", 16), 2, 48));
     }
 
     /** Beim Deaktivieren: alle Fake-Spieler regulär abmelden (Spielerdaten werden dabei gespeichert). */
@@ -386,7 +390,7 @@ public final class FakePlayerManager implements Listener {
             Player body = b.bukkit();
             Location at = body != null ? body.getLocation() : null;
             sender.sendMessage(msg("list-entry", sender, tag("name", b.name),
-                    tag("state", body == null ? "offline" : b.ai ? b.goal.label + ", " + b.defense.label : "KI aus"),
+                    tag("state", body == null ? "offline" : b.ai ? goalLabel(b) + ", " + b.defense.label : "KI aus"),
                     tag("location", at == null ? "–" : at.getWorld().getName() + " " + at.getBlockX() + " " + at.getBlockY() + " " + at.getBlockZ())));
         }
     }
@@ -395,14 +399,22 @@ public final class FakePlayerManager implements Listener {
         b.ai = on;
         if (b.handle != null) b.clearState();
         save();
-        sender.sendMessage(msg(on ? "ai-on" : "ai-off", sender, tag("name", b.name), tag("goal", b.goal.label)));
+        sender.sendMessage(msg(on ? "ai-on" : "ai-off", sender, tag("name", b.name), tag("goal", goalLabel(b))));
     }
 
-    private void setGoal(CommandSender sender, FakePlayer b, FakePlayer.Goal goal) {
+    /** @param block Blocktyp beim Ziel {@code mine}, sonst {@code null} */
+    private void setGoal(CommandSender sender, FakePlayer b, FakePlayer.Goal goal, Material block) {
         b.goal = goal;
+        b.mineBlock = block;
         if (b.handle != null) b.clearState();
         save();
-        sender.sendMessage(msg("goal-set", sender, tag("name", b.name), tag("goal", goal.label)));
+        sender.sendMessage(msg("goal-set", sender, tag("name", b.name), tag("goal", goalLabel(b))));
+        if (!b.ai) sender.sendMessage(msg("ai-hint", sender, tag("name", b.name)));
+    }
+
+    private static String goalLabel(FakePlayer b) {
+        return b.goal == FakePlayer.Goal.MINE && b.mineBlock != null
+                ? b.goal.label + " (" + b.mineBlock.getKey().getKey() + ")" : b.goal.label;
     }
 
     private void setDefense(CommandSender sender, FakePlayer b, FakePlayer.Defense defense) {
@@ -550,8 +562,15 @@ public final class FakePlayerManager implements Listener {
 
         var goal = botArgument();
         for (FakePlayer.Goal g : FakePlayer.Goal.values()) {
-            goal.then(Commands.literal(g.key).executes(ctx -> withBot(ctx, (sender, b) -> setGoal(sender, b, g))));
+            if (g == FakePlayer.Goal.MINE) continue;
+            goal.then(Commands.literal(g.key).executes(ctx -> withBot(ctx, (sender, b) -> setGoal(sender, b, g, null))));
         }
+        goal.then(Commands.literal(FakePlayer.Goal.MINE.key)
+                .then(Commands.argument("block", ArgumentTypes.blockState()).executes(ctx -> withBot(ctx, (sender, b) -> {
+                    Material block = ctx.getArgument("block", BlockState.class).getType();
+                    if (block.isAir() || !block.isBlock()) sender.sendMessage(msg("invalid-block", sender, tag("name", b.name)));
+                    else setGoal(sender, b, FakePlayer.Goal.MINE, block);
+                }))));
         root.then(Commands.literal("goal").then(goal));
 
         var defense = botArgument();
@@ -615,6 +634,9 @@ public final class FakePlayerManager implements Listener {
                 FakePlayer.Goal goal = FakePlayer.Goal.byKey(s.getString("goal", "wander"));
                 b.goal = goal != null ? goal : FakePlayer.Goal.WANDER;
                 b.defense = orDefault(FakePlayer.Defense.byKey(s.getString("defense", "")), defaultDefense());
+                b.mineBlock = s.isString("mine-block") ? Material.matchMaterial(s.getString("mine-block")) : null;
+                // Ziel "mine" ohne (gültigen) Block: zurück auf Herumlaufen
+                if (b.goal == FakePlayer.Goal.MINE && b.mineBlock == null) b.goal = FakePlayer.Goal.WANDER;
                 b.home = s.getLocation("home");
                 // Absturz während einer Animation: OP von damals zurücknehmen
                 if (s.getBoolean("temp-op")) Bukkit.getOfflinePlayer(b.id).setOp(false);
@@ -638,6 +660,7 @@ public final class FakePlayerManager implements Listener {
             yml.set(p + "ai", b.ai);
             yml.set(p + "goal", b.goal.key);
             yml.set(p + "defense", b.defense.key);
+            if (b.mineBlock != null) yml.set(p + "mine-block", b.mineBlock.name());
             if (b.tempOp) yml.set(p + "temp-op", true);
             yml.set(p + "home", b.home);
         }

@@ -1,5 +1,7 @@
 package de.sessentials.fakeplayer;
 
+import net.minecraft.core.BlockPos;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +13,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
@@ -20,7 +24,7 @@ import java.util.function.Predicate;
  * ist Ziel von Befehlen), nur ohne Client. Die KI steuert ihn über dieselben Eingaben wie eine Tastatur:
  * vorwärts, sprinten, springen, schauen, schlagen. Keine Wegfindung – Ein-Block-Hindernisse werden
  * übersprungen, Abgründe über 3 Blöcke, Wasser und Lava gemieden.
- * Angriff ({@link Goal}): wen er von sich aus angreift. Verteidigung ({@link Defense}): was er tut, wenn ihn
+ * Ziel ({@link Goal}): herumlaufen, von sich aus angreifen oder einen Blocktyp abbauen ({@link #mineBlock}). Verteidigung ({@link Defense}): was er tut, wenn ihn
  * ein Spieler oder Mob trifft – fliehen, zurückschlagen (und bei wenig Leben fliehen) oder nichts.
  */
 final class FakePlayer {
@@ -29,7 +33,8 @@ final class FakePlayer {
         WANDER("wander", "Herumlaufen"),
         MOBS("mobs", "Mobs bekämpfen"),
         PLAYERS("players", "Spieler bekämpfen"),
-        ALL("all", "Mobs & Spieler bekämpfen");
+        ALL("all", "Mobs & Spieler bekämpfen"),
+        MINE("mine", "Abbauen");
 
         final String key;
         final String label;
@@ -79,7 +84,7 @@ final class FakePlayer {
      * @param fleeBelowHealth beim Zurückschlagen: unter diesem Leben (Herzen × 2) doch fliehen; 0 = nie
      */
     record Tuning(double wanderRadius, double aggroRange, int attackCooldown,
-                  double fleeDistance, int fleeTicks, double fleeBelowHealth) {}
+                  double fleeDistance, int fleeTicks, double fleeBelowHealth, int mineRadius) {}
 
     /** Ausweich-Richtungen beim Fliehen, wenn geradeaus versperrt ist (Grad). */
     private static final int[] FLEE_ANGLES = {0, 35, -35, 70, -70, 110, -110};
@@ -87,6 +92,9 @@ final class FakePlayer {
     private static final double REACH = 2.8;
     private static final double LOSE_TARGET_RANGE = 24;
     private static final int MAX_DROP = 3;
+    /** Reichweite beim Abbauen (Augen bis Blockmitte), wie bei Spielern im Überlebensmodus. */
+    private static final double MINE_REACH = 4.5;
+    private static final BlockFace[] FACES = {BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
 
     final String name;
     /** UUID des Spielers – stabil pro Name, damit Inventar und Position (Spielerdaten) erhalten bleiben. */
@@ -101,6 +109,8 @@ final class FakePlayer {
     boolean placeAtHome;
     boolean ai;
     Goal goal;
+    /** Blocktyp für {@link Goal#MINE}. */
+    Material mineBlock;
     Defense defense;
 
     /** Der laufende Spieler oder {@code null}, wenn offline. */
@@ -112,6 +122,13 @@ final class FakePlayer {
 
     // KI-Zustand (nur Main-Thread)
     private LivingEntity target;
+    // Abbauen: aktueller Block, Fortschritt (0–1), Ablage der Drops, unerreichbare Blöcke
+    private Block mining;
+    private double mineProgress;
+    private int mineSearchTicks, mineStuckTicks, collectTicks;
+    private double mineLastDistance = Double.MAX_VALUE;
+    private Location collectAt;
+    private final Map<Block, Integer> unreachable = new HashMap<>();
     /** Wer ihn zuletzt getroffen hat – darf zurückgeschlagen werden, egal was {@link #goal} sagt. */
     private LivingEntity attacker;
     /** Gefahr, vor der er gerade flieht. */
@@ -160,6 +177,9 @@ final class FakePlayer {
     }
 
     void clearState() {
+        cancelMining();
+        collectAt = null;
+        unreachable.clear();
         target = null;
         attacker = null;
         threat = null;
@@ -201,17 +221,172 @@ final class FakePlayer {
             threat = null;
             stop();
         }
-        if (goal != Goal.WANDER && --retargetTicks <= 0) {
+        if ((goal.mobs() || goal.players()) && --retargetTicks <= 0) {
             retargetTicks = 10;
             if (!validTarget(body, target, LOSE_TARGET_RANGE, attackable)) target = findTarget(body, t.aggroRange(), attackable);
         }
         if (target != null && validTarget(body, target, LOSE_TARGET_RANGE, attackable)) {
+            cancelMining();
             fight(body, t);
         } else {
             target = null;
-            wander(body, t);
+            if (goal == Goal.MINE && mineBlock != null) mine(body, t);
+            else wander(body, t);
         }
         if (swim) handle.setJumping(true);
+    }
+
+    // ------------------------------------------------------------
+    // Abbauen
+    // ------------------------------------------------------------
+
+    private void mine(Player body, Tuning t) {
+        // nach einem Abbau kurz zu den Drops laufen, damit er sie aufsammelt
+        if (collectAt != null && collectTicks-- > 0) {
+            Vector to = collectAt.toVector().subtract(body.getLocation().toVector()).setY(0);
+            if (to.length() > 0.6 && walk(body, to, false)) return;
+        }
+        collectAt = null;
+        // volles Inventar: nichts mehr abbauen, die Drops würden liegen bleiben
+        if (body.getInventory().firstEmpty() < 0) {
+            cancelMining();
+            wander(body, t);
+            return;
+        }
+        if (mining != null && (mining.getType() != mineBlock || unreachable.containsKey(mining))) cancelMining();
+        if (mining == null) {
+            if (--mineSearchTicks > 0) {
+                wander(body, t);
+                return;
+            }
+            mineSearchTicks = 20;
+            unreachable.values().removeIf(until -> until < body.getTicksLived());
+            mining = findBlock(body, t);
+            if (mining != null) org.bukkit.Bukkit.getLogger().info("DEBUG target " + mining.getLocation().toVector());
+            mineLastDistance = Double.MAX_VALUE;
+            mineStuckTicks = 0;
+            if (mining == null) {
+                wander(body, t);
+                return;
+            }
+        }
+
+        Location center = mining.getLocation().add(0.5, 0.5, 0.5);
+        double distance = body.getEyeLocation().distance(center);
+        if (distance > MINE_REACH || !visible(body, mining)) {
+            // hinlaufen; kommt er nicht näher, ist der Block (gerade) nicht erreichbar
+            Vector to = center.toVector().subtract(body.getLocation().toVector());
+            boolean moving = walk(body, to, false);
+            if (distance < mineLastDistance - 0.02) {
+                mineLastDistance = distance;
+                mineStuckTicks = 0;
+            } else if (++mineStuckTicks > 60 || !moving && distance <= MINE_REACH) {
+                giveUp(body);
+            }
+            return;
+        }
+        stop();
+        look(body, center);
+        float speed = mining.getBreakSpeed(body);
+        if (speed <= 0) {
+            giveUp(body);
+            return;
+        }
+        mineProgress += speed;
+        if (body.getTicksLived() % 4 == 0) body.swingMainHand();
+        if (mineProgress < 1) {
+            crack(body, (float) mineProgress);
+            return;
+        }
+        Block broken = mining;
+        crack(body, 0);
+        mining = null;
+        mineProgress = 0;
+        // wie ein Spieler abbauen: Drops, Werkzeug-Abnutzung, Erfahrung und BlockBreakEvent (Schutz-Plugins)
+        handle.gameMode.destroyBlock(new BlockPos(broken.getX(), broken.getY(), broken.getZ()));
+        if (broken.getType() == mineBlock) {
+            unreachable.put(broken, body.getTicksLived() + 1200); // abgelehnt (z.B. geschützt): eine Minute lang meiden
+        } else {
+            collectAt = center;
+            collectTicks = 40;
+        }
+    }
+
+    /** Nächster freiliegender Block des Typs in Reichweite des Heimatpunkts (bzw. der aktuellen Position). */
+    private Block findBlock(Player body, Tuning t) {
+        Location here = body.getLocation();
+        Location center = home != null && home.getWorld().equals(here.getWorld()) ? home : here;
+        int r = t.mineRadius(), vertical = Math.max(2, r / 2);
+        var world = here.getWorld();
+        Block best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (int x = here.getBlockX() - r; x <= here.getBlockX() + r; x++) {
+            for (int z = here.getBlockZ() - r; z <= here.getBlockZ() + r; z++) {
+                if (!world.isChunkLoaded(x >> 4, z >> 4)) continue;
+                double dx = x + 0.5 - center.getX(), dz = z + 0.5 - center.getZ();
+                if (dx * dx + dz * dz > (double) r * r) continue;
+                for (int y = here.getBlockY() - vertical; y <= here.getBlockY() + vertical; y++) {
+                    Block b = world.getBlockAt(x, y, z);
+                    if (b.getType() != mineBlock || unreachable.containsKey(b) || !minable(b, here)) continue;
+                    double d = b.getLocation().add(0.5, 0.5, 0.5).distanceSquared(body.getEyeLocation());
+                    if (d < bestDistance) {
+                        bestDistance = d;
+                        best = b;
+                    }
+                }
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Freiliegend (mindestens eine Seite offen), ohne Wasser oder Lava daneben (würde nachfließen) und nicht
+     * direkt unter ihm (sonst gräbt er sich senkrecht nach unten).
+     */
+    private static boolean minable(Block b, Location standing) {
+        if (b.getX() == standing.getBlockX() && b.getZ() == standing.getBlockZ() && b.getY() < standing.getBlockY()) return false;
+        boolean open = false;
+        for (BlockFace face : FACES) {
+            Block n = b.getRelative(face);
+            if (n.isLiquid()) return false;
+            if (!n.isSolid()) open = true;
+        }
+        return open;
+    }
+
+    /** Sieht er den Block (Strahl von den Augen trifft genau diesen Block)? */
+    private static boolean visible(Player body, Block b) {
+        Location eye = body.getEyeLocation();
+        Vector to = b.getLocation().add(0.5, 0.5, 0.5).toVector().subtract(eye.toVector());
+        var hit = body.getWorld().rayTraceBlocks(eye, to, to.length() + 0.5, FluidCollisionMode.NEVER, true);
+        return hit != null && b.equals(hit.getHitBlock());
+    }
+
+    private void giveUp(Player body) {
+        if (mining != null) org.bukkit.Bukkit.getLogger().info("DEBUG giveUp " + mining.getLocation().toVector() + " eyeDist=" + body.getEyeLocation().distance(mining.getLocation().add(0.5,0.5,0.5)) + " visible=" + visible(body, mining) + " stuck=" + mineStuckTicks + " pos=" + body.getLocation().toVector() + " hit=" + dbgHit(body, mining));
+        if (mining != null) unreachable.put(mining, body.getTicksLived() + 1200);
+        cancelMining();
+    }
+
+    private static String dbgHit(Player body, Block b) {
+        Location eye = body.getEyeLocation();
+        Vector to = b.getLocation().add(0.5, 0.5, 0.5).toVector().subtract(eye.toVector());
+        var hit = body.getWorld().rayTraceBlocks(eye, to, to.length() + 0.5, FluidCollisionMode.NEVER, true);
+        return hit == null ? "null" : hit.getHitBlock().getType() + "@" + hit.getHitBlock().getLocation().toVector();
+    }
+
+    private void cancelMining() {
+        if (mining != null && handle != null) crack(handle.getBukkitEntity(), 0);
+        mining = null;
+        mineProgress = 0;
+    }
+
+    /** Zeigt Spielern in der Nähe den Abbau-Fortschritt (Risse im Block); 0 = entfernen. */
+    private void crack(Player body, float progress) {
+        Location at = mining.getLocation();
+        for (Player p : body.getWorld().getPlayers()) {
+            if (p.getLocation().distanceSquared(at) < 32 * 32) p.sendBlockDamage(at, Math.min(progress, 1f), body);
+        }
     }
 
     private void fight(Player body, Tuning t) {

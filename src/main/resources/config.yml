@@ -880,6 +880,9 @@ auto-update:
 #   /fp tp|tphere|equip|inv <name>   hinreisen, herholen (setzt den Heimatpunkt), deine Ausrüstung kopieren, Inventar öffnen
 #   /fp ai <name> on|off       KI ein/aus
 #   /fp goal <name> wander|mobs|players|all   Angriff: nur herumlaufen bzw. Mobs / Spieler / beides von sich aus bekämpfen
+#   /fp goal <name> mine <block>              einen Blocktyp abbauen, z.B. mine diamond_ore: sucht freiliegende
+#                                             Blöcke um den Heimatpunkt, baut sie mit dem Werkzeug in der Hand ab
+#                                             und sammelt die Drops ein (Schutz-Plugins greifen wie bei Spielern)
 #   /fp defense <name> flee|fight|ignore      Verteidigung, wenn ihn ein Spieler oder Mob trifft: weglaufen,
 #                                             zurückschlagen (bei wenig Leben doch weglaufen) oder nichts tun
 #   /fp skin <name> <skin>     /fp list
@@ -905,6 +908,8 @@ fakeplayers:
     ai: false
     goal: wander               # wander, mobs, players, all
     defense: flee              # flee, fight, ignore
+  mining:
+    radius: 16                 # Blöcke um den Heimatpunkt (nach oben/unten die Hälfte)
   defense:
     flee-distance: 16          # so weit (Blöcke) läuft er vor dem Angreifer weg
     flee-seconds: 10           # höchstens so lange
@@ -932,6 +937,8 @@ fakeplayers:
     ai-off: "<prefix><gray>KI von <white><name></white> ausgeschaltet."
     goal-set: "<prefix><gray>Ziel von <white><name></white>: <white><goal></white>."
     defense-set: "<prefix><gray>Verteidigung von <white><name></white>: <white><defense></white>."
+    invalid-block: "<prefix><red>Das ist kein abbaubarer Block."
+    ai-hint: "<prefix><gray>Hinweis: Die KI von <white><name></white> ist aus – einschalten mit <white>/fp ai <name> on</white>."
     skin-set: "<prefix><gray>Skin von <white><name></white> auf <white><skin></white> gesetzt."
     equipped: "<prefix><gray><white><name></white> trägt jetzt eine Kopie deiner Ausrüstung."
     teleported: "<prefix><gray>Zu <white><name></white> teleportiert."
