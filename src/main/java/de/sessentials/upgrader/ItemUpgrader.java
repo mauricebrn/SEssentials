@@ -99,8 +99,11 @@ public final class ItemUpgrader implements Listener {
         } catch (IOException e) {
             plugin.getLogger().warning("upgrader-values.yml nicht lesbar: " + e.getMessage());
         }
-        values = ItemValues.compute(base, plugin.getConfig().getConfigurationSection("upgrader.value-overrides"), plugin.getLogger());
-        plugin.getLogger().info("Item-Upgrader: " + values.sorted().size() + " von " + ItemValues.allItems().size()
+        var cfg = plugin.getConfig();
+        values = ItemValues.compute(base, cfg.getConfigurationSection("upgrader.value-overrides"),
+                cfg.getConfigurationSection("upgrader.input-overrides"), cfg.getConfigurationSection("upgrader.output-overrides"),
+                plugin.getLogger());
+        plugin.getLogger().info("Item-Upgrader: " + values.sortedOutput().size() + " von " + ItemValues.allItems().size()
                 + " Items haben einen Wert (Rest: /upgrader admin → Rechtsklick).");
         Set<Material> list = EnumSet.noneOf(Material.class);
         for (String name : plugin.getConfig().getStringList("upgrader.blacklist")) {
@@ -136,7 +139,7 @@ public final class ItemUpgrader implements Listener {
     String betProblem(ItemStack item) {
         if (item == null || item.getType().isAir()) return "bet-empty";
         if (blacklisted(item.getType())) return "bet-blacklisted";
-        if (!values.known(item.getType())) return "bet-no-value";
+        if (!values.knownInput(item.getType())) return "bet-no-value";
         ItemMeta meta = item.getItemMeta();
         // umbenannte oder von Plugins markierte Items sind keine normalen Items mit Normalwert
         if (meta.hasDisplayName() || meta.hasLore() || item.hasData(DataComponentTypes.CUSTOM_MODEL_DATA)
@@ -148,7 +151,7 @@ public final class ItemUpgrader implements Listener {
     }
 
     boolean targetAllowed(Material m) {
-        return values.known(m) && !blacklisted(m);
+        return values.knownOutput(m) && !blacklisted(m);
     }
 
     double chance(double betValue, double targetValue) {
@@ -159,12 +162,12 @@ public final class ItemUpgrader implements Listener {
     }
 
     double targetValue(Session s) {
-        return s.target == null ? 0 : values.value(s.target) * s.amount;
+        return s.target == null ? 0 : values.outputValue(s.target) * s.amount;
     }
 
     /** Aktuelle Chance der Auswahl, 0 wenn Einsatz oder Ziel fehlt. */
     double chance(Session s) {
-        return s.bet == null || s.target == null ? 0 : chance(values.value(s.bet), targetValue(s));
+        return s.bet == null || s.target == null ? 0 : chance(values.inputValue(s.bet), targetValue(s));
     }
 
     void selectBet(Player player, int slot) {
@@ -207,9 +210,9 @@ public final class ItemUpgrader implements Listener {
         Material best = null;
         int bestAmount = 1;
         double bestError = Double.MAX_VALUE;
-        for (Material m : values.sorted()) {
+        for (Material m : values.sortedOutput()) {
             if (blacklisted(m) || m == s.bet.getType()) continue;
-            double each = values.value(m);
+            double each = values.outputValue(m);
             int amount = (int) Math.clamp(Math.round(wanted / each), 1, m.getMaxStackSize());
             double error = Math.abs(each * amount - wanted) / wanted;
             // bei gleichem Abstand lieber weniger, aber wertvollere Items
@@ -227,13 +230,13 @@ public final class ItemUpgrader implements Listener {
 
     void quickMultiplier(Player player, double multiplier) {
         Session s = session(player);
-        if (s.bet != null) quickPick(player, values.value(s.bet) * multiplier);
+        if (s.bet != null) quickPick(player, values.inputValue(s.bet) * multiplier);
         else player.sendMessage(msg("bet-empty", player));
     }
 
     void quickChance(Player player, double chance) {
         Session s = session(player);
-        if (s.bet != null) quickPick(player, values.value(s.bet) * plugin.getConfig().getDouble("upgrader.house-factor", 0.9) / chance);
+        if (s.bet != null) quickPick(player, values.inputValue(s.bet) * plugin.getConfig().getDouble("upgrader.house-factor", 0.9) / chance);
         else player.sendMessage(msg("bet-empty", player));
     }
 
@@ -354,7 +357,26 @@ public final class ItemUpgrader implements Listener {
     }
 
     boolean overridden(Material m) {
-        ConfigurationSection sec = plugin.getConfig().getConfigurationSection("upgrader.value-overrides");
+        return overridden("upgrader.value-overrides", m);
+    }
+
+    /** Einsatz- ({@code input = true}) bzw. Gewinn-Wert von Hand setzen; {@code value <= 0} entfernt die Überschreibung. */
+    void setSideOverride(Material m, boolean input, double value) {
+        plugin.getConfig().set(sidePath(input) + "." + m.name(), value > 0 ? value : null);
+        plugin.saveConfig();
+        reload();
+    }
+
+    boolean sideOverridden(Material m, boolean input) {
+        return overridden(sidePath(input), m);
+    }
+
+    private static String sidePath(boolean input) {
+        return input ? "upgrader.input-overrides" : "upgrader.output-overrides";
+    }
+
+    private boolean overridden(String path, Material m) {
+        ConfigurationSection sec = plugin.getConfig().getConfigurationSection(path);
         return sec != null && sec.contains(m.name());
     }
 
@@ -373,7 +395,7 @@ public final class ItemUpgrader implements Listener {
                         .then(Commands.literal("admin")
                                 .requires(src -> src.getExecutor() instanceof Player p && p.hasPermission(PERM_ADMIN))
                                 .executes(ctx -> {
-                                    menu.openCatalog((Player) ctx.getSource().getExecutor(), 0, "", true);
+                                    menu.openCatalog((Player) ctx.getSource().getExecutor(), 0, "", UpgraderMenu.Mode.ADMIN);
                                     return Command.SINGLE_SUCCESS;
                                 }))
                         .then(Commands.literal("value")
@@ -391,18 +413,25 @@ public final class ItemUpgrader implements Listener {
     }
 
     public void openAdmin(Player player) {
-        menu.openCatalog(player, 0, "", true);
+        menu.openCatalog(player, 0, "", UpgraderMenu.Mode.ADMIN);
+    }
+
+    /** Admin-Panel „Upgrader-Werte“: Einsatz- und Gewinn-Wert pro Item. */
+    public void openValues(Player player) {
+        menu.openCatalog(player, 0, "", UpgraderMenu.Mode.VALUES);
     }
 
     private void showValue(CommandSender sender, ItemStack item) {
         Player p = sender instanceof Player pl ? pl : null;
-        if (item == null || item.getType().isAir() || !values.known(item.getType())) {
+        if (item == null || item.getType().isAir() || !values.knownInput(item.getType()) && !values.knownOutput(item.getType())) {
             sender.sendMessage(msg("value-unknown", p));
             return;
         }
+        Material m = item.getType();
         sender.sendMessage(msg("value", p,
-                TextService.placeholder("value", format(values.value(item.getType()))),
-                TextService.placeholder("total", format(values.value(item))),
+                TextService.placeholder("value", values.knownInput(m) ? format(values.inputValue(m)) : "–"),
+                TextService.placeholder("total", values.knownInput(m) ? format(values.inputValue(item)) : "–"),
+                TextService.placeholder("output", values.knownOutput(m) ? format(values.outputValue(m)) : "–"),
                 TextService.placeholder("amount", String.valueOf(item.getAmount())),
                 Placeholder.component("item", Component.translatable(item.getType().translationKey()))));
     }

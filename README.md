@@ -389,6 +389,13 @@ Versteckte Spieler (Vanish) können nicht angefragt werden. Eine neue Anfrage an
 Genutzt wird jeweils die erste geladene Welt der Dimension (Standard: `world`, `world_nether`, `world_the_end`).
 Texte unter `dimensions.messages`.
 
+## Item-Upgrader
+Jedes Item hat einen Grundwert (`upgrader-values.yml`, sonst aus den Rezepten berechnet, ändern mit `upgrader.value-overrides`).
+Davon getrennt gibt es einen **Einsatz-Wert** (beim Setzen) und einen **Gewinn-Wert** (als Ziel) – standardmäßig der
+Grundwert, einzeln überschreibbar mit `upgrader.input-overrides` / `upgrader.output-overrides`. Am bequemsten im
+Admin-Panel unter „Upgrader-Werte“ (`sess.upgrader.admin`): Linksklick = Einsatz-Wert, Rechtsklick = Gewinn-Wert,
+Shift-Klick = beide zurücksetzen. Die Chance ist Hausfaktor × Einsatz-Wert / Gewinn-Wert. `/upgrader value` zeigt beide Werte.
+
 ## Webpanel
 Zeigt Statistiken aus dem Admin-Panel im Browser – lesend bis auf die Glücksrad-Chancen (siehe unten): Online-Spieler (mit Vanish-Markierung, Ping, Kontostand),
 TPS/MSPT/Laufzeit, offene Reports, aktive Strafen, Taler im Umlauf, reichste Spieler, Item-Tracker-Bestände mit

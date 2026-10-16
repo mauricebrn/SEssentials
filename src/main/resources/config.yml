@@ -1096,6 +1096,12 @@ upgrader:
     - BARRIER
   # Eigene Werte pro Item, z.B. ELYTRA: 5000 (gehen den Grundwerten und Rezepten vor)
   value-overrides: {}
+  # Getrennte Werte als Einsatz (beim Setzen) bzw. als Gewinn (als Ziel) – überschreiben den Wert nur für diese
+  # Seite und wirken nicht auf Rezepte. Bequem im Admin-Panel unter „Upgrader-Werte“. Beispiel:
+  #   input-overrides: {ELYTRA: 3000}    → wer eine Elytra setzt, setzt 3000
+  #   output-overrides: {ELYTRA: 8000}   → eine Elytra zu gewinnen kostet Chance wie 8000
+  input-overrides: {}
+  output-overrides: {}
   messages:
     bet-empty: "<prefix><red>Wähle zuerst einen Einsatz: Klicke ein Item in deinem Inventar an."
     bet-blacklisted: "<prefix><red>Dieses Item kann nicht gesetzt werden."
@@ -1107,11 +1113,13 @@ upgrader:
     won: "<prefix><green>Upgrade geglückt! Du bekommst <white><amount>x <item></white>. <dark_gray>(Chance <chance>)"
     lost: "<prefix><red>Upgrade fehlgeschlagen – dein Einsatz ist weg. <dark_gray>(Chance <chance>)"
     delivered: "<prefix><green>Dein Gewinn aus dem Item-Upgrader wurde nachgeliefert."
-    value: "<prefix><gray>Wert von <white><item></white>: <gold><value></gold> pro Stück, <gold><total></gold> für <amount> Stück."
+    value: "<prefix><gray>Wert von <white><item></white>: als Einsatz <gold><value></gold> pro Stück (<gold><total></gold> für <amount>), als Gewinn <gold><output></gold> pro Stück."
     value-unknown: "<prefix><gray>Dieses Item hat keinen Upgrader-Wert."
     prompt-amount: "<prefix><gray>Wie viele möchtest du gewinnen? Zahl im Chat eingeben. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
     prompt-search: "<prefix><gray>Suchbegriff im Chat eingeben (englischer Name, <white>-</white> = alle). <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
     prompt-value: "<prefix><gray>Neuen Wert im Chat eingeben oder <white>reset</white> für den berechneten Wert. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    prompt-input-value: "<prefix><gray>Neuen <white>Einsatz-Wert</white> im Chat eingeben oder <white>reset</white> für den Grundwert. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
+    prompt-output-value: "<prefix><gray>Neuen <white>Gewinn-Wert</white> im Chat eingeben oder <white>reset</white> für den Grundwert. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"
     invalid-number: "<prefix><red>Ungültige Zahl."
 
 # ------------------------------------------------------------

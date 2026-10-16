@@ -32,7 +32,11 @@ import java.util.stream.Collectors;
 /**
  * Wert jedes Items für den Upgrader. Feste Werte (Admin-Überschreibungen vor den mitgelieferten Grundwerten)
  * gelten immer; alle anderen Items bekommen den Wert ihres günstigsten Rezepts (Crafting, Ofen, Schmiede,
- * Steinsäge), solange alle Zutaten einen Wert haben. Items ohne Wert können weder gesetzt noch gewonnen werden.
+ * Steinsäge), solange alle Zutaten einen Wert haben.
+ * Daraus entstehen zwei Seiten: Einsatz-Wert (beim Setzen) und Gewinn-Wert (als Ziel). Beide sind standardmäßig der
+ * berechnete Wert und lassen sich getrennt überschreiben ({@code upgrader.input-overrides} / {@code output-overrides});
+ * diese Überschreibungen wirken nur auf das Item selbst, nicht auf Rezepte. Ohne Wert auf einer Seite kann ein Item
+ * auf dieser Seite nicht verwendet werden.
  */
 public final class ItemValues {
 
@@ -41,17 +45,24 @@ public final class ItemValues {
 
     private static final int MAX_PASSES = 64;
 
+    /** Berechneter Grundwert. */
     private final Map<Material, Double> values;
-    private final List<Material> sorted;
+    private final Map<Material, Double> input;
+    private final Map<Material, Double> output;
+    /** Mögliche Ziele, aufsteigend nach Gewinn-Wert. */
+    private final List<Material> sortedOutput;
 
-    private ItemValues(Map<Material, Double> values) {
+    private ItemValues(Map<Material, Double> values, Map<Material, Double> input, Map<Material, Double> output) {
         this.values = values;
-        this.sorted = values.keySet().stream()
-                .sorted(Comparator.comparingDouble((Material m) -> values.get(m)).thenComparing(Material::name))
+        this.input = input;
+        this.output = output;
+        this.sortedOutput = output.keySet().stream()
+                .sorted(Comparator.comparingDouble((Material m) -> output.get(m)).thenComparing(Material::name))
                 .toList();
     }
 
-    public static ItemValues compute(ConfigurationSection base, ConfigurationSection overrides, Logger log) {
+    public static ItemValues compute(ConfigurationSection base, ConfigurationSection overrides,
+                                     ConfigurationSection inputOverrides, ConfigurationSection outputOverrides, Logger log) {
         Map<Material, Double> fixed = new EnumMap<>(Material.class);
         read(base, fixed, log, "upgrader-values.yml");
         if (overrides != null) read(overrides, fixed, log, "upgrader.value-overrides");
@@ -81,7 +92,11 @@ public final class ItemValues {
             }
             if (!changed) break;
         }
-        return new ItemValues(values);
+        Map<Material, Double> input = new EnumMap<>(values);
+        if (inputOverrides != null) read(inputOverrides, input, log, "upgrader.input-overrides");
+        Map<Material, Double> output = new EnumMap<>(values);
+        if (outputOverrides != null) read(outputOverrides, output, log, "upgrader.output-overrides");
+        return new ItemValues(values, input, output);
     }
 
     /** Material, "#tag" oder Muster mit "*" (z.B. "*_ARMOR_TRIM_SMITHING_TEMPLATE") – jeweils mit Wert > 0. */
@@ -166,19 +181,38 @@ public final class ItemValues {
     // Abfragen
     // ------------------------------------------------------------
 
+    /** Hat das Item einen berechneten Grundwert? */
     public boolean known(Material m) {
         return values.containsKey(m);
     }
 
-    /** Wert eines einzelnen Items dieses Materials, 0 = unbekannt. */
+    /** Berechneter Grundwert eines Items, 0 = unbekannt. */
     public double value(Material m) {
         return values.getOrDefault(m, 0.0);
     }
 
-    /** Wert des ganzen Stapels; Werkzeuge und Rüstung anteilig nach verbleibender Haltbarkeit. 0 = unbekannt. */
-    public double value(ItemStack item) {
-        if (item == null || !known(item.getType())) return 0;
-        double each = value(item.getType());
+    public boolean knownInput(Material m) {
+        return input.containsKey(m);
+    }
+
+    public boolean knownOutput(Material m) {
+        return output.containsKey(m);
+    }
+
+    /** Wert eines Items beim Setzen, 0 = kann nicht gesetzt werden. */
+    public double inputValue(Material m) {
+        return input.getOrDefault(m, 0.0);
+    }
+
+    /** Wert eines Items als Gewinn, 0 = kann nicht gewonnen werden. */
+    public double outputValue(Material m) {
+        return output.getOrDefault(m, 0.0);
+    }
+
+    /** Einsatz-Wert des ganzen Stapels; Werkzeuge und Rüstung anteilig nach verbleibender Haltbarkeit. 0 = unbekannt. */
+    public double inputValue(ItemStack item) {
+        if (item == null || !knownInput(item.getType())) return 0;
+        double each = inputValue(item.getType());
         int max = item.getType().getMaxDurability();
         if (max > 0 && item.getItemMeta() instanceof Damageable d && d.hasDamage()) {
             each *= Math.max(0, max - d.getDamage()) / (double) max;
@@ -186,9 +220,9 @@ public final class ItemValues {
         return each * item.getAmount();
     }
 
-    /** Alle Items mit Wert, aufsteigend. */
-    public List<Material> sorted() {
-        return sorted;
+    /** Alle möglichen Ziele, aufsteigend nach Gewinn-Wert. */
+    public List<Material> sortedOutput() {
+        return sortedOutput;
     }
 
     /** Alle Items, auch ohne Wert (für die Admin-Ansicht). */

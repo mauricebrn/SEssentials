@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.DoubleConsumer;
 
 /** Menüs des Item-Upgraders: Hauptmenü mit Dreh-Band und der Item-Katalog (Zielauswahl bzw. Admin-Verwaltung). */
 final class UpgraderMenu {
@@ -68,19 +69,19 @@ final class UpgraderMenu {
                     gray("Klicke ein Item in deinem Inventar an.")), p -> {});
         } else {
             menu.set(BET_SLOT, withLore(s.bet.clone(),
-                    line("Wert", ItemUpgrader.format(values.value(s.bet))),
+                    line("Wert", ItemUpgrader.format(values.inputValue(s.bet))),
                     s.bet.getEnchantments().isEmpty() ? null : Component.text("Verzauberungen zählen nicht mit.", NamedTextColor.DARK_GRAY),
                     gray("Anderes Item im Inventar anklicken zum Wechseln.")), p -> {});
         }
 
         menu.set(CHANCE_SLOT, Menu.icon(chance > 0 ? Material.EXPERIENCE_BOTTLE : Material.GLASS_BOTTLE,
                 Component.text("Chance: " + (chance > 0 ? ItemUpgrader.percent(chance) : "–"), chanceColor(chance), TextDecoration.BOLD),
-                line("Einsatz-Wert", s.bet == null ? "–" : ItemUpgrader.format(values.value(s.bet))),
+                line("Einsatz-Wert", s.bet == null ? "–" : ItemUpgrader.format(values.inputValue(s.bet))),
                 line("Ziel-Wert", s.target == null ? "–" : ItemUpgrader.format(upgrader.targetValue(s)))), p -> {});
 
         if (s.target == null) {
             menu.set(TARGET_SLOT, Menu.icon(Material.ITEM_FRAME, Component.text("Ziel wählen", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                    gray("Klick » Item-Katalog")), p -> openCatalog(p, 0, "", false));
+                    gray("Klick » Item-Katalog")), p -> openCatalog(p, 0, "", Mode.TARGET));
         } else {
             menu.setClick(TARGET_SLOT, withLore(new ItemStack(s.target, s.amount),
                     line("Wert", ItemUpgrader.format(upgrader.targetValue(s))),
@@ -91,7 +92,7 @@ final class UpgraderMenu {
                 if (click == ClickType.RIGHT) upgrader.changeAmount(p, 1);
                 else if (click == ClickType.SHIFT_RIGHT) upgrader.changeAmount(p, -1);
                 else {
-                    openCatalog(p, 0, "", false);
+                    openCatalog(p, 0, "", Mode.TARGET);
                     return;
                 }
                 render(menu, p);
@@ -169,58 +170,94 @@ final class UpgraderMenu {
     // Katalog
     // ------------------------------------------------------------
 
-    /** Zielauswahl ({@code admin = false}) oder Verwaltung von Sperrliste und Werten ({@code admin = true}). */
-    void openCatalog(Player player, int page, String query, boolean admin) {
+    /** Katalog: Zielauswahl, Verwaltung (Sperrliste, Grundwert) oder Einsatz-/Gewinn-Werte. */
+    enum Mode {
+        TARGET("Upgrader – Ziel wählen"), ADMIN("Upgrader – Verwaltung"), VALUES("Upgrader – Werte");
+
+        final String title;
+
+        Mode(String title) {
+            this.title = title;
+        }
+    }
+
+    void openCatalog(Player player, int page, String query, Mode mode) {
         ItemValues values = upgrader.values();
         String q = query.toLowerCase(Locale.ROOT).replace(' ', '_');
-        List<Material> items = (admin ? ItemValues.allItems() : values.sorted()).stream()
-                .filter(m -> admin || !upgrader.blacklisted(m))
+        List<Material> items = (mode == Mode.TARGET ? values.sortedOutput() : ItemValues.allItems()).stream()
+                .filter(m -> mode != Mode.TARGET || !upgrader.blacklisted(m))
                 .filter(m -> q.isEmpty() || m.name().toLowerCase(Locale.ROOT).contains(q))
                 .toList();
         int pages = Math.max(1, (items.size() + PAGE - 1) / PAGE);
         int current = Math.clamp(page, 0, pages - 1);
         Session s = upgrader.session(player);
 
-        Menu menu = new Menu(6, Component.text(admin ? "Upgrader – Verwaltung" : "Upgrader – Ziel wählen", NamedTextColor.DARK_GRAY));
+        Menu menu = new Menu(6, Component.text(mode.title, NamedTextColor.DARK_GRAY));
         for (int i = 0; i < PAGE && current * PAGE + i < items.size(); i++) {
             Material m = items.get(current * PAGE + i);
-            List<Component> lore = new ArrayList<>();
-            lore.add(line("Wert", values.known(m) ? ItemUpgrader.format(values.value(m)) : "keiner"));
-            if (admin) {
-                if (upgrader.overridden(m)) lore.add(Component.text("Wert von Hand gesetzt", NamedTextColor.GOLD));
-                lore.add(upgrader.blacklisted(m) ? Component.text("Gesperrt", NamedTextColor.RED) : Component.text("Erlaubt", NamedTextColor.GREEN));
-                lore.add(Component.empty());
-                lore.add(hint("Linksklick", upgrader.blacklisted(m) ? "freigeben" : "sperren"));
-                lore.add(hint("Rechtsklick", "Wert setzen"));
-            } else {
-                if (s.bet != null) lore.add(line("Chance (1 Stück)", ItemUpgrader.percent(upgrader.chance(values.value(s.bet), values.value(m)))));
-                lore.add(Component.empty());
-                lore.add(hint("Linksklick", "als Ziel wählen"));
-                lore.add(hint("Rechtsklick", "Menge eingeben"));
-            }
+            List<Component> lore = switch (mode) {
+                case TARGET -> {
+                    List<Component> l = new ArrayList<>();
+                    l.add(line("Wert", ItemUpgrader.format(values.outputValue(m))));
+                    if (s.bet != null) l.add(line("Chance (1 Stück)", ItemUpgrader.percent(upgrader.chance(values.inputValue(s.bet), values.outputValue(m)))));
+                    l.add(Component.empty());
+                    l.add(hint("Linksklick", "als Ziel wählen"));
+                    l.add(hint("Rechtsklick", "Menge eingeben"));
+                    yield l;
+                }
+                case ADMIN -> {
+                    List<Component> l = new ArrayList<>();
+                    l.add(line("Wert", values.known(m) ? ItemUpgrader.format(values.value(m)) : "keiner"));
+                    if (upgrader.overridden(m)) l.add(Component.text("Wert von Hand gesetzt", NamedTextColor.GOLD));
+                    l.add(upgrader.blacklisted(m) ? Component.text("Gesperrt", NamedTextColor.RED) : Component.text("Erlaubt", NamedTextColor.GREEN));
+                    l.add(Component.empty());
+                    l.add(hint("Linksklick", upgrader.blacklisted(m) ? "freigeben" : "sperren"));
+                    l.add(hint("Rechtsklick", "Wert setzen"));
+                    yield l;
+                }
+                case VALUES -> {
+                    List<Component> l = new ArrayList<>();
+                    l.add(line("Grundwert", values.known(m) ? ItemUpgrader.format(values.value(m)) : "keiner"));
+                    l.add(sideLine("Einsatz-Wert", values.knownInput(m), values.inputValue(m), upgrader.sideOverridden(m, true)));
+                    l.add(sideLine("Gewinn-Wert", values.knownOutput(m), values.outputValue(m), upgrader.sideOverridden(m, false)));
+                    if (upgrader.blacklisted(m)) l.add(Component.text("Gesperrt (Verwaltung)", NamedTextColor.RED));
+                    l.add(Component.empty());
+                    l.add(hint("Linksklick", "Einsatz-Wert setzen"));
+                    l.add(hint("Rechtsklick", "Gewinn-Wert setzen"));
+                    l.add(hint("Shift-Klick", "beide zurücksetzen"));
+                    yield l;
+                }
+            };
             menu.setClick(i, withLore(new ItemStack(m), lore.toArray(Component[]::new)), (p, click) -> {
-                if (admin) adminClick(p, m, click, current, query);
-                else if (click.isRightClick()) askAmount(p, m);
-                else {
-                    upgrader.selectTarget(p, m, 1);
-                    open(p);
+                switch (mode) {
+                    case ADMIN -> adminClick(p, m, click, current, query);
+                    case VALUES -> valuesClick(p, m, click, current, query);
+                    case TARGET -> {
+                        if (click.isRightClick()) askAmount(p, m);
+                        else {
+                            upgrader.selectTarget(p, m, 1);
+                            open(p);
+                        }
+                    }
                 }
             });
         }
 
+        boolean admin = mode != Mode.TARGET;
         if (current > 0) menu.set(45, Menu.icon(Material.ARROW, Component.text("Zurück", NamedTextColor.GRAY)),
-                p -> openCatalog(p, current - 1, query, admin));
+                p -> openCatalog(p, current - 1, query, mode));
         menu.set(47, Menu.icon(Material.OAK_SIGN, Component.text("Suchen", NamedTextColor.YELLOW, TextDecoration.BOLD),
-                line("Suche", query.isEmpty() ? "–" : query), gray("Englischer Item-Name, z.B. diamond")), p -> askSearch(p, admin));
-        menu.set(49, Menu.icon(Material.BARRIER, Component.text(admin ? "Schließen" : "Zum Upgrader", NamedTextColor.RED)),
+                line("Suche", query.isEmpty() ? "–" : query), gray("Englischer Item-Name, z.B. diamond")), p -> askSearch(p, mode));
+        menu.set(49, Menu.icon(admin ? Material.ARROW : Material.BARRIER,
+                        Component.text(admin ? "Zum Admin-Panel" : "Zum Upgrader", admin ? NamedTextColor.GRAY : NamedTextColor.RED)),
                 p -> {
-                    if (admin) p.closeInventory();
+                    if (admin) plugin.adminPanel().open(p);
                     else open(p);
                 });
         menu.set(51, Menu.icon(Material.PAPER, Component.text("Seite " + (current + 1) + " / " + pages, NamedTextColor.WHITE),
                 gray(items.size() + " Items")), p -> {});
         if (current < pages - 1) menu.set(53, Menu.icon(Material.ARROW, Component.text("Weiter", NamedTextColor.GRAY)),
-                p -> openCatalog(p, current + 1, query, admin));
+                p -> openCatalog(p, current + 1, query, mode));
         menu.fillEmpty();
         menu.open(player);
     }
@@ -228,21 +265,44 @@ final class UpgraderMenu {
     private void adminClick(Player player, Material m, ClickType click, int page, String query) {
         if (!click.isRightClick()) {
             upgrader.toggleBlacklist(m);
-            openCatalog(player, page, query, true);
+            openCatalog(player, page, query, Mode.ADMIN);
             return;
         }
+        askValue(player, "prompt-value", value -> upgrader.setOverride(m, value), () -> openCatalog(player, page, query, Mode.ADMIN));
+    }
+
+    /** Links = Einsatz-Wert, Rechts = Gewinn-Wert, Shift = beide Überschreibungen entfernen. */
+    private void valuesClick(Player player, Material m, ClickType click, int page, String query) {
+        Runnable reopen = () -> openCatalog(player, page, query, Mode.VALUES);
+        if (click.isShiftClick()) {
+            upgrader.setSideOverride(m, true, 0);
+            upgrader.setSideOverride(m, false, 0);
+            reopen.run();
+            return;
+        }
+        boolean input = click.isLeftClick();
+        askValue(player, input ? "prompt-input-value" : "prompt-output-value", value -> upgrader.setSideOverride(m, input, value), reopen);
+    }
+
+    /** Wert per Chat: Zahl > 0 oder "reset" (= 0, entfernt die Überschreibung). */
+    private void askValue(Player player, String messageKey, DoubleConsumer apply, Runnable reopen) {
         player.closeInventory();
-        player.sendMessage(upgrader.msg("prompt-value", player));
+        player.sendMessage(upgrader.msg(messageKey, player));
         plugin.chatPrompt().ask(player, input -> {
             if (input.equalsIgnoreCase("reset")) {
-                upgrader.setOverride(m, 0);
+                apply.accept(0);
             } else {
                 double value = parse(input);
                 if (value <= 0) player.sendMessage(upgrader.msg("invalid-number", player));
-                else upgrader.setOverride(m, value);
+                else apply.accept(value);
             }
-            openCatalog(player, page, query, true);
-        }, () -> openCatalog(player, page, query, true));
+            reopen.run();
+        }, reopen);
+    }
+
+    private static Component sideLine(String label, boolean known, double value, boolean manual) {
+        Component line = line(label, known ? ItemUpgrader.format(value) : "keiner");
+        return manual ? line.append(Component.text(" (von Hand)", NamedTextColor.GOLD)) : line;
     }
 
     private void askAmount(Player player, Material m) {
@@ -256,11 +316,11 @@ final class UpgraderMenu {
         }, () -> open(player));
     }
 
-    private void askSearch(Player player, boolean admin) {
+    private void askSearch(Player player, Mode mode) {
         player.closeInventory();
         player.sendMessage(upgrader.msg("prompt-search", player));
-        plugin.chatPrompt().ask(player, input -> openCatalog(player, 0, input.equals("-") ? "" : input.trim(), admin),
-                () -> openCatalog(player, 0, "", admin));
+        plugin.chatPrompt().ask(player, input -> openCatalog(player, 0, input.equals("-") ? "" : input.trim(), mode),
+                () -> openCatalog(player, 0, "", mode));
     }
 
     private static double parse(String input) {

@@ -533,6 +533,11 @@ public final class SEssentials extends JavaPlugin {
                     p -> Menu.icon(Material.SMITHING_TABLE, Component.text("Item-Upgrader", NamedTextColor.AQUA),
                             Component.text("Item-Werte und Sperrliste", NamedTextColor.GRAY)),
                     upgrader::openAdmin);
+            adminPanel.addApp(Category.ECONOMY, ItemUpgrader.PERM_ADMIN,
+                    p -> Menu.icon(Material.ANVIL, Component.text("Upgrader-Werte", NamedTextColor.AQUA),
+                            Component.text("Einsatz- und Gewinn-Wert", NamedTextColor.GRAY),
+                            Component.text("pro Item getrennt einstellen", NamedTextColor.GRAY)),
+                    upgrader::openValues);
         }
         if (modules.on("gambling")) {
             adminPanel.addApp(Category.ECONOMY, LuckyWheel.PERM_ADMIN,
