@@ -23,6 +23,8 @@ public final class Clan {
     Location home;
     /** Clan-Konto in Bank-Währung. */
     long balance;
+    /** {@code true} = Mitglieder können sich gegenseitig Schaden zufügen. */
+    boolean friendlyFire;
     boolean chestBought;
     /** Position des aufgestellten Truhenblocks, {@code null} = nicht aufgestellt. */
     Location chestBlock;

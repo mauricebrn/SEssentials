@@ -52,6 +52,7 @@ public final class ClanCommands implements Listener {
     private final SEssentials plugin;
     private final ClanManager clans;
     private final ClanChest chest;
+    private final ClanFriendlyFire friendlyFire;
     /** Eingeladener → (Clan-Name klein → Ablaufzeit ms), neueste zuletzt. */
     private final Map<UUID, LinkedHashMap<String, Long>> invites = new HashMap<>();
     private final Map<Clan, Vote> votes = new HashMap<>();
@@ -65,6 +66,7 @@ public final class ClanCommands implements Listener {
         this.plugin = plugin;
         this.clans = clans;
         this.chest = new ClanChest(plugin, clans, this);
+        this.friendlyFire = new ClanFriendlyFire(plugin, clans);
         reload();
     }
 
@@ -79,6 +81,11 @@ public final class ClanCommands implements Listener {
     /** Truhe für das Admin-Panel (am Block geöffnet, also mit Einlagern). */
     void openChest(Player player, Clan clan) {
         chest.open(player, clan, false);
+    }
+
+    /** Listener gegen Schaden unter Clan-Mitgliedern. */
+    public Listener friendlyFireListener() {
+        return friendlyFire;
     }
 
     /** Listener der Clan-Truhe (Block und Inventar). */
@@ -303,6 +310,29 @@ public final class ClanCommands implements Listener {
         invites.values().forEach(open -> open.remove(key));
     }
 
+    /** {@code on == null} zeigt nur den Stand. */
+    private void friendlyFire(Player player, Boolean on) {
+        Clan clan = memberClan(player);
+        if (clan == null) return;
+        if (on == null) {
+            player.sendMessage(msg("friendly-fire-status", player, clanTags(clan), ffTag(clan)));
+            return;
+        }
+        if (!mayDo(player, clan, "friendly-fire")) return;
+        setFriendlyFire(clan, on, player.getName());
+    }
+
+    /** Setzt Friendly Fire und meldet es allen Mitgliedern ({@code by} = wer es geändert hat). */
+    void setFriendlyFire(Clan clan, boolean on, String by) {
+        clans.setFriendlyFire(clan, on);
+        notify(clan, "friendly-fire-changed", clanTags(clan), ffTag(clan), TextService.placeholder("target", by));
+    }
+
+    /** {@code <state>}: an/aus aus der Config. */
+    TagResolver ffTag(Clan clan) {
+        return Placeholder.component("state", msg(clan.friendlyFire ? "state-on" : "state-off", null));
+    }
+
     // ------------------------------------------------------------
     // Anzeige
     // ------------------------------------------------------------
@@ -324,6 +354,7 @@ public final class ClanCommands implements Listener {
                 TextService.placeholder("count", String.valueOf(clan.members.size())),
                 TextService.placeholder("home", home),
                 TextService.placeholder("chest", chestState),
+                ffTag(clan),
                 money("balance", clan.balance)));
     }
 
@@ -732,6 +763,9 @@ public final class ClanCommands implements Listener {
                                 .then(Commands.literal("nein").executes(player(p -> castVote(p, false)))))
                         .then(sub("truhe").executes(player(this::openRemote))
                                 .then(Commands.literal("kaufen").executes(player(this::buyChest))))
+                        .then(sub("friendlyfire").executes(player(p -> friendlyFire(p, null)))
+                                .then(Commands.literal("an").executes(player(p -> friendlyFire(p, true))))
+                                .then(Commands.literal("aus").executes(player(p -> friendlyFire(p, false)))))
                         .then(sub("bank").executes(player(this::bankInfo)))
                         .then(sub("einzahlen").then(Commands.argument("betrag", LongArgumentType.longArg(1))
                                 .executes(ctx -> {

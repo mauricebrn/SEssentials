@@ -95,6 +95,14 @@ public final class ClanMenu {
                         line("Anzahl", String.valueOf(clan.members.size())),
                         Component.text("Rauswerfen, Leiter bestimmen", NamedTextColor.GRAY)),
                 live(clan, p -> openMembers(p, clan)));
+        menu.set(24, Menu.icon(clan.friendlyFire ? Material.IRON_SWORD : Material.SHIELD, Component.text("Friendly Fire", NamedTextColor.RED),
+                        Component.text("Status: ", NamedTextColor.GRAY).append(commands.msg(clan.friendlyFire ? "state-on" : "state-off", null)),
+                        Component.empty(),
+                        Component.text("Klick", NamedTextColor.YELLOW).append(Component.text(" » umschalten", NamedTextColor.GRAY))),
+                live(clan, p -> {
+                    commands.setFriendlyFire(clan, !clan.friendlyFire, p.getName());
+                    openClan(p, clan);
+                }));
         menu.set(25, Menu.icon(Material.TNT, Component.text("Clan auflösen", NamedTextColor.RED, TextDecoration.BOLD),
                         Component.text("Konto geht an den Leiter,", NamedTextColor.GRAY),
                         Component.text("Truheninhalt an dich", NamedTextColor.GRAY)),

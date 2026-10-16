@@ -581,7 +581,7 @@ bounty:
 # Clans (/clan) – Kosten-Format wie bei spawn.cost (type money = Bankkonto, item = Items, amount 0 = kostenlos).
 # Befehle: erstellen <name> <farbe>, farbe, einladen, annehmen, ablehnen, verlassen, kicken, leiter,
 #          aufloesen, info [clan], liste, home, home vorschlagen, abstimmen ja|nein,
-#          truhe, truhe kaufen, bank, einzahlen, auszahlen, admin aufloesen <clan> (sess.clan.admin)
+#          truhe, truhe kaufen, bank, einzahlen, auszahlen, friendlyfire an|aus, admin aufloesen <clan> (sess.clan.admin)
 # Der Platzhalter <clan> (Clan-Tag nach tag-format) funktioniert in Chat, TAB, Nametags usw.
 # Gespeichert in clans.yml. Einladungen und Home-Abstimmungen verfallen bei einem Neustart.
 # ------------------------------------------------------------
@@ -605,6 +605,9 @@ clans:
     propose-home: false
     buy-chest: true
     withdraw: true
+    friendly-fire: true
+  # Friendly Fire für neue Clans (true = Mitglieder können sich schaden); jeder Clan stellt es mit /clan friendlyfire an|aus um
+  friendly-fire-default: false
   home:
     # Mehr als so viel Prozent aller Mitglieder müssen mit Ja stimmen (50 = einfache Mehrheit)
     vote-percent: 50
@@ -659,7 +662,7 @@ clans:
     disbanded: "<prefix><red>Der Clan <clan> wurde aufgelöst. <gray>Clan-Konto (<amount>) ging an den Leiter."
     admin-disbanded: "<prefix><green>Clan <clan> aufgelöst."
     chest-not-empty: "<prefix><red>Leere zuerst die Clan-Truhe."
-    info: "<dark_gray>────── <clan> <dark_gray>──────<newline><gray>Leiter: <white><leader><newline><gray>Mitglieder (<count>): <white><members><newline><gray>Clan-Konto: <gold><balance><newline><gray>Home: <white><home><newline><gray>Truhe: <white><chest>"
+    info: "<dark_gray>────── <clan> <dark_gray>──────<newline><gray>Leiter: <white><leader><newline><gray>Mitglieder (<count>): <white><members><newline><gray>Clan-Konto: <gold><balance><newline><gray>Home: <white><home><newline><gray>Truhe: <white><chest><newline><gray>Friendly Fire: <state>"
     home-none: "nicht gesetzt"
     chest-state-none: "nicht gekauft"
     chest-state-unplaced: "gekauft, nicht aufgestellt"
@@ -695,6 +698,11 @@ clans:
     bank-balance: "<prefix><gray>Clan-Konto von <clan>: <gold><balance>"
     bank-deposited: "<prefix><white><target></white><gray> hat <gold><amount></gold> eingezahlt. <dark_gray>(Clan-Konto: <balance>)"
     bank-withdrawn: "<prefix><white><target></white><gray> hat <gold><amount></gold> abgehoben. <dark_gray>(Clan-Konto: <balance>)"
+    state-on: "<red>an"
+    state-off: "<green>aus"
+    friendly-fire-status: "<prefix><gray>Friendly Fire in <clan>: <state> <dark_gray>(/clan friendlyfire an|aus)"
+    friendly-fire-changed: "<prefix><white><target></white><gray> hat Friendly Fire auf <state><gray> gestellt."
+    friendly-fire-blocked: "<green>Friendly Fire ist in eurem Clan aus."
     # Admin-Panel
     admin-updated: "<prefix><green>Clan <clan> aktualisiert."
     admin-balance-prompt: "<prefix><gray>Clan-Konto von <clan> ändern: <white>+100</white>, <white>-50</white> oder <white>=200</white>. <click:suggest_command:'abbrechen'><red>[Abbrechen]</red></click>"

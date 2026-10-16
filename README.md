@@ -93,6 +93,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/clan home [vorschlagen]` | `sess.clan` | Zum Clan-Home (kostet `clans.home.cost`) bzw. aktuellen Ort zur Abstimmung stellen; `/clan abstimmen ja\|nein` |
 | `/clan truhe [kaufen]` | `sess.clan` | Truhe aus der Ferne öffnen (`clans.chest.remote-cost`) bzw. vom Clan-Konto kaufen und nahe dem Home aufstellen |
 | `/clan bank`, `/clan einzahlen\|auszahlen <betrag>` | `sess.clan` | Gemeinsames Clan-Konto |
+| `/clan friendlyfire [an\|aus]` | `sess.clan` | Schaden unter Clan-Mitgliedern erlauben/verhindern (Standard `clans.friendly-fire-default`, wer umschalten darf: `clans.leader-only.friendly-fire`) |
 | `/clan admin aufloesen <clan>` | `sess.clan.admin` | Clan zwangsweise auflösen (Truheninhalt geht an den Admin). Alles Weitere im Admin-Panel unter „Clans“: Home/Truhe besuchen, Truhe öffnen, Clan-Konto ändern, Mitglieder rauswerfen, Leiter bestimmen |
 | `/kopfgeld entfernen <spieler>` | `sess.bounty.admin` | Alle Kopfgelder auf einen Spieler entfernen und erstatten; einzelne Gebote im Admin-Panel |
 | `/baltop` | – | Die 10 reichsten Spieler |

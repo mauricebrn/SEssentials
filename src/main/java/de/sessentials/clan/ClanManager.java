@@ -71,6 +71,7 @@ public final class ClanManager {
 
     Clan create(String name, NamedTextColor color, UUID leader) {
         Clan clan = new Clan(name, color, leader);
+        clan.friendlyFire = plugin.getConfig().getBoolean("clans.friendly-fire-default");
         byName.put(name.toLowerCase(Locale.ROOT), clan);
         byMember.put(leader, clan);
         save();
@@ -107,6 +108,11 @@ public final class ClanManager {
 
     void setLeader(Clan clan, UUID player) {
         clan.leader = player;
+        save();
+    }
+
+    void setFriendlyFire(Clan clan, boolean on) {
+        clan.friendlyFire = on;
         save();
     }
 
@@ -231,6 +237,7 @@ public final class ClanManager {
             sec.getStringList("members").forEach(m -> clan.members.add(UUID.fromString(m)));
             clan.home = location(sec, "home");
             clan.balance = Math.max(0, sec.getLong("balance"));
+            clan.friendlyFire = sec.getBoolean("friendly-fire", plugin.getConfig().getBoolean("clans.friendly-fire-default"));
             clan.chestBought = sec.getBoolean("chest.bought");
             clan.chestBlock = location(sec, "chest.block");
             ConfigurationSection items = sec.getConfigurationSection("chest.items");
@@ -259,6 +266,7 @@ public final class ClanManager {
             yml.set(p + "members", clan.members.stream().map(UUID::toString).toList());
             setLocation(yml, p + "home", clan.home);
             yml.set(p + "balance", clan.balance);
+            yml.set(p + "friendly-fire", clan.friendlyFire);
             yml.set(p + "chest.bought", clan.chestBought);
             setLocation(yml, p + "chest.block", clan.chestBlock);
             if (clan.chest != null) {

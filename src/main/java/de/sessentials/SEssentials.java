@@ -226,6 +226,7 @@ public final class SEssentials extends JavaPlugin {
         listen("bounty", bounties);
         listen("clans", clanCommands);
         if (clanCommands != null) listen("clans", clanCommands.chestListener());
+        if (clanCommands != null) listen("clans", clanCommands.friendlyFireListener());
         listen("messages", messages);
         listen("mail", mail);
         listen("tab", tab);
