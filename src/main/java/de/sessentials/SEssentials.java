@@ -46,6 +46,7 @@ import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.spawn.SpawnManager;
 import de.sessentials.tab.TabNametagManager;
+import de.sessentials.teleport.TeleportWarmup;
 import de.sessentials.tpa.TpaManager;
 import de.sessentials.tracker.ItemTracker;
 import de.sessentials.update.AutoUpdater;
@@ -96,6 +97,7 @@ public final class SEssentials extends JavaPlugin {
     private SpawnManager spawn;
     private HelpCommand help;
     private TpaManager tpa;
+    private TeleportWarmup teleportWarmup;
     private ChatPrompt chatPrompt;
     private BankManager bank;
     private BankExchange bankExchange;
@@ -147,6 +149,8 @@ public final class SEssentials extends JavaPlugin {
         permissions = perms;
         text = new TextService(perms, papi, vanish::visibleCount);
         text.setPrefix(getConfig().getString("prefix", ""));
+
+        teleportWarmup = new TeleportWarmup(this);
 
         // Bank vor allem, was Kosten hat (/spawn, /tpa)
         bank = new BankManager(this);
@@ -207,6 +211,7 @@ public final class SEssentials extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
+        getServer().getPluginManager().registerEvents(teleportWarmup, this);
         listen("softrestart", softRestart);
         listen("chat", chat);
         listen("join-quit", joinQuit);
@@ -397,6 +402,11 @@ public final class SEssentials extends JavaPlugin {
 
     public ChatPrompt chatPrompt() {
         return chatPrompt;
+    }
+
+    /** Wartezeit vor Spieler-Teleports (/spawn, /tpa, /nether, /end, /clan home). */
+    public TeleportWarmup teleportWarmup() {
+        return teleportWarmup;
     }
 
     public BankManager bank() {

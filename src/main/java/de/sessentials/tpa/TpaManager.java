@@ -150,12 +150,26 @@ public final class TpaManager implements Listener {
         TagResolver tags = tags(requester, target);
         Cost cost = this.cost;
         boolean pays = pays(requester);
-        if (pays && !cost.take(requester)) {
+        if (pays && !cost.canAfford(requester)) {
             requester.sendMessage(msg("not-enough", requester, tags));
             target.sendMessage(msg("requester-cannot-pay", target, tags));
             return;
         }
         target.sendMessage(msg("accepted-target", target, tags));
+        plugin.teleportWarmup().start(requester, "tpa", () -> teleportNow(target, requester, cost, pays));
+    }
+
+    /** Nach der Wartezeit: zur dann aktuellen Position des Ziels, Kosten erst jetzt. */
+    private void teleportNow(Player target, Player requester, Cost cost, boolean pays) {
+        TagResolver tags = tags(requester, target);
+        if (!target.isOnline()) {
+            requester.sendMessage(msg("not-found", requester, tags));
+            return;
+        }
+        if (pays && !cost.take(requester)) {
+            requester.sendMessage(msg("not-enough", requester, tags));
+            return;
+        }
         requester.teleportAsync(target.getLocation()).thenAccept(ok -> {
             if (!ok) {
                 if (pays) cost.refund(requester);

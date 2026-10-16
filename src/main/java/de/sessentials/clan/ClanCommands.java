@@ -452,6 +452,21 @@ public final class ClanCommands implements Listener {
             return;
         }
         Cost cost = homeCost;
+        if (!cost.canAfford(player)) {
+            player.sendMessage(msg("not-enough", player, cost.tags()));
+            return;
+        }
+        plugin.teleportWarmup().start(player, "clan-home", () -> teleportHomeNow(player, cost));
+    }
+
+    /** Nach der Wartezeit: Clan und Home neu prüfen (können sich geändert haben), Kosten erst jetzt. */
+    private void teleportHomeNow(Player player, Cost cost) {
+        Clan clan = memberClan(player);
+        if (clan == null) return;
+        if (clan.home == null) {
+            player.sendMessage(msg("home-not-set", player));
+            return;
+        }
         if (!cost.take(player)) {
             player.sendMessage(msg("not-enough", player, cost.tags()));
             return;

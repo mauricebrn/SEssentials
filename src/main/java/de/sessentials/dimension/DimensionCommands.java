@@ -48,8 +48,12 @@ public final class DimensionCommands {
                 List.of());
     }
 
-    /** In die Dimension {@code target} oder, wenn man schon dort ist, zurück in die Oberwelt. */
+    /** In die Dimension {@code target} oder, wenn man schon dort ist, zurück in die Oberwelt – nach der Wartezeit. */
     public void toggle(Player player, World.Environment target) {
+        plugin.teleportWarmup().start(player, target == World.Environment.NETHER ? "nether" : "end", () -> toggleNow(player, target));
+    }
+
+    private void toggleNow(Player player, World.Environment target) {
         World from = player.getWorld();
         boolean back = from.getEnvironment() == target;
         World to = world(back ? World.Environment.NORMAL : target);

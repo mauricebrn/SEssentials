@@ -72,7 +72,15 @@ public final class SpawnManager implements Listener {
     public void teleport(Player player) {
         Cost cost = this.cost;
         boolean pays = !player.hasPermission(PERM_FREE) && !cost.isFree();
-        // vorher abziehen, damit niemand die Items während des Teleports weglegen kann
+        if (pays && !cost.canAfford(player)) {
+            player.sendMessage(msg("not-enough", player, cost.tags()));
+            return;
+        }
+        plugin.teleportWarmup().start(player, "spawn", () -> teleportNow(player, cost, pays));
+    }
+
+    /** Nach der Wartezeit: erst jetzt abziehen, damit ein Abbruch nichts kostet. */
+    private void teleportNow(Player player, Cost cost, boolean pays) {
         if (pays && !cost.take(player)) {
             player.sendMessage(msg("not-enough", player, cost.tags()));
             return;

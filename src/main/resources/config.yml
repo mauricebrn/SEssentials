@@ -266,6 +266,30 @@ help:
         - {command: "/fp", name: "<red>/fp", description: "<gray>Fake-Spieler verwalten", icon: ARMOR_STAND, permission: sess.fakeplayer}
 
 # ------------------------------------------------------------
+# Teleport-Wartezeit für /spawn, /tpa (der Anfragende nach Annahme), /nether, /end und /clan home.
+# Der Teleport startet erst, wenn man so lange stillsteht und keinen Schaden nimmt. Kosten werden erst
+# beim Teleport abgezogen – ein Abbruch kostet nichts. Mit sess.teleport.nowarmup sofort.
+# Admin-Teleports (Admin-Panel, Reports) und Join/Respawn sind nie betroffen.
+# ------------------------------------------------------------
+teleport-warmup:
+  seconds: 3                  # 0 = sofort
+  cancel-on-move: true        # Abbruch beim Verlassen des Blocks (Umsehen ist erlaubt)
+  move-tolerance-blocks: 0    # so viele Blöcke darf man sich entfernen (0 = Block nicht verlassen)
+  cancel-on-damage: true      # Abbruch bei jedem Schaden
+  # Eigene Wartezeit pro Teleport (fehlt ein Eintrag, gilt seconds)
+  per-teleport:
+    spawn: 3
+    tpa: 3
+    nether: 3
+    end: 3
+    clan-home: 5
+  messages:
+    started: "<prefix><gray>Teleport in <white><seconds></white> Sekunden – nicht bewegen und keinen Schaden nehmen."
+    countdown: "<yellow>Teleport in <white><seconds></white>…"
+    cancelled-move: "<prefix><red>Teleport abgebrochen – du hast dich bewegt."
+    cancelled-damage: "<prefix><red>Teleport abgebrochen – du hast Schaden genommen."
+
+# ------------------------------------------------------------
 # Spawn (/spawn, /setspawn)
 # Mit sess.spawn ist /spawn kostenlos, sonst kostet es den Betrag unten (Konto oder Items).
 # Platzhalter in den Kosten-Texten: <price>, <amount>, <item>

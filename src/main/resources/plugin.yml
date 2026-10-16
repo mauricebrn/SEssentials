@@ -118,6 +118,9 @@ permissions:
   sess.bounty:
     description: Erlaubt /kopfgeld (Kopfgeld aussetzen und anzeigen)
     default: true
+  sess.teleport.nowarmup:
+    description: Teleportiert ohne Wartezeit (/spawn, /tpa, /nether, /end, /clan home)
+    default: op
   sess.clan:
     description: Erlaubt /clan (gründen, beitreten, Home, Truhe, Clan-Konto)
     default: true

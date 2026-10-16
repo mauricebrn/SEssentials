@@ -253,9 +253,15 @@ Kopf-, Fußzeile und Blätter-Buttons sind unter `help` einstellbar (Platzhalter
 und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den Spawn der Hauptwelt.
 
 `/spawn` kann jeder nutzen. Mit `sess.spawn` ist es kostenlos, sonst kostet es `spawn.cost` – siehe [Kosten](#kosten)
-(Standard 500 Taler vom Konto). Die Kosten werden vor dem Teleport abgezogen und bei einem fehlgeschlagenen Teleport erstattet.
+(Standard 500 Taler vom Konto). Die Kosten werden nach der [Wartezeit](#teleport-wartezeit) direkt vor dem Teleport abgezogen und bei einem fehlgeschlagenen Teleport erstattet.
 
 Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
+
+## Teleport-Wartezeit
+`/spawn`, `/tpa` (nach der Annahme), `/nether`, `/end` und `/clan home` teleportieren erst nach `teleport-warmup.seconds`
+(pro Teleport änderbar unter `teleport-warmup.per-teleport`). Wer in der Zeit den Block verlässt (`cancel-on-move`,
+Spielraum `move-tolerance-blocks`) oder Schaden nimmt (`cancel-on-damage`), bricht ab; Kosten fallen erst beim Teleport an.
+Mit `sess.teleport.nowarmup` (Standard: op) gibt es keine Wartezeit. Admin-Teleports aus Admin-Panel und Reports sind sofort.
 
 ## News
 `/news` zeigt alle aktiven News (höchste Priorität zuerst) mit Kurzfassung; ungelesene sind als **NEU** markiert.
