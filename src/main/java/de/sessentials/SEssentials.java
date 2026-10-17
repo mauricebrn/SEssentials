@@ -55,6 +55,7 @@ import de.sessentials.tracker.ItemTracker;
 import de.sessentials.update.AutoUpdater;
 import de.sessentials.upgrader.ItemUpgrader;
 import de.sessentials.tracker.TrackerMenu;
+import de.sessentials.trust.SuspicionVote;
 import de.sessentials.trust.TrustManager;
 import de.sessentials.trust.TrustMenu;
 import de.sessentials.text.TextService;
@@ -137,6 +138,7 @@ public final class SEssentials extends JavaPlugin {
     private NewsManager news;
     private TrustManager trust;
     private TrustMenu trustMenu;
+    private SuspicionVote suspicion;
 
     @Override
     public void onEnable() {
@@ -218,7 +220,8 @@ public final class SEssentials extends JavaPlugin {
         fairplay = modules.on("fairplay") ? new FairplayManager(this) : null;
         fairplayMenu = fairplay != null ? new FairplayMenu(this, fairplay) : null;
         trust = modules.on("trust") ? new TrustManager(this) : null;
-        trustMenu = trust != null ? new TrustMenu(this, trust) : null;
+        suspicion = trust != null ? new SuspicionVote(this, trust) : null;
+        trustMenu = trust != null ? new TrustMenu(this, trust, suspicion) : null;
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -333,6 +336,7 @@ public final class SEssentials extends JavaPlugin {
         if (itemGuard != null) itemGuard.reload();
         if (creativeLog != null) creativeLog.reload();
         if (trust != null) trust.reload();
+        if (suspicion != null) suspicion.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         if (tracker != null) tracker.reload();
         spawn.reload();
@@ -507,6 +511,7 @@ public final class SEssentials extends JavaPlugin {
             adminPanel.addApp(Category.MODERATION, TrustManager.PERM_ADMIN,
                     p -> Menu.icon(Material.TOTEM_OF_UNDYING, Component.text("Trust", NamedTextColor.GREEN),
                             Component.text("Warten auf Vertrauen: " + trust.candidates().size(), NamedTextColor.GRAY),
+                            Component.text("Verdachts-Abstimmungen: " + suspicion.open().size(), NamedTextColor.GRAY),
                             Component.text("Neue Spieler freischalten", NamedTextColor.GRAY)),
                     trustMenu::open);
         }
@@ -804,6 +809,7 @@ public final class SEssentials extends JavaPlugin {
             if (itemGuard != null) itemGuard.register(commands);
             if (creativeLog != null) creativeLog.register(commands);
             if (trust != null) trust.register(commands);
+            if (suspicion != null) suspicion.register(commands);
             if (webPanel != null) webPanel.register(commands);
 
             if (modules.on("admin-panel")) commands.register(

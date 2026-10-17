@@ -59,7 +59,7 @@ public final class TrustManager implements Listener {
     private static final String PERM_USE = "sess.trust";
     private static final String PERM_VOTE = "sess.trust.vote";
     public static final String PERM_ADMIN = "sess.trust.admin";
-    private static final String PERM_BYPASS = "sess.trust.bypass";
+    static final String PERM_BYPASS = "sess.trust.bypass";
 
     private final SEssentials plugin;
     private final File file;
@@ -160,7 +160,8 @@ public final class TrustManager implements Listener {
         return true;
     }
 
-    private boolean canVote(Player player) {
+    /** Darf abstimmen – für Vertrauen und Verdacht ({@code trust.voters}). */
+    boolean canVote(Player player) {
         return permissionVoters ? player.hasPermission(PERM_VOTE) : isTrusted(player);
     }
 

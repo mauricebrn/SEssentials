@@ -992,7 +992,7 @@ creativelog:
 # bis genug Spieler mit /trust <spieler> für sie gestimmt haben.
 # Beim ersten Start gelten alle Spieler, die schon einmal online waren, als vertraut.
 # Admins: /trust add|remove <spieler> (sess.trust.admin). Immer vertraut: sess.trust.bypass.
-# Platzhalter: <target>, <votes>, <needed>, <voter>, <time> (nur playtime-left)
+# Platzhalter: <target>, <votes>, <needed>, <voter>, <time> (playtime-left: fehlende Spielzeit, suspect-banned: Ban-Dauer)
 # ------------------------------------------------------------
 trust:
   # Wer abstimmen darf: "trusted" = alle vertrauten Spieler, "permission" = nur Spieler mit sess.trust.vote
@@ -1005,6 +1005,16 @@ trust:
   # Spielzeit, ab der Spielern automatisch vertraut wird, z.B. 30m, 5h, 1d – 0 = aus.
   # Zählt die Spielzeit aus der Minecraft-Statistik (auch vor dem Einschalten); geprüft beim Join und jede Minute.
   auto-trust-playtime: 0
+  # Verdachts-Abstimmung: /suspect <spieler> (Alias /verdacht) gegen einen Online-Spieler.
+  # Abstimmen darf, wer auch für Vertrauen stimmen darf (voters). Bei genug Stimmen innerhalb von votes-expire
+  # wird der Spieler über das Strafen-System gebannt (braucht das Modul punishments).
+  # Nie betroffen: sess.punish.exempt und sess.trust.bypass. Stimmen werden in suspicion.yml gespeichert.
+  suspicion:
+    enabled: false
+    votes-needed: 3
+    votes-expire: 30m      # Stimmen, die älter sind, zählen nicht mehr
+    ban-duration: 1d       # z.B. 30m, 12h, 3d
+    reason: "Verdacht (Abstimmung der Spieler)"
   messages:
     join: "<prefix><yellow>Du bist neu hier! <gray>Bis dir genug Spieler vertrauen (<white><votes>/<needed></white>), kannst du nicht mit der Welt interagieren."
     blocked: "<red>Du brauchst erst das Vertrauen anderer Spieler. <gray>(/trust)"
@@ -1023,6 +1033,15 @@ trust:
     revoked-self: "<prefix><red>Dir wird nicht mehr vertraut."
     added: "<prefix><green><white><target></white> ist jetzt vertraut."
     removed: "<prefix><red><white><target></white> ist nicht mehr vertraut."
+    suspicion-disabled: "<prefix><red>Die Verdachts-Abstimmung ist ausgeschaltet."
+    suspect-offline: "<prefix><red><white><target></white> ist gerade nicht online."
+    suspect-self: "<prefix><red>Du kannst nicht gegen dich selbst stimmen."
+    suspect-exempt: "<prefix><red>Gegen <white><target></white> kann nicht abgestimmt werden."
+    already-suspected: "<prefix><red>Du hast schon gegen <white><target></white> gestimmt <gray>(<votes>/<needed>)</gray>."
+    suspected: "<prefix><yellow>Du hast gegen <white><target></white> gestimmt <gray>(<votes>/<needed>)</gray>."
+    suspicion-notify: "<prefix><yellow><voter></yellow> <gray>verdächtigt <white><target></white> <dark_gray>(<votes>/<needed>)</dark_gray>"
+    suspicion-dismissed: "<prefix><green>Die Verdachts-Abstimmung gegen <white><target></white> wurde verworfen."
+    suspect-banned: "<prefix><red><white><target></white> wurde nach einer Abstimmung für <white><time></white> gebannt."
     votes-reset: "<prefix><yellow>Die Stimmen für <white><target></white> wurden zurückgesetzt."
 
 # ------------------------------------------------------------

@@ -133,6 +133,11 @@ public final class PunishCommands {
         punishTemplate(Bukkit.getConsoleSender(), actor, targetName, templateId);
     }
 
+    /** Automatischer Ban mit fester Dauer (z.B. Verdachts-Abstimmung) – als Konsole, im Verlauf unter {@code actor}. */
+    public void banAutomatic(String targetName, String reason, Duration duration, String actor) {
+        apply(Bukkit.getConsoleSender(), actor, Type.BAN, targetName, reason, duration, null);
+    }
+
     private void punishTemplate(CommandSender sender, String targetArg, String id) {
         punishTemplate(sender, null, targetArg, id);
     }
