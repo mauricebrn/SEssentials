@@ -55,6 +55,8 @@ import de.sessentials.tracker.ItemTracker;
 import de.sessentials.update.AutoUpdater;
 import de.sessentials.upgrader.ItemUpgrader;
 import de.sessentials.tracker.TrackerMenu;
+import de.sessentials.trust.TrustManager;
+import de.sessentials.trust.TrustMenu;
 import de.sessentials.text.TextService;
 import de.sessentials.vanish.VanishManager;
 import de.sessentials.web.WebPanel;
@@ -133,6 +135,8 @@ public final class SEssentials extends JavaPlugin {
     private MailManager mail;
     private TrackerMenu trackerMenu;
     private NewsManager news;
+    private TrustManager trust;
+    private TrustMenu trustMenu;
 
     @Override
     public void onEnable() {
@@ -213,6 +217,8 @@ public final class SEssentials extends JavaPlugin {
         punishmentMenu = new PunishmentMenu(this, punishments, punishCommands);
         fairplay = modules.on("fairplay") ? new FairplayManager(this) : null;
         fairplayMenu = fairplay != null ? new FairplayMenu(this, fairplay) : null;
+        trust = modules.on("trust") ? new TrustManager(this) : null;
+        trustMenu = trust != null ? new TrustMenu(this, trust) : null;
         adminPanel = new AdminPanel(this);
         registerAdminApps();
 
@@ -228,6 +234,7 @@ public final class SEssentials extends JavaPlugin {
         listen("client-detector", detector);
         listen("itemguard", itemGuard);
         listen("creativelog", creativeLog);
+        listen("trust", trust);
         listen("punishments", punishments);
         if (fairplay != null) listen("fairplay", new FairplayListener(this, fairplay));
         listen("spawn", spawn);
@@ -325,6 +332,7 @@ public final class SEssentials extends JavaPlugin {
         if (detector != null) detector.reload();
         if (itemGuard != null) itemGuard.reload();
         if (creativeLog != null) creativeLog.reload();
+        if (trust != null) trust.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         if (tracker != null) tracker.reload();
         spawn.reload();
@@ -439,6 +447,11 @@ public final class SEssentials extends JavaPlugin {
     }
 
     /** {@code null}, wenn das Modul aus ist. */
+    public FakePlayerManager fakePlayers() {
+        return fakePlayers;
+    }
+
+    /** {@code null}, wenn das Modul aus ist. */
     public LuckyWheel luckyWheel() {
         return luckyWheel;
     }
@@ -489,6 +502,13 @@ public final class SEssentials extends JavaPlugin {
                             status(creativeLog.enabled()),
                             Component.text("Aktionen im Kreativmodus", NamedTextColor.GRAY)),
                     creativeLogMenu::open);
+        }
+        if (trustMenu != null) {
+            adminPanel.addApp(Category.MODERATION, TrustManager.PERM_ADMIN,
+                    p -> Menu.icon(Material.TOTEM_OF_UNDYING, Component.text("Trust", NamedTextColor.GREEN),
+                            Component.text("Warten auf Vertrauen: " + trust.candidates().size(), NamedTextColor.GRAY),
+                            Component.text("Neue Spieler freischalten", NamedTextColor.GRAY)),
+                    trustMenu::open);
         }
 
         // Spieler & Teleport
@@ -783,6 +803,7 @@ public final class SEssentials extends JavaPlugin {
             if (clanCommands != null) clanCommands.register(commands);
             if (itemGuard != null) itemGuard.register(commands);
             if (creativeLog != null) creativeLog.register(commands);
+            if (trust != null) trust.register(commands);
             if (webPanel != null) webPanel.register(commands);
 
             if (modules.on("admin-panel")) commands.register(

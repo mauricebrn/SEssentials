@@ -142,6 +142,18 @@ permissions:
   sess.itemguard.admin:
     description: ItemGuard im Admin-Panel einstellen
     default: op
+  sess.trust:
+    description: Erlaubt /trust (eigenen Status sehen, für neue Spieler stimmen)
+    default: true
+  sess.trust.vote:
+    description: Darf für neue Spieler stimmen, wenn trust.voters auf permission steht
+    default: op
+  sess.trust.admin:
+    description: Erlaubt /trust add|remove (Vertrauen direkt setzen oder entziehen)
+    default: op
+  sess.trust.bypass:
+    description: Gilt immer als vertraut
+    default: op
   sess.creativelog.view:
     description: Erlaubt /creativelog und die Ansicht im Admin-Panel
     default: op

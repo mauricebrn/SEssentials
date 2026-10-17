@@ -55,6 +55,7 @@ modules:
   reports: true          # /report, /reports
   itemguard: true        # ItemGuard (verbotene Items)
   creativelog: true      # CreativeLog
+  trust: true            # Schutz vor neuen Spielern, /trust
   client-detector: true  # Client-Detector
   news: true             # /news
   softrestart: true      # /softrestart
@@ -722,6 +723,7 @@ clans:
     teleport-failed: "<prefix><red>Teleport fehlgeschlagen."
     vote-started: "<prefix><white><proposer></white><gray> schlägt <white><location></white> als Clan-Home vor (<minutes> Min.). <click:run_command:'/clan abstimmen ja'><hover:show_text:'<green>Dafür'><green>[Ja]</green></hover></click> <click:run_command:'/clan abstimmen nein'><hover:show_text:'<red>Dagegen'><red>[Nein]</red></hover></click>"
     vote-running: "<prefix><red>Es läuft schon eine Abstimmung (<yes> Ja / <no> Nein)."
+    playtime-left: "<prefix><gray>Oder spiele noch <white><time></white>, dann wird dir automatisch vertraut."
     no-vote: "<prefix><red>Zurzeit läuft keine Home-Abstimmung."
     voted-yes: "<prefix><green>Du stimmst dafür. <gray>(<yes> Ja / <no> Nein von <count>)"
     voted-no: "<prefix><red>Du stimmst dagegen. <gray>(<yes> Ja / <no> Nein von <count>)"
@@ -984,6 +986,44 @@ creativelog:
     footer: "<dark_gray>Neueste zuerst</dark_gray> <click:run_command:'/creativelog <target> <prev>'><yellow>[« Zurück]</yellow></click> <click:run_command:'/creativelog <target> <next>'><yellow>[Weiter »]</yellow></click>"
     none: "<prefix><red>Für <white><target></white> gibt es keine Kreativ-Logs."
     no-page: "<prefix><red>Diese Seite gibt es nicht (nur <pages>)."
+
+# ------------------------------------------------------------
+# Trust – neue Spieler können nicht mit der Welt interagieren (Blöcke, Container, Türen, Entities, Eimer),
+# bis genug Spieler mit /trust <spieler> für sie gestimmt haben.
+# Beim ersten Start gelten alle Spieler, die schon einmal online waren, als vertraut.
+# Admins: /trust add|remove <spieler> (sess.trust.admin). Immer vertraut: sess.trust.bypass.
+# Platzhalter: <target>, <votes>, <needed>, <voter>, <time> (nur playtime-left)
+# ------------------------------------------------------------
+trust:
+  # Wer abstimmen darf: "trusted" = alle vertrauten Spieler, "permission" = nur Spieler mit sess.trust.vote
+  voters: trusted
+  # Stimmen, ab denen ein Spieler vertraut ist
+  votes-needed: 3
+  # true = betritt ein neuer Spieler den Server, startet automatisch eine Abstimmung:
+  # alle, die abstimmen dürfen, bekommen eine Nachricht mit Klick-Button. false = nur per /trust <spieler>
+  auto-vote: true
+  # Spielzeit, ab der Spielern automatisch vertraut wird, z.B. 30m, 5h, 1d – 0 = aus.
+  # Zählt die Spielzeit aus der Minecraft-Statistik (auch vor dem Einschalten); geprüft beim Join und jede Minute.
+  auto-trust-playtime: 0
+  messages:
+    join: "<prefix><yellow>Du bist neu hier! <gray>Bis dir genug Spieler vertrauen (<white><votes>/<needed></white>), kannst du nicht mit der Welt interagieren."
+    blocked: "<red>Du brauchst erst das Vertrauen anderer Spieler. <gray>(/trust)"
+    status-trusted: "<prefix><green>Du bist vertraut und kannst mit /trust <spieler> für neue Spieler stimmen."
+    status-untrusted: "<prefix><gray>Du hast <white><votes>/<needed></white> Stimmen. Bitte andere Spieler um <white>/trust <target></white>."
+    no-vote: "<prefix><red>Du darfst nicht abstimmen."
+    unknown-player: "<prefix><red>Der Spieler <white><target></white> war noch nie auf dem Server."
+    self: "<prefix><red>Du kannst nicht für dich selbst stimmen."
+    already-trusted: "<prefix><red><white><target></white> ist bereits vertraut."
+    already-voted: "<prefix><red>Du hast schon für <white><target></white> gestimmt <gray>(<votes>/<needed>)</gray>."
+    vote-request: "<prefix><yellow>Neuer Spieler <white><target></white> <gray>(<votes>/<needed> Stimmen)</gray> <click:run_command:'/trust <target>'><hover:show_text:'<gray>Für <target> stimmen'><green>[Vertrauen]</green></hover></click>"
+    voted: "<prefix><green>Du hast für <white><target></white> gestimmt <gray>(<votes>/<needed>)</gray>."
+    received-vote: "<prefix><green><white><voter></white> vertraut dir <gray>(<votes>/<needed>)</gray>."
+    now-trusted: "<prefix><green><white><target></white> ist jetzt vertraut und kann mit der Welt interagieren!"
+    now-trusted-self: "<prefix><green>Dir wird jetzt vertraut – du kannst mit der Welt interagieren!"
+    revoked-self: "<prefix><red>Dir wird nicht mehr vertraut."
+    added: "<prefix><green><white><target></white> ist jetzt vertraut."
+    removed: "<prefix><red><white><target></white> ist nicht mehr vertraut."
+    votes-reset: "<prefix><yellow>Die Stimmen für <white><target></white> wurden zurückgesetzt."
 
 # ------------------------------------------------------------
 # Client-Detector
