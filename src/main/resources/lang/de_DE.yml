@@ -539,6 +539,14 @@ creativelog:
   none: <prefix><red>Für <white><target></white> gibt es keine Kreativ-Logs.
   no-page: <prefix><red>Diese Seite gibt es nicht (nur <pages>).
 # ------------------------------------------------------------
+# Haltbarkeits-Warnung (/durability, Alias /haltbarkeit)
+# Platzhalter: <item>, <remaining>, <max>, <percent>
+# ------------------------------------------------------------
+durability:
+  alert: "<prefix><red>⚠ <white><item></white> ist fast kaputt: <yellow><remaining>/<max></yellow> <gray>(<percent>%)"
+  enabled: "<prefix><gray>Haltbarkeits-Warnung <green>eingeschaltet</green>."
+  disabled: "<prefix><gray>Haltbarkeits-Warnung <red>ausgeschaltet</red>."
+# ------------------------------------------------------------
 # Trust – neue Spieler können nicht mit der Welt interagieren (Blöcke, Container, Türen, Entities, Eimer),
 # bis genug Spieler mit /trust <spieler> für sie gestimmt haben.
 # Beim ersten Start gelten alle Spieler, die schon einmal online waren, als vertraut.

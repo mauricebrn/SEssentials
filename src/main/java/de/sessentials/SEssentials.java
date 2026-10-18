@@ -27,6 +27,7 @@ import de.sessentials.fairplay.FairplayListener;
 import de.sessentials.fairplay.FairplayManager;
 import de.sessentials.fairplay.FairplayMenu;
 import de.sessentials.dimension.DimensionCommands;
+import de.sessentials.durability.DurabilityAlert;
 import de.sessentials.fakeplayer.FakePlayerManager;
 import de.sessentials.gamble.LuckyWheel;
 import de.sessentials.help.HelpCommand;
@@ -136,6 +137,7 @@ public final class SEssentials extends JavaPlugin {
     private TrackerMenu trackerMenu;
     private NewsManager news;
     private TrustManager trust;
+    private DurabilityAlert durability;
     private TrustMenu trustMenu;
     private SuspicionVote suspicion;
 
@@ -219,6 +221,7 @@ public final class SEssentials extends JavaPlugin {
         fairplay = modules.on("fairplay") ? new FairplayManager(this) : null;
         fairplayMenu = fairplay != null ? new FairplayMenu(this, fairplay) : null;
         trust = modules.on("trust") ? new TrustManager(this) : null;
+        durability = modules.on("durability") ? new DurabilityAlert(this) : null;
         suspicion = trust != null ? new SuspicionVote(this, trust) : null;
         trustMenu = trust != null ? new TrustMenu(this, trust, suspicion) : null;
         adminPanel = new AdminPanel(this);
@@ -237,6 +240,7 @@ public final class SEssentials extends JavaPlugin {
         listen("itemguard", itemGuard);
         listen("creativelog", creativeLog);
         listen("trust", trust);
+        listen("durability", durability);
         listen("punishments", punishments);
         if (fairplay != null) listen("fairplay", new FairplayListener(this, fairplay));
         listen("spawn", spawn);
@@ -323,6 +327,7 @@ public final class SEssentials extends JavaPlugin {
         if (itemGuard != null) itemGuard.reload();
         if (creativeLog != null) creativeLog.reload();
         if (trust != null) trust.reload();
+        if (durability != null) durability.reload();
         if (suspicion != null) suspicion.reload();
         bankExchange = BankExchange.fromConfig(getConfig(), getLogger());
         if (tracker != null) tracker.reload();
@@ -816,6 +821,7 @@ public final class SEssentials extends JavaPlugin {
             if (itemGuard != null) itemGuard.register(commands);
             if (creativeLog != null) creativeLog.register(commands);
             if (trust != null) trust.register(commands);
+            if (durability != null) durability.register(commands);
             if (suspicion != null) suspicion.register(commands);
             if (webPanel != null) webPanel.register(commands);
 

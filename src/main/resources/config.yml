@@ -41,6 +41,7 @@ modules:
   help: true             # /help als Menü
   command-aliases: true  # eigene Befehle (command-aliases)
   player-commands: true  # /fly, /god, /heal, /feed
+  durability: true       # Warnung bei fast kaputter Ausrüstung (/durability)
   sudo: true             # /sudo
   enderchest: true       # /enderchest, /ec
   spawn: true            # /spawn, /setspawn
@@ -568,6 +569,14 @@ creativelog:
   enabled: true
   max-entries: 1000     # pro Spieler; ältere Einträge fallen weg
   page-size: 15
+
+# ------------------------------------------------------------
+# Haltbarkeits-Warnung – Spieler mit sess.durability bekommen eine Nachricht samt Ton, wenn Rüstung,
+# Werkzeug oder Waffe eine der Stufen unten unterschreitet (je Stufe einmal). An/aus pro Spieler: /durability
+# ------------------------------------------------------------
+durability:
+  warn-percent: [10, 3]    # Warnstufen in Prozent der Haltbarkeit
+  default-enabled: true    # an für alle, die /durability noch nie benutzt haben
 
 # ------------------------------------------------------------
 # Trust – neue Spieler können nicht mit der Welt interagieren (Blöcke, Container, Türen, Entities, Eimer),

@@ -142,6 +142,9 @@ permissions:
   sess.itemguard.admin:
     description: ItemGuard im Admin-Panel einstellen
     default: op
+  sess.durability:
+    description: Bekommt eine Warnung bei fast kaputter Rüstung/Werkzeug; /durability schaltet sie an/aus
+    default: true
   sess.trust:
     description: Erlaubt /trust (eigenen Status sehen, für neue Spieler stimmen) und /suspect (Verdachts-Abstimmung)
     default: true

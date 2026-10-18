@@ -482,6 +482,14 @@ creativelog:
   none: "<prefix><red>There are no creative logs for <white><target></white>."
   no-page: "<prefix><red>This page doesn't exist (only <pages>)."
 # ------------------------------------------------------------
+# Durability alert (/durability, alias /haltbarkeit)
+# Placeholders: <item>, <remaining>, <max>, <percent>
+# ------------------------------------------------------------
+durability:
+  alert: "<prefix><red>⚠ <white><item></white> is about to break: <yellow><remaining>/<max></yellow> <gray>(<percent>%)"
+  enabled: "<prefix><gray>Durability alert <green>enabled</green>."
+  disabled: "<prefix><gray>Durability alert <red>disabled</red>."
+# ------------------------------------------------------------
 # Trust (/trust, /suspect)
 # Placeholders: <target>, <votes>, <needed>, <voter>, <time> (playtime-left: missing playtime, suspect-banned: ban duration)
 # ------------------------------------------------------------
