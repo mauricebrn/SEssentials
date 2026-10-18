@@ -539,6 +539,15 @@ creativelog:
   none: <prefix><red>Für <white><target></white> gibt es keine Kreativ-Logs.
   no-page: <prefix><red>Diese Seite gibt es nicht (nur <pages>).
 # ------------------------------------------------------------
+# Getrennte Inventare für Kreativ und Survival (/gminv, Alias /gamemodeinv – Recht sess.gamemodeinv)
+# ------------------------------------------------------------
+gamemode-inventory:
+  enabled: "<prefix><green>Getrennte Inventare eingeschaltet.</green> <gray>Ab dem nächsten Wechsel zwischen Kreativ und Survival hat jeder Modus sein eigenes Inventar."
+  disabled: "<prefix><gray>Getrennte Inventare <red>ausgeschaltet</red>. Ein gesichertes Kreativ-Inventar wurde verworfen."
+  disable-in-creative: "<prefix><red>Wechsle zuerst in den Survival-Modus – dein Survival-Inventar ist gerade gesichert."
+  switched-creative: "<prefix><gray>Kreativ-Inventar geladen, dein Survival-Inventar ist gesichert."
+  switched-survival: "<prefix><gray>Survival-Inventar geladen, dein Kreativ-Inventar ist gesichert."
+# ------------------------------------------------------------
 # Eigene Uhrzeit und eigenes Wetter (/ptime, Alias /pzeit; /pweather, Alias /pwetter) – nur für den Spieler sichtbar
 # /ptime day|noon|night|midnight|<0-23999>|reset   /pweather clear|rain|reset
 # Platzhalter: <time>

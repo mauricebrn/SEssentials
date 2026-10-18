@@ -43,6 +43,7 @@ modules:
   player-commands: true  # /fly, /god, /heal, /feed
   durability: true       # Warnung bei fast kaputter Ausrüstung (/durability)
   ptime: true            # eigene Uhrzeit und eigenes Wetter (/ptime, /pweather)
+  gamemode-inventory: true # getrennte Inventare für Kreativ und Survival (/gminv, Admins)
   sudo: true             # /sudo
   enderchest: true       # /enderchest, /ec
   spawn: true            # /spawn, /setspawn

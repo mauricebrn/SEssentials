@@ -142,6 +142,9 @@ permissions:
   sess.itemguard.admin:
     description: ItemGuard im Admin-Panel einstellen
     default: op
+  sess.gamemodeinv:
+    description: Erlaubt /gminv (getrennte Inventare für Kreativ und Survival)
+    default: op
   sess.ptime:
     description: Erlaubt /ptime (eigene Uhrzeit, nur für dich sichtbar)
     default: true

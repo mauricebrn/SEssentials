@@ -40,6 +40,7 @@ import de.sessentials.msg.MessageCommands;
 import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
 import de.sessentials.player.EnderChestCommand;
+import de.sessentials.player.GamemodeInventories;
 import de.sessentials.player.KnownPlayers;
 import de.sessentials.player.PersonalEnvironment;
 import de.sessentials.player.PlayerCommands;
@@ -142,6 +143,7 @@ public final class SEssentials extends JavaPlugin {
     private TrustManager trust;
     private DurabilityAlert durability;
     private PersonalEnvironment personalEnvironment;
+    private GamemodeInventories gamemodeInventories;
     private TrustMenu trustMenu;
     private SuspicionVote suspicion;
 
@@ -228,6 +230,7 @@ public final class SEssentials extends JavaPlugin {
         trust = modules.on("trust") ? new TrustManager(this) : null;
         durability = modules.on("durability") ? new DurabilityAlert(this) : null;
         personalEnvironment = modules.on("ptime") ? new PersonalEnvironment(this) : null;
+        gamemodeInventories = modules.on("gamemode-inventory") ? new GamemodeInventories(this) : null;
         suspicion = trust != null ? new SuspicionVote(this, trust) : null;
         trustMenu = trust != null ? new TrustMenu(this, trust, suspicion) : null;
         adminPanel = new AdminPanel(this);
@@ -249,6 +252,7 @@ public final class SEssentials extends JavaPlugin {
         listen("trust", trust);
         listen("durability", durability);
         listen("ptime", personalEnvironment);
+        listen("gamemode-inventory", gamemodeInventories);
         listen("punishments", punishments);
         if (fairplay != null) listen("fairplay", new FairplayListener(this, fairplay));
         listen("spawn", spawn);
@@ -836,6 +840,7 @@ public final class SEssentials extends JavaPlugin {
             if (trust != null) trust.register(commands);
             if (durability != null) durability.register(commands);
             if (personalEnvironment != null) personalEnvironment.register(commands);
+            if (gamemodeInventories != null) gamemodeInventories.register(commands);
             if (suspicion != null) suspicion.register(commands);
             if (webPanel != null) webPanel.register(commands);
 
