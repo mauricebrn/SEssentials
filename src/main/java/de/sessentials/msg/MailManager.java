@@ -3,12 +3,10 @@ package de.sessentials.msg;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.sessentials.SEssentials;
 import de.sessentials.punish.PunishmentManager;
 import de.sessentials.storage.AsyncFileWriter;
 import de.sessentials.text.TextService;
-import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -30,11 +28,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * /mail: Nachrichten an Spieler hinterlassen, auch wenn sie offline sind. Gespeichert in mail.yml;
@@ -43,7 +38,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public final class MailManager implements Listener {
 
     private static final String PERM = "sess.mail";
-    private static final int MAX_SUGGESTIONS = 50;
 
     private record Mail(String from, long time, String text, boolean read) {
         Mail markRead() {
@@ -56,16 +50,11 @@ public final class MailManager implements Listener {
     private final AsyncFileWriter writer;
     /** Empfänger → Postfach, älteste zuerst (nur Main-Thread). */
     private final Map<UUID, List<Mail>> inboxes = new HashMap<>();
-    /** Namen aller Spieler, die schon einmal da waren – für die Tab-Vervollständigung (auch asynchron gelesen). */
-    private final NavigableSet<String> knownNames = new ConcurrentSkipListSet<>(String.CASE_INSENSITIVE_ORDER);
 
     public MailManager(SEssentials plugin) {
         this.plugin = plugin;
         this.file = plugin.dataFile("mail.yml");
         this.writer = new AsyncFileWriter("Mail", plugin.getLogger());
-        for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
-            if (p.getName() != null) knownNames.add(p.getName());
-        }
         load();
     }
 
@@ -160,7 +149,6 @@ public final class MailManager implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        knownNames.add(player.getName());
         long unread = unread(player.getUniqueId());
         if (unread == 0) return;
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -173,18 +161,6 @@ public final class MailManager implements Listener {
     // ------------------------------------------------------------
 
     public void register(Commands commands) {
-        SuggestionProvider<CommandSourceStack> players = (ctx, builder) -> {
-            String typed = builder.getRemainingLowerCase();
-            String self = ctx.getSource().getSender().getName();
-            int count = 0;
-            for (String name : knownNames.tailSet(typed, true)) {
-                if (!name.toLowerCase(Locale.ROOT).startsWith(typed) || count >= MAX_SUGGESTIONS) break;
-                if (name.equalsIgnoreCase(self)) continue;
-                builder.suggest(name);
-                count++;
-            }
-            return builder.buildFuture();
-        };
         commands.register(
                 Commands.literal("mail")
                         .requires(src -> src.getSender().hasPermission(PERM))
@@ -197,7 +173,7 @@ public final class MailManager implements Listener {
                             return Command.SINGLE_SUCCESS;
                         }))
                         .then(Commands.literal("send")
-                                .then(Commands.argument("spieler", StringArgumentType.word()).suggests(players)
+                                .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions())
                                         .then(Commands.argument("nachricht", StringArgumentType.greedyString()).executes(ctx -> {
                                             CommandSender sender = ctx.getSource().getExecutor() instanceof Player p ? p : ctx.getSource().getSender();
                                             send(sender, StringArgumentType.getString(ctx, "spieler"), StringArgumentType.getString(ctx, "nachricht"));

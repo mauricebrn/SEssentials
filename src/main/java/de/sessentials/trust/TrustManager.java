@@ -260,18 +260,8 @@ public final class TrustManager implements Listener {
                 List.of("vertrauen"));
     }
 
-    private static RequiredArgumentBuilder<CommandSourceStack, String> playerArg() {
-        return Commands.argument("spieler", StringArgumentType.word())
-                .suggests((ctx, builder) -> {
-                    String typed = builder.getRemainingLowerCase();
-                    CommandSender sender = ctx.getSource().getSender();
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        if ((!(sender instanceof Player self) || self.canSee(p)) && p.getName().toLowerCase().startsWith(typed)) {
-                            builder.suggest(p.getName());
-                        }
-                    }
-                    return builder.buildFuture();
-                });
+    private RequiredArgumentBuilder<CommandSourceStack, String> playerArg() {
+        return Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions());
     }
 
     private void status(Player player) {

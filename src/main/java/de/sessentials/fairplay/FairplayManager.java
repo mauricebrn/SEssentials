@@ -326,18 +326,12 @@ public final class FairplayManager {
                         }))
                         .then(Commands.literal("reset")
                                 .requires(src -> src.getSender().hasPermission(PERM_ADMIN))
-                                .then(Commands.argument("spieler", StringArgumentType.word()).executes(ctx -> {
+                                .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions()).executes(ctx -> {
                                     reset(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "spieler"));
                                     return Command.SINGLE_SUCCESS;
                                 })))
                         .then(Commands.argument("spieler", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    String typed = builder.getRemainingLowerCase();
-                                    for (Player p : Bukkit.getOnlinePlayers()) {
-                                        if (p.getName().toLowerCase().startsWith(typed)) builder.suggest(p.getName());
-                                    }
-                                    return builder.buildFuture();
-                                })
+                                .suggests(plugin.knownPlayers().suggestions())
                                 .executes(ctx -> {
                                     info(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "spieler"));
                                     return Command.SINGLE_SUCCESS;

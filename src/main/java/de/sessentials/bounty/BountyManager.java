@@ -319,16 +319,7 @@ public final class BountyManager implements Listener {
                                         })))
                         .then(Commands.argument("spieler", StringArgumentType.word())
                                 .requires(src -> src.getExecutor() instanceof Player && src.getSender().hasPermission(PERM_USE))
-                                .suggests((ctx, builder) -> {
-                                    Player self = (Player) ctx.getSource().getExecutor();
-                                    String typed = builder.getRemainingLowerCase();
-                                    for (Player p : Bukkit.getOnlinePlayers()) {
-                                        if (p != self && self.canSee(p) && p.getName().toLowerCase().startsWith(typed)) {
-                                            builder.suggest(p.getName());
-                                        }
-                                    }
-                                    return builder.buildFuture();
-                                })
+                                .suggests(plugin.knownPlayers().suggestions())
                                 .then(Commands.argument("betrag", LongArgumentType.longArg(1)).executes(ctx -> {
                                     place((Player) ctx.getSource().getExecutor(),
                                             StringArgumentType.getString(ctx, "spieler"),

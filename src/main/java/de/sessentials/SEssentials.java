@@ -40,6 +40,7 @@ import de.sessentials.msg.MessageCommands;
 import de.sessentials.news.NewsManager;
 import de.sessentials.notify.Notifications;
 import de.sessentials.player.EnderChestCommand;
+import de.sessentials.player.KnownPlayers;
 import de.sessentials.player.PlayerCommands;
 import de.sessentials.player.SudoCommand;
 import de.sessentials.punish.PunishCommands;
@@ -85,6 +86,7 @@ public final class SEssentials extends JavaPlugin {
 
     private ConfigFiles configFiles;
     private Modules modules;
+    private KnownPlayers knownPlayers;
     private TextService text;
     private PermissionInfo permissions;
     private SoftRestartManager softRestart;
@@ -163,6 +165,7 @@ public final class SEssentials extends JavaPlugin {
         text.setPrefix(getConfig().getString("prefix", ""));
 
         teleportWarmup = new TeleportWarmup(this);
+        knownPlayers = new KnownPlayers();
 
         // Bank vor allem, was Kosten hat (/spawn, /tpa)
         bank = new BankManager(this);
@@ -230,6 +233,7 @@ public final class SEssentials extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new Menu.ClickListener(), this);
         getServer().getPluginManager().registerEvents(chatPrompt, this);
         getServer().getPluginManager().registerEvents(teleportWarmup, this);
+        getServer().getPluginManager().registerEvents(knownPlayers, this);
         listen("softrestart", softRestart);
         listen("chat", chat);
         listen("join-quit", joinQuit);
@@ -426,6 +430,11 @@ public final class SEssentials extends JavaPlugin {
 
     public ChatPrompt chatPrompt() {
         return chatPrompt;
+    }
+
+    /** Alle Spieler, die schon einmal da waren – Tab-Vervollständigung für Befehle, die auch offline Spieler annehmen. */
+    public KnownPlayers knownPlayers() {
+        return knownPlayers;
     }
 
     /** Wartezeit vor Spieler-Teleports (/spawn, /tpa, /nether, /end, /clan home). */

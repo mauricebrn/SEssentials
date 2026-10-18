@@ -5,7 +5,6 @@ import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.sessentials.SEssentials;
 import de.sessentials.punish.PunishmentManager.Punishment;
 import de.sessentials.punish.PunishmentManager.Type;
@@ -229,16 +228,6 @@ public final class PunishCommands {
     // Registrierung
     // ------------------------------------------------------------
 
-    private static final SuggestionProvider<CommandSourceStack> PLAYERS = (ctx, builder) -> {
-        CommandSender sender = ctx.getSource().getSender();
-        String typed = builder.getRemainingLowerCase();
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            boolean visible = !(sender instanceof Player self) || self.canSee(p);
-            if (visible && p.getName().toLowerCase(Locale.ROOT).startsWith(typed)) builder.suggest(p.getName());
-        }
-        return builder.buildFuture();
-    };
-
     public void register(Commands commands) {
         // eigene Befehle statt Aliase, damit sie die Vanilla-Befehle (z.B. /ban) ersetzen
         commands.register(withTarget("ban", perm(Type.BAN), (ctx, rest) -> punish(src(ctx), Type.BAN, target(ctx), rest, null)),
@@ -255,7 +244,7 @@ public final class PunishCommands {
         commands.register(
                 Commands.literal("punish")
                         .requires(src -> List.of(Type.values()).stream().anyMatch(t -> src.getSender().hasPermission(perm(t))))
-                        .then(Commands.argument("spieler", StringArgumentType.word()).suggests(PLAYERS)
+                        .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions())
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .suggests((ctx, builder) -> {
                                             ConfigurationSection templates = plugin.getConfig().getConfigurationSection("punishments.templates");
@@ -282,7 +271,7 @@ public final class PunishCommands {
             String label, String permission, BiConsumer<CommandContext<CommandSourceStack>, String> action) {
         LiteralArgumentBuilder<CommandSourceStack> node = Commands.literal(label)
                 .requires(src -> src.getSender().hasPermission(permission));
-        node.then(Commands.argument("spieler", StringArgumentType.word()).suggests(PLAYERS)
+        node.then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions())
                 .executes(ctx -> {
                     action.accept(ctx, null);
                     return Command.SINGLE_SUCCESS;
@@ -298,7 +287,7 @@ public final class PunishCommands {
             String label, String permission, Consumer<CommandContext<CommandSourceStack>> action) {
         return Commands.literal(label)
                 .requires(src -> src.getSender().hasPermission(permission))
-                .then(Commands.argument("spieler", StringArgumentType.word()).suggests(PLAYERS).executes(ctx -> {
+                .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions()).executes(ctx -> {
                     action.accept(ctx);
                     return Command.SINGLE_SUCCESS;
                 }))

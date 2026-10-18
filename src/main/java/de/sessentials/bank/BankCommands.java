@@ -4,7 +4,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.sessentials.SEssentials;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -166,16 +165,6 @@ public final class BankCommands {
     // Registrierung
     // ------------------------------------------------------------
 
-    private static final SuggestionProvider<CommandSourceStack> ONLINE_PLAYERS = (ctx, builder) -> {
-        CommandSender sender = ctx.getSource().getSender();
-        String typed = builder.getRemainingLowerCase();
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            boolean visible = !(sender instanceof Player self) || (self != p && self.canSee(p));
-            if (visible && p.getName().toLowerCase().startsWith(typed)) builder.suggest(p.getName());
-        }
-        return builder.buildFuture();
-    };
-
     private static Player player(CommandContext<CommandSourceStack> ctx) {
         return (Player) ctx.getSource().getExecutor();
     }
@@ -212,7 +201,7 @@ public final class BankCommands {
                             balance(ctx.getSource().getSender(), null);
                             return Command.SINGLE_SUCCESS;
                         })
-                        .then(Commands.argument("spieler", StringArgumentType.word()).suggests(ONLINE_PLAYERS)
+                        .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions())
                                 .executes(ctx -> {
                                     balance(ctx.getSource().getSender(), StringArgumentType.getString(ctx, "spieler"));
                                     return Command.SINGLE_SUCCESS;
@@ -224,7 +213,7 @@ public final class BankCommands {
         commands.register(
                 Commands.literal("pay")
                         .requires(src -> src.getExecutor() instanceof Player p && p.hasPermission(PERM_PAY))
-                        .then(Commands.argument("spieler", StringArgumentType.word()).suggests(ONLINE_PLAYERS)
+                        .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions())
                                 .then(Commands.argument("betrag", LongArgumentType.longArg(1)).executes(ctx -> {
                                     pay(player(ctx), StringArgumentType.getString(ctx, "spieler"), LongArgumentType.getLong(ctx, "betrag"));
                                     return Command.SINGLE_SUCCESS;
@@ -246,7 +235,7 @@ public final class BankCommands {
         var eco = Commands.literal("eco").requires(src -> src.getSender().hasPermission(PERM_ADMIN));
         for (String[] op : new String[][]{{"give", "+"}, {"take", "-"}, {"set", "="}}) {
             eco.then(Commands.literal(op[0])
-                    .then(Commands.argument("spieler", StringArgumentType.word()).suggests(ONLINE_PLAYERS)
+                    .then(Commands.argument("spieler", StringArgumentType.word()).suggests(plugin.knownPlayers().suggestions())
                             .then(Commands.argument("betrag", LongArgumentType.longArg(0)).executes(ctx -> {
                                 CommandSender sender = ctx.getSource().getSender();
                                 String name = StringArgumentType.getString(ctx, "spieler");

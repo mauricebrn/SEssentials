@@ -188,17 +188,7 @@ public final class ReportManager implements Listener {
                 Commands.literal("report")
                         .requires(src -> src.getExecutor() instanceof Player p && p.hasPermission(PERM_USE))
                         .then(Commands.argument("spieler", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    Player self = (Player) ctx.getSource().getExecutor();
-                                    String typed = builder.getRemainingLowerCase();
-                                    for (Player p : Bukkit.getOnlinePlayers()) {
-                                        // versteckte (Vanish) Spieler nicht vorschlagen
-                                        if (p != self && self.canSee(p) && p.getName().toLowerCase().startsWith(typed)) {
-                                            builder.suggest(p.getName());
-                                        }
-                                    }
-                                    return builder.buildFuture();
-                                })
+                                .suggests(plugin.knownPlayers().suggestions())
                                 .then(Commands.argument("grund", StringArgumentType.greedyString())
                                         .executes(ctx -> {
                                             report((Player) ctx.getSource().getExecutor(),
