@@ -127,7 +127,7 @@ public final class FairplayMenu {
                 line("Strafvorlage", template.isBlank() ? "keine" : "#" + template),
                 line("Geldstrafe pro Strike", cfg.getLong("fairplay.strike-fine") > 0 ? plugin.bank().format(cfg.getLong("fairplay.strike-fine")) : "keine"),
                 line("Strikes verfallen", cfg.getLong("fairplay.strike-expire-days") <= 0 ? "nie" : "nach " + cfg.getLong("fairplay.strike-expire-days") + " Tagen"),
-                Component.text("Ändern in config.yml → fairplay", NamedTextColor.DARK_GRAY));
+                Component.text("Ändern in config/fairplay.yml", NamedTextColor.DARK_GRAY));
     }
 
     private static TagResolver target(FairplayManager.Standing s) {

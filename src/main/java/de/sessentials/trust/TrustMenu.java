@@ -64,7 +64,7 @@ public final class TrustMenu {
                 line("Nötige Stimmen", String.valueOf(trust.votesNeeded())),
                 line("Abstimmung beim Join", trust.autoVote() ? "automatisch" : "nur per /trust"),
                 line("Automatisch vertraut ab Spielzeit", trust.autoTrustPlaytime()),
-                Component.text("Ändern in der config.yml (trust)", NamedTextColor.GRAY)), p -> {});
+                Component.text("Ändern in config/trust.yml", NamedTextColor.GRAY)), p -> {});
         menu.fillEmpty();
         menu.open(player);
     }
@@ -104,7 +104,7 @@ public final class TrustMenu {
                 line("Status", suspicion.enabled() ? "an" : "aus (oder Modul punishments aus)"),
                 line("Nötige Stimmen", String.valueOf(suspicion.votesNeeded())),
                 line("Ban-Dauer", suspicion.banDuration()),
-                Component.text("Ändern in der config.yml (trust.suspicion)", NamedTextColor.GRAY)), p -> {});
+                Component.text("Ändern in config/trust.yml (suspicion)", NamedTextColor.GRAY)), p -> {});
         menu.fillEmpty();
         menu.open(player);
     }

@@ -50,7 +50,7 @@ public final class SuspicionVote {
     public SuspicionVote(SEssentials plugin, TrustManager trust) {
         this.plugin = plugin;
         this.trust = trust;
-        this.file = new File(plugin.getDataFolder(), "suspicion.yml");
+        this.file = plugin.dataFile("suspicion.yml");
         reload();
         load();
     }

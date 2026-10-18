@@ -98,8 +98,9 @@ public final class ItemTracker implements Listener {
 
     public ItemTracker(SEssentials plugin) {
         this.plugin = plugin;
-        this.playerDir = new File(plugin.getDataFolder(), "tracker/players");
-        this.serverFile = new File(plugin.getDataFolder(), "tracker/server.yml");
+        File dir = plugin.dataFile("tracker");
+        this.playerDir = new File(dir, "players");
+        this.serverFile = new File(dir, "server.yml");
         this.writer = new AsyncFileWriter("Tracker", plugin.getLogger());
         load();
         reload();

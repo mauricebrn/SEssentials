@@ -300,7 +300,7 @@ final class WebStats {
         for (NewsManager.News n : plugin.news().active()) {
             JsonObject j = new JsonObject();
             j.addProperty("id", n.id);
-            j.addProperty("title", PlainTextComponentSerializer.plainText().serialize(plugin.text().render(n.title, null)));
+            j.addProperty("title", PlainTextComponentSerializer.plainText().serialize(plugin.text().render(n.title)));
             j.addProperty("priority", n.priority);
             j.addProperty("created", n.created);
             arr.add(j);

@@ -93,7 +93,7 @@ public final class NewsManager implements Listener {
 
     public NewsManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "news.yml");
+        this.file = plugin.dataFile("news.yml");
         this.seenKey = new NamespacedKey(plugin, "news-seen");
         this.menu = new NewsMenu(plugin, this);
         load();

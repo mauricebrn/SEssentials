@@ -69,7 +69,7 @@ public final class ReportManager implements Listener {
 
     public ReportManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "reports.yml");
+        this.file = plugin.dataFile("reports.yml");
         this.menu = new ReportMenu(plugin, this);
         load();
     }

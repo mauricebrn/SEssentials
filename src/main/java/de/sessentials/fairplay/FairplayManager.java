@@ -67,7 +67,7 @@ public final class FairplayManager {
 
     public FairplayManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "fairplay.yml");
+        this.file = plugin.dataFile("fairplay.yml");
         this.writer = new AsyncFileWriter("Fairplay", plugin.getLogger());
         load();
         long ticks = 20L * 60 * Math.max(1, plugin.getConfig().getLong("fairplay.recovery.interval-minutes"));

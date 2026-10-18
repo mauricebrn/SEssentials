@@ -74,7 +74,7 @@ public final class TrustManager implements Listener {
 
     public TrustManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "trust.yml");
+        this.file = plugin.dataFile("trust.yml");
         reload();
         load();
         Bukkit.getScheduler().runTaskTimer(plugin, () -> Bukkit.getOnlinePlayers().forEach(this::checkPlaytime), 20L * 60, 20L * 60);

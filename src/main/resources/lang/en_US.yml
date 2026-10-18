@@ -1,0 +1,609 @@
+# ============================================================
+#  SEssentials – texts: English (en_US)
+#  Active with language: en_US in config.yml. Missing texts are added on startup.
+#  All texts support MiniMessage (https://webui.advntr.dev/) and &-color codes.
+#  <prefix> = prefix from config.yml; general placeholders are listed at the top of config.yml.
+# ============================================================
+
+# ------------------------------------------------------------
+# Softrestart
+# ------------------------------------------------------------
+softrestart:
+  bossbar:
+    text: "<red>Server restart in <white><time></white>"
+  started: "<prefix><green>Soft restart scheduled in <white><time></white>."
+  announce: "<prefix><red>The server restarts in <white><time></white>!"
+  title: "<red><bold>Restart"
+  subtitle: "<gray>in <white><time></white>"
+  cancelled: "<prefix><green>The scheduled restart was cancelled."
+  already-running: "<prefix><red>A soft restart is already running (<time> left). Use /softrestart cancel."
+  not-running: "<prefix><red>No soft restart is scheduled."
+  status: "<prefix><gray>Restart in <white><time></white>."
+  saving: "<prefix><yellow>Saving and restarting the server..."
+  kick: "<red><bold>Server restart</bold></red><newline><newline><gray>The server is restarting.<newline>Please reconnect in a few minutes."
+  time-format:
+    minutes: "<m> minute(s)"
+    minutes-seconds: "<m>:<ss> minutes"
+    seconds: "<s> second(s)"
+# ------------------------------------------------------------
+# Vanish (/vanish, alias /v)
+# ------------------------------------------------------------
+vanish:
+  enabled: "<prefix><gray>You are now <green>invisible</green>."
+  disabled: "<prefix><gray>You are <red>visible</red> again."
+  join-vanished: "<prefix><gray>You joined <green>invisible</green>."
+  cooldown: "<prefix><gray>No fake message sent (cooldown)."
+  blocked: "<red>Not possible while vanished."
+  bypass-on: "<prefix><gray>Protection bypass <green>on</green> – you can chat, build, break, hit and pick up items."
+  bypass-off: "<prefix><gray>Protection bypass <red>off</red>."
+  staff-join: "<prefix><gray><player> joined invisible."
+  staff-quit: "<prefix><gray><player> left the server invisible."
+# ------------------------------------------------------------
+# /fly, /heal, /feed, /god  (optionally with <player>)
+# ------------------------------------------------------------
+player-commands:
+  fly-on: "<prefix><gray>Flight <green>enabled</green>."
+  fly-off: "<prefix><gray>Flight <red>disabled</red>."
+  heal: "<prefix><gray>You have been <green>healed</green>."
+  feed: "<prefix><gray>Your hunger has been <green>satisfied</green>."
+  god-on: "<prefix><gray>God mode <green>enabled</green>."
+  god-off: "<prefix><gray>God mode <red>disabled</red>."
+  # to the executor when used on another player
+  other: "<prefix><gray>Ran /<command> for <white><player></white>."
+  player-only: "<prefix><red>Players only – use /<command> \\<player>."
+command-aliases:
+  missing-argument: "<prefix><red>/<alias> is missing arguments."
+  unsafe-argument: "<prefix><red>/<alias> only allows simple arguments (letters, numbers, _ . : -)."
+  removed: "<prefix><red>/<alias> no longer exists."
+  nested: "<prefix><red>/<alias> calls another alias and is therefore not run."
+# ------------------------------------------------------------
+# /sudo <player> <command> or /sudo <player> c:<text>
+# Placeholders: <target>, <input>
+# ------------------------------------------------------------
+sudo:
+  executed: "<prefix><gray><white><target></white> runs: <white><input>"
+  chatted: "<prefix><gray><white><target></white> says: <white><input>"
+  exempt: "<prefix><red><white><target></white> cannot be controlled with /sudo."
+  empty: "<prefix><red>Specify a command or c:<text>."
+# ------------------------------------------------------------
+# /nether and /end
+# ------------------------------------------------------------
+dimensions:
+  nether: "<prefix><gray>Welcome to the <red>Nether</red>."
+  end: "<prefix><gray>Welcome to the <light_purple>End</light_purple>."
+  overworld: "<prefix><gray>Back in the <green>Overworld</green>."
+  world-missing: "<prefix><red>This dimension is not enabled on the server."
+# ------------------------------------------------------------
+# Help (/help, alias /?)
+# ------------------------------------------------------------
+help:
+  title: "<dark_gray>Help"
+  empty: "<prefix><gray>No help available."
+  suggest: "<prefix><gray>Click here: <click:suggest_command:'<command>'><hover:show_text:'<gray>Put into chat'><gold><command></gold></hover></click>"
+  link: "<prefix><gray>Link: <click:open_url:'<url>'><aqua><u><url></u></aqua></click>"
+  text-entry: "<gray> <name> <dark_gray>–</dark_gray> <description>"
+# ------------------------------------------------------------
+# Teleport warmup (/spawn, /tpa, /nether, /end, /clan home)
+# ------------------------------------------------------------
+teleport-warmup:
+  started: "<prefix><gray>Teleporting in <white><seconds></white> seconds – don't move and don't take damage."
+  countdown: "<yellow>Teleporting in <white><seconds></white>…"
+  cancelled-move: "<prefix><red>Teleport cancelled – you moved."
+  cancelled-damage: "<prefix><red>Teleport cancelled – you took damage."
+# ------------------------------------------------------------
+# Spawn (/spawn, /setspawn)
+# Placeholders in cost texts: <price>, <amount>, <item>
+# ------------------------------------------------------------
+spawn:
+  set: "<prefix><green>Spawn set to your position."
+  teleported: "<prefix><gray>You were teleported to <green>spawn</green>."
+  teleported-paid: "<prefix><gray>You were teleported to <green>spawn</green>. <dark_gray>(-<price>)"
+  not-enough: "<prefix><red>You need <white><price></white> to teleport to spawn."
+  failed: "<prefix><red>Teleport failed."
+# ------------------------------------------------------------
+# Bank (/bank, /balance, /pay, /baltop, /eco)
+# Placeholders: <amount>, <balance>, <target>, <sender>, <rank>, <name>
+# ------------------------------------------------------------
+bank:
+  balance: "<prefix><gray>Balance: <gold><balance>"
+  balance-other: "<prefix><gray>Balance of <white><target></white>: <gold><balance>"
+  deposited: "<prefix><green>+<amount></green> <gray>deposited. Balance: <gold><balance>"
+  nothing-to-deposit: "<prefix><red>You have nothing in your inventory that can be deposited."
+  nothing-in-hand: "<prefix><red>The item in your hand cannot be deposited."
+  withdrawn: "<prefix><gray><amount> withdrawn. Balance: <gold><balance>"
+  withdrawn-partial: "<prefix><gray><amount> withdrawn – the rest is smaller than the smallest unit and stays in your account. Balance: <gold><balance>"
+  withdraw-disabled: "<prefix><red>Withdrawing is disabled on this server."
+  withdraw-too-small: "<prefix><red>The smallest amount you can withdraw is <amount>."
+  not-enough: "<prefix><red>Your balance is not enough for <amount> (<balance>)."
+  paid: "<prefix><gray>You sent <gold><amount></gold> to <white><target></white>."
+  received: "<prefix><white><sender></white> <gray>sent you <gold><amount></gold>."
+  pay-self: "<prefix><red>You cannot send money to yourself."
+  unknown-player: "<prefix><red>The player <white><target></white> has never been on the server."
+  invalid-amount: "<prefix><red>Invalid amount."
+  cancelled: "<prefix><gray>Input cancelled."
+  prompt-withdraw: "<prefix><gray>How much do you want to withdraw? Type the amount in chat. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  prompt-admin: "<prefix><gray>Change balance of <white><target></white>: <white>+100</white>, <white>-50</white> or <white>=200</white>. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  admin-updated: "<prefix><gray>Balance of <white><target></white>: <gold><balance>"
+  baltop-header: "<dark_gray>────── <gold><bold>Richest players</bold></gold> ──────"
+  baltop-entry: "<gray><rank>. <white><name></white> <dark_gray>»</dark_gray> <gold><balance>"
+# ------------------------------------------------------------
+# /enderchest (alias /ec)
+# Placeholders: <price>, <amount>, <item>
+# ------------------------------------------------------------
+enderchest:
+  opened-paid: "<prefix><gray>Ender chest opened. <dark_gray>(-<price>)"
+  not-enough: "<prefix><red>You need <white><price></white> to open your ender chest."
+# ------------------------------------------------------------
+# Lucky wheel (/gluecksrad, alias /gamble)
+# Placeholders: <amount>, <stake>, <multiplier>, <pot>, <price>, <winner> (jackpot-broadcast only)
+# ------------------------------------------------------------
+gambling:
+  won: "<prefix><green>The wheel stops at <white><multiplier></white> – you get <gold><amount></gold>. <dark_gray>(stake <stake>)"
+  jackpot: "<prefix><light_purple><bold>JACKPOT!</bold></light_purple> <green>You win the whole pot: <gold><amount></gold>."
+  jackpot-broadcast: "<prefix><light_purple><bold>JACKPOT!</bold></light_purple> <white><winner></white> <gray>won the whole lucky wheel pot: <gold><amount></gold>!"
+  lost: "<prefix><red>The wheel stops at <white><multiplier></white> – you lost. <dark_gray>(stake <stake>)"
+  not-enough: "<prefix><red>Your balance is not enough for a stake of <amount>."
+  not-enough-fee: "<prefix><red>You need <white><price></white> as a fee."
+  pot-too-small: "<prefix><red>The pot (<pot>) cannot cover the possible win. Highest stake right now: <white><amount></white>."
+  disabled: "<prefix><red>The lucky wheel is not set up."
+  prompt-stake: "<prefix><gray>How much do you want to bet? Type the amount in chat. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  invalid-amount: "<prefix><red>Invalid amount."
+  cancelled: "<prefix><gray>Input cancelled."
+  pot: "<prefix><gray>In the lucky wheel pot: <gold><pot>"
+  pot-set: "<prefix><gray>Pot set to <gold><pot></gold>."
+  prompt-pot: "<prefix><gray>Change pot (currently <gold><pot></gold>): <white>+100</white>, <white>-50</white> or <white>=200</white>. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+# ------------------------------------------------------------
+# Chest shops
+# Placeholders: <owner>, <amount>, <item>, <buy>, <sell>, <stock>, <price>, <customer>
+# ------------------------------------------------------------
+chestshop:
+  created: "<prefix><green>Shop created: <white><amount>x <item></white> – buy <gold><buy></gold>, sell <gold><sell></gold>."
+  created-admin: "<prefix><green>Admin shop created: <white><amount>x <item></white> – buy <gold><buy></gold>, sell <gold><sell></gold>."
+  no-permission: "<prefix><red>You are not allowed to create this type of shop."
+  no-container: "<prefix><red>The sign must be attached to or placed on a chest or barrel."
+  container-taken: "<prefix><red>This chest already belongs to the shop of <white><owner></white>."
+  invalid-amount: "<prefix><red>Line 2: enter an amount between 1 and 2304."
+  invalid-price: "<prefix><red>Line 3: enter a price, e.g. <white>K 100</white>, <white>V 80</white> or <white>K 100 V 80</white>."
+  no-item: "<prefix><red>Line 4: unknown item – or leave it empty and put the item in the chest or in your hand."
+  bought: "<prefix><gray>You bought <white><amount>x <item></white> for <gold><price></gold>."
+  sold: "<prefix><gray>You sold <white><amount>x <item></white> for <gold><price></gold>."
+  owner-bought: "<prefix><white><customer></white> <gray>bought <white><amount>x <item></white> for <gold><price></gold> in your shop."
+  owner-sold: "<prefix><white><customer></white> <gray>sold you <white><amount>x <item></white> for <gold><price></gold>."
+  no-buy: "<prefix><red>This shop doesn't sell anything."
+  no-sell: "<prefix><red>This shop doesn't buy anything."
+  out-of-stock: "<prefix><red>The shop is sold out."
+  shop-full: "<prefix><red>The shop's chest is full."
+  inventory-full: "<prefix><red>Your inventory is too full."
+  not-enough-money: "<prefix><red>You need <gold><price></gold>."
+  owner-not-enough-money: "<prefix><red>The owner can't pay <gold><price></gold> right now."
+  not-enough-items: "<prefix><red>You don't have <white><amount>x <item></white>."
+  info: "<prefix><gray>Shop of <white><owner></white>: <white><amount>x <item></white> – buy <gold><buy></gold>, sell <gold><sell></gold>, stock <white><stock></white>."
+  owner-hint: "<prefix><dark_gray>To remove: sneak + left-click."
+  protected: "<prefix><red>This chest belongs to the shop of <white><owner></white>."
+  removed: "<prefix><gray>Shop removed."
+  created-fee: "<prefix><green>Fee shop created: <white><item></white> for <gold><price></gold>."
+  invalid-fee-price: "<prefix><red>Line 3: enter a fee, e.g. <white>K 50</white>."
+  fee-paid: "<prefix><gray>You paid <gold><price></gold> to <white><owner></white> <dark_gray>(<item>)</dark_gray>."
+  owner-fee-paid: "<prefix><white><customer></white> <gray>paid <gold><price></gold> <dark_gray>(<item>)</dark_gray>."
+  creator-look-at-block: "<prefix><red>Look at a chest or barrel (any block for a fee shop), at most 5 blocks away."
+  creator-sign-blocked: "<prefix><red>There's no room for a sign on this side."
+  creator-no-sign: "<prefix><red>You need a sign in your inventory."
+  creator-place-denied: "<prefix><red>You are not allowed to place a sign here."
+  creator-prompt-amount: "<prefix><gray>Type the amount per trade in chat. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  creator-prompt-price: "<prefix><gray>Type the price in chat. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  creator-prompt-label: "<prefix><gray>Type a description in chat (max. 15 characters), e.g. <white>Farm</white>. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  creator-invalid-number: "<prefix><red>Invalid number."
+  fee-info: "<prefix><gray>Fee of <white><owner></white>: <white><item></white> – <gold><price></gold>. Right-click to pay."
+# ------------------------------------------------------------
+# Private messages: /msg (also /tell, /w, /whisper) and /r (/reply)
+# Placeholders: <sender>, <target>, <message> (always plain text)
+# ------------------------------------------------------------
+msg:
+  sent: "<dark_gray>[<gray>You</gray> <dark_gray>→</dark_gray> <click:suggest_command:'/msg <target> '><white><target></white></click>]</dark_gray> <gray><message>"
+  received: "<dark_gray>[<click:suggest_command:'/msg <sender> '><white><sender></white></click> <dark_gray>→</dark_gray> <gray>You</gray>]</dark_gray> <gray><message>"
+  not-online: "<prefix><red><target> is not online."
+  self: "<prefix><red>You can't message yourself."
+  no-partner: "<prefix><red>You haven't messaged anyone yet."
+  partner-offline: "<prefix><red>Your conversation partner is no longer online."
+# ------------------------------------------------------------
+# Spy (/socialspy, alias /spy)
+# Placeholders: <sender>, <target>, <message> (plain text)
+# ------------------------------------------------------------
+spy:
+  msg: "<dark_gray>[<light_purple>Spy</light_purple>] <gray><sender> <dark_gray>→</dark_gray> <target>:</gray> <white><message>"
+  mail: "<dark_gray>[<light_purple>Spy</light_purple>] <gray>Mail <sender> <dark_gray>→</dark_gray> <target>:</gray> <white><message>"
+  enabled: "<prefix><gray>Spy <green>enabled</green> – you see private messages and mails."
+  disabled: "<prefix><gray>Spy <red>disabled</red>."
+# ------------------------------------------------------------
+# Mail (/mail send <player> <message>, /mail [read], /mail delete <nr>, /mail clear)
+# Placeholders: <sender>, <target>, <message> (always plain text), <count>, <number>, <time>, <max>
+# ------------------------------------------------------------
+mail:
+  sent: "<prefix><gray>Mail sent to <white><target></white>: <gray><message>"
+  new: "<prefix><gray>New mail from <white><sender></white>. <click:run_command:'/mail read'><hover:show_text:'<gray>Read mails'><green>[Read]</green></hover></click>"
+  unread: "<prefix><gray>You have <white><count></white> unread mail(s). <click:run_command:'/mail read'><hover:show_text:'<gray>Read mails'><green>[Read]</green></hover></click>"
+  header: "<dark_gray>────── <gold><bold>Mails</bold></gold> <gray>(<count>)</gray> ──────"
+  entry: "<dark_gray><number>. <gray><time></gray> <white><sender></white><dark_gray>:</dark_gray> <gray><message>"
+  entry-unread: "<yellow><number>. <gray><time></gray> <white><sender></white><dark_gray>:</dark_gray> <white><message>"
+  footer: "<dark_gray>Reply: <gray>/mail send \\<player> …</gray> · Delete: <click:suggest_command:'/mail delete '><gray>/mail delete <nr></gray></click> · <click:run_command:'/mail clear'><red>[Delete all]</red></click>"
+  empty: "<prefix><gray>You have no mails."
+  deleted: "<prefix><gray>Mail <white><number></white> deleted."
+  cleared: "<prefix><gray>All mails deleted."
+  no-such-mail: "<prefix><red>There is no mail number <number>."
+  unknown-player: "<prefix><red>The player <white><target></white> has never been on the server."
+  self: "<prefix><red>You can't send yourself a mail."
+  too-long: "<prefix><red>The mail is too long (at most <max> characters)."
+  inbox-full: "<prefix><red>The inbox of <white><target></white> is full."
+  muted: "<prefix><red>You are muted and can't send mails."
+# ------------------------------------------------------------
+# Teleport requests (/tpa <player>, /tpaccept [player], /tpdeny [player])
+# Placeholders: <requester>, <target>, <seconds>, <price>, <amount>, <item>
+# ------------------------------------------------------------
+tpa:
+  sent: "<prefix><gray>Request sent to <white><target></white>. It expires in <seconds> seconds."
+  sent-paid: "<prefix><gray>Request sent to <white><target></white>. <dark_gray>(cost on acceptance: <price>)"
+  received: "<prefix><white><requester></white><gray> wants to teleport to you. <click:run_command:'/tpaccept <requester>'><hover:show_text:'<green>Accept'><green>[Accept]</green></hover></click> <click:run_command:'/tpdeny <requester>'><hover:show_text:'<red>Deny'><red>[Deny]</red></hover></click>"
+  accepted: "<prefix><green><target> accepted your request."
+  accepted-paid: "<prefix><green><target> accepted your request. <dark_gray>(-<price>)"
+  accepted-target: "<prefix><green>Accepted the request from <white><requester></white>."
+  denied: "<prefix><red><target> denied your request."
+  denied-target: "<prefix><gray>Denied the request from <white><requester></white>."
+  no-request: "<prefix><red>No pending teleport request."
+  not-found: "<prefix><red><target> is not online."
+  self: "<prefix><red>You can't send a request to yourself."
+  not-enough: "<prefix><red>You need <white><price></white> for a teleport request."
+  requester-cannot-pay: "<prefix><red><requester> can no longer pay <price> – teleport cancelled."
+  failed: "<prefix><red>Teleport failed."
+# ------------------------------------------------------------
+# Bounty (/kopfgeld <player> <amount>, alias /bounty)
+# Placeholders: <setter>, <killer>, <target>, <amount>, <total>, <rank>, <duration>
+# ------------------------------------------------------------
+bounty:
+  placed: "<prefix><green>Bounty of <white><amount></white> placed on <white><target></white>. <dark_gray>(total: <total>, valid: <duration>)"
+  placed-broadcast: "<prefix><white><setter></white><gray> placed a bounty of <gold><amount></gold> on <white><target></white>. <dark_gray>(total: <total>)"
+  claimed: "<prefix><green>You took out <white><target></white> and collected <gold><amount></gold> bounty plus their inventory!"
+  claimed-broadcast: "<prefix><white><killer></white><gray> collected the bounty of <gold><amount></gold> on <white><target></white>."
+  not-enough: "<prefix><red>You don't have <white><amount></white> in your account."
+  self: "<prefix><red>You can't place a bounty on yourself."
+  unknown-player: "<prefix><red>Player <white><target></white> not found."
+  list-header: "<dark_gray>────── <gold><bold>☠ Bounties</bold></gold> <dark_gray>──────"
+  list-entry: "<gray> <rank>. <white><target></white> <dark_gray>–</dark_gray> <gold><total>"
+  list-empty: "<prefix><gray>There are no bounties right now."
+  expired: "<prefix><gray>Your bounty on <white><target></white> has expired. <white><amount></white> was refunded."
+  removed: "<prefix><gray>Your bounty on <white><target></white> was removed by an admin. <white><amount></white> was refunded."
+  admin-removed: "<prefix><green>Bounty of <white><amount></white> on <white><target></white> removed and refunded."
+  none: "<prefix><red>There is no bounty on <white><target></white>."
+# ------------------------------------------------------------
+# Clans (/clan)
+# The commands themselves stay German: erstellen, einladen, annehmen, ablehnen, verlassen, kicken, leiter,
+# aufloesen, info, liste, home, home vorschlagen, abstimmen ja|nein, truhe, bank, einzahlen, auszahlen, friendlyfire an|aus
+# ------------------------------------------------------------
+clans:
+  chest:
+    item-name: "<light_purple>Clan chest"
+    title: "<dark_gray>Clan chest: <clan>"
+  no-clan: "<prefix><red>You are not in a clan. <gray>Create one: <white>/clan erstellen \\<name> \\<color>"
+  already-in-clan: "<prefix><red>You are already in a clan."
+  not-leader: "<prefix><red>Only the clan leader can do that."
+  not-member: "<prefix><red><target> is not in your clan."
+  self: "<prefix><red>That doesn't work with the clan leader."
+  invalid-name: "<prefix><red>Clan names: <min>–<max> characters, only letters, numbers and _."
+  name-taken: "<prefix><red>The clan <white><name></white> already exists."
+  invalid-color: "<prefix><red>Invalid color. Allowed: <white><colors>"
+  unknown-clan: "<prefix><red>Clan <white><name></white> not found."
+  player-not-found: "<prefix><red><target> is not online."
+  not-enough: "<prefix><red>You need <white><price></white>."
+  not-enough-own: "<prefix><red>You don't have <white><amount></white> in your account."
+  not-enough-clan: "<prefix><red>The clan account doesn't have enough – needed: <white><amount></white>."
+  created: "<prefix><green>Clan <clan> founded! <dark_gray>(-<price>)"
+  color-changed: "<prefix><gray>The clan color is now: <clan>"
+  invite-sent: "<prefix><gray>Invitation sent to <white><target></white>. It expires in <seconds> seconds."
+  invited: "<prefix><white><inviter></white><gray> invites you to the clan <clan>. <click:run_command:'/clan annehmen <clan_name>'><hover:show_text:'<green>Join'><green>[Accept]</green></hover></click> <click:run_command:'/clan ablehnen <clan_name>'><hover:show_text:'<red>Decline'><red>[Decline]</red></hover></click>"
+  invite-not-found: "<prefix><red>No pending clan invitation."
+  target-in-clan: "<prefix><red><target> is already in a clan."
+  clan-full: "<prefix><red>The clan <clan> is full."
+  joined: "<prefix><green><target> joined the clan <clan>."
+  declined: "<prefix><gray>Declined the invitation from <clan>."
+  declined-clan: "<prefix><gray><target> declined the invitation."
+  left: "<prefix><gray>You left the clan <clan>."
+  left-clan: "<prefix><gray><target> left the clan."
+  leader-cannot-leave: "<prefix><red>As leader you first have to choose a new leader (<white>/clan leiter \\<player></white>) or disband the clan."
+  kicked: "<prefix><gray><target> was kicked from the clan."
+  kicked-target: "<prefix><red>You were kicked from the clan <clan>."
+  new-leader: "<prefix><gold><target> is now the leader of <clan>."
+  disband-confirm: "<prefix><red>Really disband the clan? The clan account goes to you, the chest must be empty. <click:run_command:'/clan aufloesen bestaetigen'><hover:show_text:'<red>Disband for good'><dark_red>[Confirm]</dark_red></hover></click>"
+  disbanded: "<prefix><red>The clan <clan> was disbanded. <gray>The clan account (<amount>) went to the leader."
+  admin-disbanded: "<prefix><green>Clan <clan> disbanded."
+  chest-not-empty: "<prefix><red>Empty the clan chest first."
+  info: "<dark_gray>────── <clan> <dark_gray>──────<newline><gray>Leader: <white><leader><newline><gray>Members (<count>): <white><members><newline><gray>Clan account: <gold><balance><newline><gray>Home: <white><home><newline><gray>Chest: <white><chest><newline><gray>Friendly fire: <state>"
+  home-none: "not set"
+  chest-state-none: "not bought"
+  chest-state-unplaced: "bought, not placed"
+  chest-state-placed: "placed"
+  list-header: "<dark_gray>────── <gold><bold>Clans</bold></gold> <gray>(<count>)</gray> <dark_gray>──────"
+  list-entry: "<gray> <clan> <dark_gray>–</dark_gray> <white><count></white> members, leader <white><leader>"
+  list-empty: "<prefix><gray>There are no clans yet."
+  home-not-set: "<prefix><red>Your clan has no home yet. <gray>Propose one: <white>/clan home vorschlagen"
+  home-teleported: "<prefix><green>Teleported to the clan home."
+  home-teleported-paid: "<prefix><green>Teleported to the clan home. <dark_gray>(-<price>)"
+  teleport-failed: "<prefix><red>Teleport failed."
+  vote-started: "<prefix><white><proposer></white><gray> proposes <white><location></white> as clan home (<minutes> min). <click:run_command:'/clan abstimmen ja'><hover:show_text:'<green>For'><green>[Yes]</green></hover></click> <click:run_command:'/clan abstimmen nein'><hover:show_text:'<red>Against'><red>[No]</red></hover></click>"
+  vote-running: "<prefix><red>A vote is already running (<yes> yes / <no> no)."
+  no-vote: "<prefix><red>There is no home vote running right now."
+  voted-yes: "<prefix><green>You voted for it. <gray>(<yes> yes / <no> no of <count>)"
+  voted-no: "<prefix><red>You voted against it. <gray>(<yes> yes / <no> no of <count>)"
+  home-set: "<prefix><green>Vote passed: the clan home is now at <white><location></white>."
+  vote-failed: "<prefix><red>The vote on the home at <location> failed."
+  vote-expired: "<prefix><gray>The home vote has expired."
+  chest-bought: "<prefix><green><target> bought the clan chest for <amount> from the clan account."
+  chest-given: "<prefix><gray>Place the clan chest at most <white><distance></white> blocks from the clan home."
+  chest-not-bought: "<prefix><red>Your clan hasn't bought a chest yet."
+  chest-already-placed: "<prefix><red>Your clan chest is already placed. Break it to move it."
+  no-home: "<prefix><red>Set a clan home first – the chest has to be near it."
+  chest-too-far: "<prefix><red>Too far from the clan home."
+  chest-placed: "<prefix><green>Clan chest placed. <gray>From anywhere: <white>/clan truhe"
+  chest-picked-up: "<prefix><gray>Clan chest picked up – its contents are kept."
+  chest-foreign: "<prefix><red>This chest belongs to the clan <clan>."
+  chest-not-placed: "<prefix><red>Your clan chest is not placed."
+  chest-remote-disabled: "<prefix><red>The clan chest can only be opened at the block."
+  chest-remote-paid: "<prefix><gray>Clan chest opened remotely. <dark_gray>(-<price>)"
+  chest-remote-no-deposit: "<prefix><red>Remotely you can only take items out."
+  bank-balance: "<prefix><gray>Clan account of <clan>: <gold><balance>"
+  bank-deposited: "<prefix><white><target></white><gray> deposited <gold><amount></gold>. <dark_gray>(clan account: <balance>)"
+  bank-withdrawn: "<prefix><white><target></white><gray> withdrew <gold><amount></gold>. <dark_gray>(clan account: <balance>)"
+  state-on: "<red>on"
+  state-off: "<green>off"
+  friendly-fire-status: "<prefix><gray>Friendly fire in <clan>: <state> <dark_gray>(/clan friendlyfire an|aus)"
+  friendly-fire-changed: "<prefix><white><target></white><gray> set friendly fire to <state><gray>."
+  friendly-fire-blocked: "<green>Friendly fire is off in your clan."
+  # Admin panel
+  admin-updated: "<prefix><green>Clan <clan> updated."
+  admin-balance-prompt: "<prefix><gray>Change clan account of <clan>: <white>+100</white>, <white>-50</white> or <white>=200</white>. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  admin-balance: "<prefix><green>Clan account of <clan>: <gold><balance>"
+  admin-invalid-amount: "<prefix><red>Invalid amount."
+  admin-cancelled: "<prefix><gray>Input cancelled."
+  admin-no-position: "<prefix><red>Not set."
+# ------------------------------------------------------------
+# News (/news, /news read <id>, /newsadmin)
+# Placeholders: <id>, <title>, <priority>, <date>, <short>, in the feed also <count>, <new>
+# ------------------------------------------------------------
+news:
+  priorities:
+    '1': "<gray>Info"
+    '2': "<yellow>Normal"
+    '3': "<red>Important"
+    '4': "<dark_red><bold>URGENT</bold>"
+  feed:
+    header: "<dark_gray>────── <gold><bold>✉ News</bold></gold> <gray>(<count>)</gray> <dark_gray>– <gray>Click to read</gray> ──────"
+    entry: "<click:run_command:'/news read <id>'><hover:show_text:'<gray>Click to read the whole message'> <new><dark_gray>[</dark_gray><priority><dark_gray>]</dark_gray> <white><bold><title></bold></white> <dark_gray>»</dark_gray> <gray><short></hover></click>"
+    new: "<green><bold>NEW</bold></green> "
+    footer: "<dark_gray>──────────────────────────────"
+  read:
+    header: "<dark_gray>──────</dark_gray> <priority> <dark_gray>|</dark_gray> <white><bold><title></bold></white>"
+    date: "<gray>Published on <white><date>"
+    footer: "<click:run_command:'/news'><hover:show_text:'<gray>Back to the overview'><dark_gray>[<gray>« All news</gray>]</dark_gray></hover></click>"
+  none: "<prefix><gray>There is no news right now."
+  not-available: "<prefix><red>This news is not available."
+  not-found: "<prefix><red>This news doesn't exist."
+  saved: "<prefix><green>Saved."
+  cancelled: "<prefix><gray>Input cancelled."
+  deleted: "<prefix><red>News no. <id> was deleted."
+  delete-hint: "<prefix><gray>Use <red>shift + click</red> to delete."
+  back-to-editor: "<click:run_command:'/newsadmin edit <id>'><hover:show_text:'<gray>Back to the editor'><dark_gray>[<yellow>« Back to the editor</yellow>]</dark_gray></hover></click>"
+  invalid-duration: "<prefix><red>Invalid duration. Examples: <white>2h</white>, <white>7 days</white>, <white>1d 12h</white>. Try again:"
+  prompt-title: "<prefix><gray>Type the new <white>title</white> in chat. <click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click> <dark_gray>(or type <gray>cancel</gray>)"
+  prompt-content: "<prefix><gray>Type the new <white>content</white> in chat.<newline><dark_gray> - <gray>Clickable command: <white>[All news](/news)</white><newline><dark_gray> - <gray>Line break: <white>\\n</white> <dark_gray>| <gray>Colors: <white>&-codes</white> or <white>MiniMessage</white><newline><click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click> <dark_gray>(or type <gray>cancel</gray>)"
+  prompt-append: "<prefix><gray>Type the <white>text to append</white> in chat. <click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click> <dark_gray>(or type <gray>cancel</gray>)"
+  prompt-start: "<prefix><gray>In how much time should the news <white>start</white>? E.g. <white>2h</white>, <white>1 day</white>. <click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click>"
+  prompt-end: "<prefix><gray>How long should the news <white>run</white> (from its start)? E.g. <white>7 days</white>. <click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click>"
+# ------------------------------------------------------------
+# Reports (/report <player> <reason>, /reports, /clearreports)
+# Placeholders: <id>, <target>, <reporter>, <reason>
+# ------------------------------------------------------------
+reports:
+  sent: "<prefix><green>Your report has been submitted! <gray>(ID #<id>)"
+  self: "<prefix><red>You can't report yourself!"
+  unknown-player: "<prefix><red>The player <white><target></white> has never been on the server."
+  cooldown: "<prefix><red>Wait <time> more second(s) before reporting again."
+  notify: "<prefix><yellow><reporter></yellow><gray> reported <yellow><target></yellow> <dark_gray>(#<id>)</dark_gray>: <white><reason>"
+  teleported: "<prefix><green>You were teleported to <target>."
+  offline: "<prefix><red><target> is not online right now."
+  resolved: "<prefix><green>Report #<id> was marked as resolved."
+  deleted: "<prefix><red>Report #<id> was deleted."
+  gone: "<prefix><red>This report no longer exists."
+  cleared: "<prefix><green><count> open report(s) were deleted."
+# ------------------------------------------------------------
+# Web panel
+# ------------------------------------------------------------
+webpanel:
+  link: "<prefix><gray>Your login link (5 minutes, single use): <click:open_url:'<url>'><aqua><u>Open web panel</u></aqua></click> <dark_gray>– don't share it!"
+  disabled: "<prefix><red>The web panel is disabled or could not start (see console)."
+  logged-out: "<prefix><gray>All your web panel sessions have been ended."
+# ------------------------------------------------------------
+# Fairplay (/fairplay [player], /fairplay top, /fairplay reset <player>)
+# Placeholders: <target>, <score>, <max>, <strikes>, <strikes_max>, <threshold>, <violation>, <points>, <fine>, <victim>, <rank>
+# ------------------------------------------------------------
+fairplay:
+  combat-tagged: "<prefix><red>You are in combat! <gray>Don't leave the server in the next <white><seconds></white> seconds."
+  violation: "<prefix><red>Fairplay violation: <white><violation></white> <dark_gray>(-<points>)</dark_gray> <gray>– score <white><score>/<max></white>, strike at <threshold>."
+  violation-notify: "<prefix><gold>Fairplay</gold> <gray>» <white><target></white>: <violation> (-<points>, fine <fine>), score <score>, strikes <strikes>/<strikes_max>"
+  strike: "<prefix><dark_red><bold>Fairplay strike!</bold></dark_red> <gray>You now have <white><strikes>/<strikes_max></white> strikes – after that comes a punishment."
+  strike-notify: "<prefix><gold>Fairplay</gold> <gray>» <red><target> got a strike</red> (<strikes>/<strikes_max>, fine <fine>)"
+  fined: "<prefix><red>Fine: <white><fine></white> was taken from your account."
+  info: "<dark_gray>────── <gold><bold>Fairplay</bold></gold> <white><target></white> <dark_gray>──────<newline><gray>Points: <white><score>/<max></white> <dark_gray>(strike at <threshold>)<newline><gray>Strikes: <white><strikes>/<strikes_max><newline><gray>Rank: <white><rank>"
+  history-entry: "<dark_gray> <date></dark_gray> <red><violation></red> <gray>-<points> points, -<fine>"
+  top-header: "<dark_gray>────── <gold><bold>Fairplay ranking</bold></gold> <dark_gray>──────"
+  top-entry: "<gray> <rank>. <white><target></white> <dark_gray>–</dark_gray> <green><score></green> <gray>points, <strikes> strikes"
+  top-empty: "<prefix><gray>No entries yet."
+  reset: "<prefix><green>Fairplay of <white><target></white> reset."
+  unknown-player: "<prefix><red>Player <white><target></white> not found."
+  admin-strike-removed: "<prefix><green>Removed one strike from <white><target></white>."
+  admin-no-strike: "<prefix><gray><target> has no active strikes."
+# ------------------------------------------------------------
+# Punishments (/ban, /mute, /ipban, /punish, /unban, /unmute, /unbanip, /history)
+# Placeholders: <id>, <type>, <verb>, <target>, <reason>, <actor>, <duration>, <remaining>, <date>, <expires>
+# ------------------------------------------------------------
+punishments:
+  ban-screen: "<red><bold>You have been banned from the server</bold></red><newline><newline><gray>Reason: <white><reason></white><newline><gray>Duration: <white><remaining></white><newline><gray>Expires: <white><expires></white><newline><newline><dark_gray>ID #<id>"
+  ipban-screen: "<red><bold>Your IP has been banned from the server</bold></red><newline><newline><gray>Reason: <white><reason></white><newline><gray>Duration: <white><remaining></white><newline><newline><dark_gray>ID #<id>"
+  muted: "<prefix><red>You have been muted: <white><reason></white> <gray>(<duration>)"
+  muted-blocked: "<prefix><red>You are muted: <white><reason></white> <gray>– <remaining> left"
+  unmuted: "<prefix><green>Your mute has been lifted."
+  notify: "<prefix><red><actor></red> <gray>punished <white><target></white> (<verb>) <dark_gray>(<duration>)</dark_gray>: <white><reason></white> <dark_gray>#<id>"
+  broadcast: "<prefix><white><target></white> <gray>was punished (<verb>): <white><reason>"
+  revoked: "<prefix><green><revoker></green> <gray>lifted the <type> of <white><target></white> <dark_gray>#<id>"
+  not-punished: "<prefix><red><target> has no active <type>."
+  unknown-player: "<prefix><red>The player <white><target></white> has never been on the server."
+  unknown-template: "<prefix><red>There is no template <white><id></white>."
+  no-permission: "<prefix><red>You don't have permission for that."
+  self: "<prefix><red>You can't punish yourself."
+  exempt: "<prefix><red><target> cannot be punished."
+  no-ip: "<prefix><red>No IP is known for <target> (never been online?)."
+  history-header: "<dark_gray>────── <gold>Punishments of <yellow><target></yellow> <gray>(<count>)</gray> ──────"
+  history-entry: "<dark_gray>#<id></dark_gray> <gold><type></gold> <white><reason></white> <gray>– <duration>, by <actor> on <date> – <status>"
+# ------------------------------------------------------------
+# ItemGuard
+# Placeholders: <items>, <target>, <id> (report number)
+# ------------------------------------------------------------
+itemguard:
+  removed: "<prefix><red>Forbidden items were removed: <white><items>"
+  spawn-egg: "<prefix><red>Spawn eggs may not be used."
+  notify: "<prefix><red><target></red> <gray>had forbidden items <dark_gray>(report #<id>)</dark_gray>: <white><items>"
+  scanned: "<prefix><green>Inventory of <white><target></white> was scanned."
+  scanned-all: "<prefix><green>All players were scanned."
+  not-online: "<prefix><red>This player is not online."
+# ------------------------------------------------------------
+# CreativeLog (/creativelog <player> [page], alias /clog)
+# Placeholders: <target>, <page>, <pages>, <prev>, <next>
+# ------------------------------------------------------------
+creativelog:
+  header: "<dark_gray>────── <gold>Creative log: <yellow><target></yellow> <gray>(page <page>/<pages>)</gray> ──────"
+  footer: "<dark_gray>Newest first</dark_gray> <click:run_command:'/creativelog <target> <prev>'><yellow>[« Back]</yellow></click> <click:run_command:'/creativelog <target> <next>'><yellow>[Next »]</yellow></click>"
+  none: "<prefix><red>There are no creative logs for <white><target></white>."
+  no-page: "<prefix><red>This page doesn't exist (only <pages>)."
+# ------------------------------------------------------------
+# Trust (/trust, /suspect)
+# Placeholders: <target>, <votes>, <needed>, <voter>, <time> (playtime-left: missing playtime, suspect-banned: ban duration)
+# ------------------------------------------------------------
+trust:
+  join: "<prefix><yellow>You are new here! <gray>Until enough players trust you (<white><votes>/<needed></white>), you can't interact with the world."
+  blocked: "<red>You need the trust of other players first. <gray>(/trust)"
+  status-trusted: "<prefix><green>You are trusted and can vote for new players with /trust \\<player>."
+  status-untrusted: "<prefix><gray>You have <white><votes>/<needed></white> votes. Ask other players for <white>/trust <target></white>."
+  playtime-left: "<prefix><gray>Or play <white><time></white> more and you will be trusted automatically."
+  no-vote: "<prefix><red>You are not allowed to vote."
+  unknown-player: "<prefix><red>The player <white><target></white> has never been on the server."
+  self: "<prefix><red>You can't vote for yourself."
+  already-trusted: "<prefix><red><white><target></white> is already trusted."
+  already-voted: "<prefix><red>You already voted for <white><target></white> <gray>(<votes>/<needed>)</gray>."
+  vote-request: "<prefix><yellow>New player <white><target></white> <gray>(<votes>/<needed> votes)</gray> <click:run_command:'/trust <target>'><hover:show_text:'<gray>Vote for <target>'><green>[Trust]</green></hover></click>"
+  voted: "<prefix><green>You voted for <white><target></white> <gray>(<votes>/<needed>)</gray>."
+  received-vote: "<prefix><green><white><voter></white> trusts you <gray>(<votes>/<needed>)</gray>."
+  now-trusted: "<prefix><green><white><target></white> is now trusted and can interact with the world!"
+  now-trusted-self: "<prefix><green>You are now trusted – you can interact with the world!"
+  revoked-self: "<prefix><red>You are no longer trusted."
+  added: "<prefix><green><white><target></white> is now trusted."
+  removed: "<prefix><red><white><target></white> is no longer trusted."
+  suspicion-disabled: "<prefix><red>The suspicion vote is disabled."
+  suspect-offline: "<prefix><red><white><target></white> is not online right now."
+  suspect-self: "<prefix><red>You can't vote against yourself."
+  suspect-exempt: "<prefix><red>You can't vote against <white><target></white>."
+  already-suspected: "<prefix><red>You already voted against <white><target></white> <gray>(<votes>/<needed>)</gray>."
+  suspected: "<prefix><yellow>You voted against <white><target></white> <gray>(<votes>/<needed>)</gray>."
+  suspicion-notify: "<prefix><yellow><voter></yellow> <gray>suspects <white><target></white> <dark_gray>(<votes>/<needed>)</dark_gray>"
+  suspicion-dismissed: "<prefix><green>The suspicion vote against <white><target></white> was dismissed."
+  suspect-banned: "<prefix><red><white><target></white> was banned for <white><time></white> after a vote."
+  votes-reset: "<prefix><yellow>The votes for <white><target></white> were reset."
+# ------------------------------------------------------------
+# Client detector
+# Placeholders: <client>, <channels>, <match>, <id> (entry in the admin panel)
+# ------------------------------------------------------------
+client-detector:
+  vanilla: "<prefix><gray><player> joined with <green>Vanilla</green>."
+  modded: "<prefix><gray><player> joined with <yellow><client></yellow>. <dark_gray>[<hover:show_text:'<gray>Channels:<newline><white><channels>'>Channels</hover>]"
+  hack: "<prefix><red><bold>Hack client:</bold></red> <white><player></white> <gray>(<client>, match: <red><match></red><gray>) – entry #<id> in the admin panel."
+# ------------------------------------------------------------
+# Admin panel (/admin)
+# ------------------------------------------------------------
+admin:
+  title: "<dark_gray>Admin panel"
+# ------------------------------------------------------------
+# General
+# ------------------------------------------------------------
+general:
+  reloaded: "<prefix><green>Configuration reloaded."
+# ------------------------------------------------------------
+# Item upgrader (/upgrader, alias /upgrade)
+# Placeholders: <item>, <amount>, <chance>, <value>, <total>
+# ------------------------------------------------------------
+upgrader:
+  bet-empty: "<prefix><red>Choose a stake first: click an item in your inventory."
+  bet-blacklisted: "<prefix><red>This item cannot be staked."
+  bet-no-value: "<prefix><red>This item has no value and cannot be staked."
+  bet-modified: "<prefix><red>Renamed or special items cannot be staked."
+  bet-container: "<prefix><red>Empty the container first – its contents would be lost too."
+  bet-changed: "<prefix><red>Your stake changed in your inventory – select it again."
+  target-empty: "<prefix><red>Choose a target first."
+  won: "<prefix><green>Upgrade succeeded! You get <white><amount>x <item></white>. <dark_gray>(chance <chance>)"
+  lost: "<prefix><red>Upgrade failed – your stake is gone. <dark_gray>(chance <chance>)"
+  delivered: "<prefix><green>Your item upgrader win has been delivered."
+  value: "<prefix><gray>Value of <white><item></white>: as stake <gold><value></gold> each (<gold><total></gold> for <amount>), as win <gold><output></gold> each."
+  value-unknown: "<prefix><gray>This item has no upgrader value."
+  prompt-amount: "<prefix><gray>How many do you want to win? Type a number in chat. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  prompt-search: "<prefix><gray>Type a search term in chat (English name, <white>-</white> = all). <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  prompt-value: "<prefix><gray>Type a new value in chat or <white>reset</white> for the calculated value. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  prompt-input-value: "<prefix><gray>Type a new <white>stake value</white> in chat or <white>reset</white> for the base value. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  prompt-output-value: "<prefix><gray>Type a new <white>win value</white> in chat or <white>reset</white> for the base value. <click:suggest_command:'cancel'><red>[Cancel]</red></click>"
+  invalid-number: "<prefix><red>Invalid number."
+# ------------------------------------------------------------
+# Auto-update from GitHub releases (/autoupdate an|aus|check)
+# Placeholders: <version>, <current>, <error>, <repository>, <state>, <time>, <result>
+# ------------------------------------------------------------
+auto-update:
+  enabled: "<prefix><green>Auto-update enabled."
+  disabled: "<prefix><gray>Auto-update disabled."
+  status: "<prefix><gray>Auto-update: <white><state></white> · <white><repository></white> daily at <white><time></white> · installed <white><current></white><newline><gray>Last check: <white><result>"
+  checking: "<prefix><gray>Checking for updates …"
+  busy: "<prefix><gray>A check is already running."
+  up-to-date: "<prefix><green>SEssentials is up to date (<current>)."
+  already-staged: "<prefix><gray>Version <white><version></white> is already downloaded and becomes active after the next restart."
+  no-release: "<prefix><gray>The repository <white><repository></white> has no release yet."
+  staged: "<prefix><green>Update <white><version></white> downloaded (installed: <current>) – active after the next restart."
+  failed: "<prefix><red>Auto-update failed: <white><error>"
+# ------------------------------------------------------------
+# Fake players (/fakeplayer, aliases /fp, /bot)
+# Placeholders: <name>, <skin>, <goal>, <defense>, <count>, <state>, <location>
+# ------------------------------------------------------------
+fakeplayers:
+  created: "<prefix><green>Fake player <white><name></white> created (skin: <skin>). AI: <white>/fp ai <name> on</white>"
+  removed: "<prefix><gray>Fake player <white><name></white> removed."
+  joined: "<prefix><green><white><name></white> joined the server."
+  left: "<prefix><gray><white><name></white> left the server."
+  already-online: "<prefix><red><white><name></white> is already online."
+  name-in-use: "<prefix><red>A player named <white><name></white> is already online."
+  banned: "<prefix><red><white><name></white> is banned and can't join."
+  join-failed: "<prefix><red><white><name></white> could not join – details in the console."
+  offline: "<prefix><red><white><name></white> is offline right now (<white>/fp join <name></white>)."
+  exists: "<prefix><red>The name <white><name></white> is already taken."
+  invalid-name: "<prefix><red>Invalid name <white><name></white> – 3 to 16 characters, only letters, numbers and _."
+  limit: "<prefix><red>There are already <count> fake players (maximum)."
+  not-found: "<prefix><red>No fake player named <white><name></white>."
+  list-empty: "<prefix><gray>There are no fake players."
+  list-header: "<prefix><gray>Fake players (<white><count></white>):"
+  list-entry: "<dark_gray> - <white><name></white> <dark_gray>»</dark_gray> <gray><state></gray> <dark_gray>(<location>)"
+  ai-on: "<prefix><green>AI of <white><name></white> enabled: <goal>."
+  ai-off: "<prefix><gray>AI of <white><name></white> disabled."
+  goal-set: "<prefix><gray>Goal of <white><name></white>: <white><goal></white>."
+  defense-set: "<prefix><gray>Defense of <white><name></white>: <white><defense></white>."
+  invalid-block: "<prefix><red>That is not a minable block."
+  ai-hint: "<prefix><gray>Note: the AI of <white><name></white> is off – enable it with <white>/fp ai <name> on</white>."
+  skin-set: "<prefix><gray>Skin of <white><name></white> set to <white><skin></white>."
+  equipped: "<prefix><gray><white><name></white> now wears a copy of your equipment."
+  teleported: "<prefix><gray>Teleported to <white><name></white>."
+  moved: "<prefix><gray><white><name></white> is now here (new home point)."
+  animate-start: "<prefix><green>You are now controlling <white><name></white>. Your chat goes through them. Stop: <white>/fp animate</white>"
+  animate-stop: "<prefix><gray>You are no longer controlling <white><name></white>."
+  animate-none: "<prefix><red>You are not controlling a fake player right now."
+  animate-busy: "<prefix><red><white><name></white> is already being controlled by someone else."
+  animate-output: "<dark_gray>[<gray><name></gray>]</dark_gray> <output>"
+  login-denied: "<prefix><red><white><name></white> was rejected on login – reason in the console."

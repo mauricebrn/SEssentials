@@ -10,18 +10,21 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
  * Fragt einen Text im Chat ab (z.B. Titel im News-Editor). Die nächste Chatnachricht des Spielers
- * wird abgefangen statt gesendet. "abbrechen" oder {@link #cancel} bricht ab.
+ * wird abgefangen statt gesendet. "abbrechen"/"cancel" oder {@link #cancel} bricht ab.
  */
 public final class ChatPrompt implements Listener {
 
-    public static final String CANCEL_WORD = "abbrechen";
+    /** Wörter, die eine Eingabe abbrechen (je Sprache eins). */
+    private static final Set<String> CANCEL_WORDS = Set.of("abbrechen", "cancel");
 
     private record Pending(Consumer<String> onInput, Runnable onCancel) {}
 
@@ -55,7 +58,7 @@ public final class ChatPrompt implements Listener {
         String input = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
-            if (input.equalsIgnoreCase(CANCEL_WORD)) p.onCancel().run();
+            if (CANCEL_WORDS.contains(input.toLowerCase(Locale.ROOT))) p.onCancel().run();
             else p.onInput().accept(input);
         });
     }

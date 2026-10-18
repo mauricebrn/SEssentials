@@ -231,7 +231,7 @@ public final class LuckyWheel {
                 ? Component.text("keine", NamedTextColor.WHITE)
                 : plugin.text().render("<white><price>", s.fee().tags())));
         fields.add(Component.empty());
-        fields.add(Component.text("Ändern in config.yml (gambling)", NamedTextColor.DARK_GRAY));
+        fields.add(Component.text("Ändern in config/gambling.yml", NamedTextColor.DARK_GRAY));
         fields.add(Component.text("Pro Spieler: Webpanel → Glücksrad", NamedTextColor.DARK_GRAY));
         menu.set(13, Menu.icon(Material.PAPER, Component.text("Felder & Chancen", NamedTextColor.AQUA, TextDecoration.BOLD),
                 fields.toArray(Component[]::new)), p -> {});

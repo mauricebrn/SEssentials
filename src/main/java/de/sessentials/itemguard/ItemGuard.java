@@ -84,7 +84,7 @@ public final class ItemGuard implements Listener {
     }
 
     // ------------------------------------------------------------
-    // Einstellungen (für das Admin-Menü; werden in der config.yml gespeichert)
+    // Einstellungen (für das Admin-Menü; werden in config/itemguard.yml gespeichert)
     // ------------------------------------------------------------
 
     public boolean enabled() { return enabled; }

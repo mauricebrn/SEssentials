@@ -1,9 +1,9 @@
 package de.sessentials.gamble;
 
+import de.sessentials.SEssentials;
 import de.sessentials.storage.AsyncFileWriter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -55,8 +55,8 @@ public final class GambleStats {
     private final NavigableMap<String, Day> days = new TreeMap<>();
     private final Deque<Spin> recent = new ArrayDeque<>();
 
-    GambleStats(Plugin plugin) {
-        this.file = new File(plugin.getDataFolder(), "gambling-stats.yml");
+    GambleStats(SEssentials plugin) {
+        this.file = plugin.dataFile("gambling-stats.yml");
         this.writer = new AsyncFileWriter("Gambling", plugin.getLogger());
         load();
     }

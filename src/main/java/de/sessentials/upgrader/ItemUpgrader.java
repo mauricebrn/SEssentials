@@ -85,7 +85,7 @@ public final class ItemUpgrader implements Listener {
 
     public ItemUpgrader(SEssentials plugin) {
         this.plugin = plugin;
-        this.pendingFile = new File(plugin.getDataFolder(), "upgrader-pending.yml");
+        this.pendingFile = plugin.dataFile("upgrader-pending.yml");
         this.writer = new AsyncFileWriter("Upgrader", plugin.getLogger());
         this.menu = new UpgraderMenu(plugin, this);
         loadPending();

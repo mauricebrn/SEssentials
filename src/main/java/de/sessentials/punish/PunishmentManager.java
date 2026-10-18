@@ -110,7 +110,7 @@ public final class PunishmentManager implements Listener {
 
     public PunishmentManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "punishments.yml");
+        this.file = plugin.dataFile("punishments.yml");
         this.writer = new AsyncFileWriter("Punishments", plugin.getLogger());
         load();
     }

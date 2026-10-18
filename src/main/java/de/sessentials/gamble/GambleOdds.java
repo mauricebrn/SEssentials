@@ -45,7 +45,7 @@ public final class GambleOdds implements Listener {
 
     GambleOdds(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "gambling-odds.yml");
+        this.file = plugin.dataFile("gambling-odds.yml");
         this.writer = new AsyncFileWriter("GambleOdds", plugin.getLogger());
         load();
     }

@@ -66,7 +66,7 @@ public final class BountyManager implements Listener {
     public BountyManager(SEssentials plugin) {
         this.plugin = plugin;
         this.bank = plugin.bank();
-        this.file = new File(plugin.getDataFolder(), "bounties.yml");
+        this.file = plugin.dataFile("bounties.yml");
         this.writer = new AsyncFileWriter("Bounty", plugin.getLogger());
         load();
         reload();

@@ -98,7 +98,7 @@ public final class FakePlayerManager implements Listener {
 
     public FakePlayerManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "fakeplayers.yml");
+        this.file = plugin.dataFile("fakeplayers.yml");
         this.writer = new AsyncFileWriter("FakePlayers", plugin.getLogger());
         this.animator = new FakeAnimator(plugin, this);
         // gehört zu diesem Modul – nur angemeldet, wenn es die Fake-Spieler gibt

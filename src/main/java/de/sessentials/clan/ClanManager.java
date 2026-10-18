@@ -47,7 +47,7 @@ public final class ClanManager {
     public ClanManager(SEssentials plugin) {
         this.plugin = plugin;
         this.bank = plugin.bank();
-        this.file = new File(plugin.getDataFolder(), "clans.yml");
+        this.file = plugin.dataFile("clans.yml");
         this.writer = new AsyncFileWriter("Clans", plugin.getLogger());
         load();
     }

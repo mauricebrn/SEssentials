@@ -36,7 +36,7 @@ public final class BankManager implements Listener {
 
     public BankManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "bank.yml");
+        this.file = plugin.dataFile("bank.yml");
         this.writer = new AsyncFileWriter("Bank", plugin.getLogger());
         load();
     }

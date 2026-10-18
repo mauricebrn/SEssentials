@@ -36,11 +36,22 @@ Optional: **LuckPerms** (Prefix/Suffix/Gruppen) und **PlaceholderAPI**.
 ## Installation
 
 `SEssentials-<version>.jar` aus den [Releases](../../releases) in den `plugins/`-Ordner legen und den Server starten.
-Die Konfiguration liegt danach in `plugins/SEssentials/config.yml`. Änderungen mit `/sess reload` übernehmen.
+Danach liegt in `plugins/SEssentials/`:
 
-Neue Optionen aus Updates werden nicht automatisch in eine bestehende `config.yml` geschrieben.
-Fehlt ein Abschnitt, gelten die Standardwerte. Zum Anpassen den Abschnitt aus der
-[Standard-Config](src/main/resources/config.yml) übernehmen.
+| Pfad | Inhalt |
+|------|--------|
+| `config.yml` | global: Sprache (`language`), Prefix, Module an/aus |
+| `config/<modul>.yml` | Einstellungen je Modul, z.B. `trust.yml`, `clans.yml` |
+| `lang/<sprache>.yml` | alle Texte – mitgeliefert `de_DE.yml` (Deutsch) und `en_US.yml` (English) |
+| `data/` | gespeicherte Daten (Bank, Clans, Strafen, …) |
+
+Sprache wechseln: `language: en_US` in der `config.yml`, dann `/sess reload`. Eigene Sprache: `lang/<code>.yml` anlegen
+und eintragen – fehlende Texte kommen aus `en_US`. Admin-Menüs (Kachel-Beschriftungen) sind noch fest auf Deutsch.
+
+Neue Optionen und Texte aus Updates werden beim Start samt Kommentaren in die passende Datei ergänzt; vorhandene Werte bleiben.
+Eine `config.yml` aus älteren Versionen wird beim ersten Start automatisch aufgeteilt und als `config.yml.old` behalten.
+Alle Standardwerte: [Einstellungen](src/main/resources/config.yml), [Texte DE](src/main/resources/lang/de_DE.yml),
+[Texte EN](src/main/resources/lang/en_US.yml).
 
 ## Befehle & Rechte
 
@@ -134,7 +145,7 @@ Spieler speichern → alle Spieler mit `kick`-Nachricht kicken → Welten speich
 - `nametag` setzt Prefix, Suffix und Namensfarbe über dem Kopf, pro Gruppe mit `priority` für die TAB-Sortierung.
 
 ## Join- / Leave-Nachrichten
-Unter `join-quit` in der `config.yml` (`join`, `quit`). Alle [Platzhalter](#platzhalter) sind nutzbar.
+In `config/join-quit.yml` (`join`, `quit`). Alle [Platzhalter](#platzhalter) sind nutzbar.
 Leerer Text blendet die Nachricht aus, `enabled: false` lässt die Vanilla-Nachrichten unverändert.
 
 ## Vanish
@@ -214,7 +225,7 @@ die Konsole ein Protokoll. Spieler mit `sess.itemguard.bypass` (Standard: op) we
 
 Im Admin-Panel (Moderation → **ItemGuard**): Schalter für ItemGuard, Spawn-Eier, Enderchest und Shulker,
 verbotene Items ansehen und per Rechtsklick entfernen, „Item aus der Hand verbieten“, „Alle jetzt scannen“.
-Änderungen werden in der `config.yml` gespeichert.
+Änderungen werden in `config/itemguard.yml` gespeichert.
 
 ## CreativeLog
 Protokolliert alle Aktionen von Spielern im Kreativmodus – außer mit `sess.creativelog.bypass` (Standard: niemand,

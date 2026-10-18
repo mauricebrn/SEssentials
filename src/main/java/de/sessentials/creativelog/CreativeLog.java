@@ -115,7 +115,7 @@ public final class CreativeLog implements Listener {
 
     public CreativeLog(SEssentials plugin) {
         this.plugin = plugin;
-        this.dir = new File(plugin.getDataFolder(), "creativelog");
+        this.dir = plugin.dataFile("creativelog");
         this.writer = new AsyncFileWriter("CreativeLog", plugin.getLogger());
         load();
         reload();

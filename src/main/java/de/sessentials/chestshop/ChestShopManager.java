@@ -90,7 +90,7 @@ public final class ChestShopManager implements Listener {
 
     public ChestShopManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "shops.yml");
+        this.file = plugin.dataFile("shops.yml");
         this.writer = new AsyncFileWriter("Shops", plugin.getLogger());
         load();
     }

@@ -38,7 +38,7 @@ public final class SpawnManager implements Listener {
 
     public SpawnManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "spawn.yml");
+        this.file = plugin.dataFile("spawn.yml");
         this.spawn = YamlConfiguration.loadConfiguration(file).getLocation("spawn");
         reload();
     }

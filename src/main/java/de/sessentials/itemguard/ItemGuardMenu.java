@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-/** ItemGuard im Admin-Panel: Schalter, Liste verbotener Items und Sofort-Scan. Änderungen landen in der config.yml. */
+/** ItemGuard im Admin-Panel: Schalter, Liste verbotener Items und Sofort-Scan. Änderungen landen in config/itemguard.yml. */
 public final class ItemGuardMenu {
 
     public static final String PERM = "sess.itemguard.admin";
@@ -77,7 +77,7 @@ public final class ItemGuardMenu {
                         .append(Component.text(String.valueOf(banned.size()), NamedTextColor.WHITE))), p -> {});
         if (banned.size() > LIST_SIZE) {
             menu.set(53, Menu.icon(Material.BARRIER, Component.text("+" + (banned.size() - LIST_SIZE) + " weitere", NamedTextColor.RED),
-                    Component.text("Nur in der config.yml sichtbar", NamedTextColor.GRAY)), p -> {});
+                    Component.text("Nur in config/itemguard.yml sichtbar", NamedTextColor.GRAY)), p -> {});
         }
         menu.fillEmpty();
         menu.refreshWith(this::open);

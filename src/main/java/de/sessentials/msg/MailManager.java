@@ -61,7 +61,7 @@ public final class MailManager implements Listener {
 
     public MailManager(SEssentials plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "mail.yml");
+        this.file = plugin.dataFile("mail.yml");
         this.writer = new AsyncFileWriter("Mail", plugin.getLogger());
         for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
             if (p.getName() != null) knownNames.add(p.getName());
