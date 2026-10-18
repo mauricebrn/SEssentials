@@ -176,6 +176,11 @@ help:
         - {command: "/tpa", name: "<gold>/tpa <spieler>", description: "<gray>Teleport-Anfrage senden", icon: COMPASS}
         - {command: "/ec", name: "<gold>/ec", description: "<gray>Enderchest öffnen", icon: ENDER_CHEST, click: run}
         - {command: "/report", name: "<gold>/report <spieler> <grund>", description: "<gray>Spieler melden", icon: BELL}
+        - {command: "/trust", name: "<gold>/trust [spieler]", description: "<gray>Dein Vertrauens-Status bzw. für neue Spieler stimmen", icon: TOTEM_OF_UNDYING}
+        - {command: "/fairplay", name: "<gold>/fairplay", description: "<gray>Deine Fairplay-Punkte", icon: GOLDEN_HELMET, click: run, permission: sess.fairplay}
+        - {command: "/ptime", name: "<gold>/ptime day|night|reset", description: "<gray>Eigene Uhrzeit, nur für dich", icon: CLOCK, permission: sess.ptime}
+        - {command: "/pweather", name: "<gold>/pweather clear|rain|reset", description: "<gray>Eigenes Wetter, nur für dich", icon: WATER_BUCKET, permission: sess.pweather}
+        - {command: "/durability", name: "<gold>/durability", description: "<gray>Warnung bei fast kaputter Ausrüstung an/aus", icon: ANVIL, click: run, permission: sess.durability}
         - {name: "<aqua>Discord", description: "<gray>discord.gg/DEIN-LINK", icon: AMETHYST_SHARD, click: url, url: "https://discord.gg/DEIN-LINK"}
     wirtschaft:
       name: "<yellow><bold>Wirtschaft"
@@ -201,6 +206,10 @@ help:
         - {command: "/socialspy", name: "<red>/socialspy", description: "<gray>/msg und /mail mitlesen", icon: SPYGLASS, click: run, permission: sess.spy}
         - {command: "/fly", name: "<red>/fly, /god, /heal, /feed", description: "<gray>Spieler-Befehle", icon: FEATHER, permission: sess.fly}
         - {command: "/fp", name: "<red>/fp", description: "<gray>Fake-Spieler verwalten", icon: ARMOR_STAND, permission: sess.fakeplayer}
+        - {command: "/ban", name: "<red>/ban, /mute <spieler> [dauer] [grund]", description: "<gray>Strafen vergeben, /history zeigt den Verlauf", icon: IRON_BARS, permission: sess.punish.ban}
+        - {command: "/trust add", name: "<red>/trust add|remove <spieler>", description: "<gray>Vertrauen direkt setzen oder entziehen", icon: TOTEM_OF_UNDYING, permission: sess.trust.admin}
+        - {command: "/gminv", name: "<red>/gminv", description: "<gray>Getrennte Inventare für Kreativ und Survival an/aus", icon: SHULKER_BOX, click: run, permission: sess.gamemodeinv}
+        - {command: "/creativelog", name: "<red>/creativelog <spieler>", description: "<gray>Aktionen im Kreativmodus ansehen", icon: GRASS_BLOCK, permission: sess.creativelog.view}
 
 # ------------------------------------------------------------
 # Teleport-Wartezeit für /spawn, /tpa (der Anfragende nach Annahme), /nether, /end und /clan home.
