@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Wandelt konfigurierte Texte in Components um – mit MiniMessage, &-Farbcodes,
@@ -102,6 +104,27 @@ public final class TextService {
     public static TagResolver placeholder(String key, String value) {
         boolean plain = value.chars().noneMatch(c -> c == '<' || c == '\\' || c == '\'' || c == '"');
         return plain ? Placeholder.parsed(key, value) : Placeholder.unparsed(key, value);
+    }
+
+    /** [Text](/befehl) in Texten aus dem Spiel (News, Regeln). */
+    private static final Pattern LINK = Pattern.compile("\\[([^\\]]+)]\\((/[^)]+)\\)");
+
+    /**
+     * Im Spiel geschriebener Langtext als MiniMessage: {@code [Text](/befehl)} wird zum klickbaren Befehl,
+     * {@code \n} zum Zeilenumbruch. {@code links=false} zeigt nur den Linktext (für Kurzfassungen).
+     */
+    public static String richText(String raw, boolean links) {
+        Matcher m = LINK.matcher(raw.replace("\\n", "<newline>"));
+        StringBuilder out = new StringBuilder();
+        while (m.find()) {
+            String label = m.group(1), cmd = m.group(2).replace("'", "\\'");
+            String replacement = links
+                    ? "<click:run_command:'" + cmd + "'><hover:show_text:'<gray>" + cmd + "'><aqua><u>" + label + "</u></aqua></hover></click>"
+                    : "<aqua>" + label + "</aqua>";
+            m.appendReplacement(out, Matcher.quoteReplacement(replacement));
+        }
+        m.appendTail(out);
+        return out.toString();
     }
 
     /** Parst einen Einzelwert (z.B. LuckPerms-Prefix) – egal ob MiniMessage oder &-Codes. */

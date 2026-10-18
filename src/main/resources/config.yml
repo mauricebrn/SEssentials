@@ -67,6 +67,7 @@ modules:
   trust: true            # Schutz vor neuen Spielern, /trust
   client-detector: true  # Client-Detector
   news: true             # /news
+  rules: true            # /regeln, /regeladmin
   softrestart: true      # /softrestart
   auto-update: true      # /autoupdate (das Update selbst steuert auto-update.enabled)
   fake-players: true     # /fakeplayer
@@ -175,6 +176,7 @@ help:
         - {command: "/mail", name: "<gold>/mail", description: "<gray>Deine Mails lesen", icon: BOOK, click: run}
         - {command: "/tpa", name: "<gold>/tpa <spieler>", description: "<gray>Teleport-Anfrage senden", icon: COMPASS}
         - {command: "/ec", name: "<gold>/ec", description: "<gray>Enderchest öffnen", icon: ENDER_CHEST, click: run}
+        - {command: "/regeln", name: "<gold>/regeln", description: "<gray>Die Serverregeln", icon: WRITTEN_BOOK, click: run}
         - {command: "/report", name: "<gold>/report <spieler> <grund>", description: "<gray>Spieler melden", icon: BELL}
         - {command: "/trust", name: "<gold>/trust [spieler]", description: "<gray>Dein Vertrauens-Status bzw. für neue Spieler stimmen", icon: TOTEM_OF_UNDYING}
         - {command: "/fairplay", name: "<gold>/fairplay", description: "<gray>Deine Fairplay-Punkte", icon: GOLDEN_HELMET, click: run, permission: sess.fairplay}

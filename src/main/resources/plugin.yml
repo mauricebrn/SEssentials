@@ -145,6 +145,9 @@ permissions:
   sess.gamemodeinv:
     description: Erlaubt /gminv (getrennte Inventare für Kreativ und Survival)
     default: op
+  sess.rules.admin:
+    description: Erlaubt /regeladmin (Regeln verwalten, Akzeptanz-Version, Rollout-Tracker)
+    default: op
   sess.ptime:
     description: Erlaubt /ptime (eigene Uhrzeit, nur für dich sichtbar)
     default: true

@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * News: /news (Übersicht), /news read <id> (ganze Nachricht), /newsadmin (Verwaltung).
@@ -42,9 +40,6 @@ public final class NewsManager implements Listener {
     static final String PERM_ADMIN = "sess.news.admin";
     static final int MIN_PRIORITY = 1, MAX_PRIORITY = 4;
     static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault());
-
-    /** [Text](/befehl) → klickbarer Befehl (Syntax aus dem alten Skript). */
-    private static final Pattern LINK = Pattern.compile("\\[([^\\]]+)]\\((/[^)]+)\\)");
 
     enum Status {
         DRAFT("Entwurf"), SCHEDULED("Geplant"), ACTIVE("Aktiv"), EXPIRED("Abgelaufen");
@@ -195,29 +190,14 @@ public final class NewsManager implements Listener {
         return plugin.text().render(plugin.getConfig().getString("news.priorities." + n.priority), player);
     }
 
-    /** Inhalt als MiniMessage: [Text](/befehl) und "\n" umgewandelt; {@code links=false} zeigt nur den Text. */
-    private String contentMiniMessage(News n, boolean links) {
-        Matcher m = LINK.matcher(n.content.replace("\\n", "<newline>"));
-        StringBuilder out = new StringBuilder();
-        while (m.find()) {
-            String label = m.group(1), cmd = m.group(2).replace("'", "\\'");
-            String replacement = links
-                    ? "<click:run_command:'" + cmd + "'><hover:show_text:'<gray>Klicken: " + cmd + "'><aqua><u>" + label + "</u></aqua></hover></click>"
-                    : "<aqua>" + label + "</aqua>";
-            m.appendReplacement(out, Matcher.quoteReplacement(replacement));
-        }
-        m.appendTail(out);
-        return out.toString();
-    }
-
     Component content(News n, Player player) {
-        return plugin.text().render(contentMiniMessage(n, true), player);
+        return plugin.text().render(TextService.richText(n.content, true), player);
     }
 
     /** Einzeilige Kurzfassung ohne Formatierung, auf {@code max} Zeichen gekürzt. */
     String shortText(News n, Player player, int max) {
         String plain = PlainTextComponentSerializer.plainText()
-                .serialize(plugin.text().render(contentMiniMessage(n, false), player))
+                .serialize(plugin.text().render(TextService.richText(n.content, false), player))
                 .replace('\n', ' ');
         return plain.length() > max ? plain.substring(0, max - 3) + "..." : plain;
     }

@@ -440,6 +440,44 @@ news:
   prompt-start: <prefix><gray>In wie viel Zeit soll die News <white>starten</white>? Z.B. <white>2h</white>, <white>1 Tag</white>. <click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click>
   prompt-end: <prefix><gray>Wie lange soll die News <white>laufen</white> (ab Start)? Z.B. <white>7 Tage</white>. <click:run_command:'/newsadmin cancel'><red>[Abbrechen]</red></click>
 # ------------------------------------------------------------
+# Regeln (/regeln [nr|akzeptieren], Aliase /rules, /regel; Verwaltung /regeladmin – Recht sess.rules.admin)
+# Inhalt im Spiel: [Text](/befehl) = klickbarer Befehl, \n = Zeilenumbruch, &-Farbcodes
+# Platzhalter: <number>, <title>, <short>, <count>, <penalty>, <version>, <id>; <para> = §-Zeichen
+# ------------------------------------------------------------
+rules:
+  line: "<dark_gray><st>                                                   </st>"
+  none: "<prefix><gray>Es sind noch keine Regeln eingetragen."
+  feed-header: " <gold><bold><para> REGELN</bold></gold> <dark_gray>»</dark_gray> <gray><count> Regel(n) <dark_gray>-</dark_gray> <gray>Klicke für Details"
+  feed-entry: " <click:run_command:'/regeln <number>'><hover:show_text:'<gray>Klicke für die ganze Regel'><dark_gray>[<gold><para><number></gold>]</dark_gray> <white><bold><title></bold></white> <dark_gray>»</dark_gray> <gray><short></hover></click>"
+  accept-button: " <click:run_command:'/regeln akzeptieren'><hover:show_text:'<gray>Bestätigt, dass du die Regeln gelesen hast'><green><bold>[✔ Regeln akzeptieren]</bold></green></hover></click>"
+  rule-header: " <gold><bold><para><number></bold></gold> <dark_gray>|</dark_gray> <white><bold><title>"
+  rule-header-hidden: " <gray><bold>(unsichtbar)</bold></gray> <dark_gray>|</dark_gray> <white><bold><title>"
+  rule-penalty: " <red><bold>⚠ Strafe:</bold></red> <gray><penalty>"
+  nav-all: " <click:run_command:'/regeln'><hover:show_text:'<gray>Zurück zur Übersicht'><dark_gray>[<gray>« Alle Regeln</gray>]</dark_gray></hover></click>"
+  nav-prev: "<click:run_command:'/regeln <number>'><hover:show_text:'<gray>Vorherige Regel'><dark_gray>[<yellow>‹ <para><number></yellow>]</dark_gray></hover></click>"
+  nav-next: "<click:run_command:'/regeln <number>'><hover:show_text:'<gray>Nächste Regel'><dark_gray>[<yellow><para><number> ›</yellow>]</dark_gray></hover></click>"
+  notify-new: " <gold><bold><para> REGELN</bold></gold> <dark_gray>»</dark_gray> <yellow>Bitte lies unsere Regeln."
+  notify-updated: " <gold><bold><para> REGELN</bold></gold> <dark_gray>»</dark_gray> <yellow>Die Regeln wurden aktualisiert!"
+  notify-buttons: " <click:run_command:'/regeln'><hover:show_text:'<gray>Regeln anzeigen'><dark_gray>[<aqua>📖 Regeln lesen</aqua>]</dark_gray></hover></click> <click:run_command:'/regeln akzeptieren'><hover:show_text:'<gray>Bestätigt, dass du die Regeln gelesen hast'><dark_gray>[<green>✔ Akzeptieren</green>]</dark_gray></hover></click>"
+  nothing-to-accept: "<prefix><gray>Es gibt keine Regeln zum Akzeptieren."
+  already-accepted: "<prefix><gray>Du hast die Regeln bereits akzeptiert."
+  accepted: "<prefix><green>Danke! Du hast die Regeln akzeptiert."
+  not-found: "<prefix><red>Regel <para><number> existiert nicht."
+  unknown-id: "<prefix><red>Diese Regel existiert nicht."
+  gone: "<prefix><red>Diese Regel existiert nicht mehr."
+  version-hint: "<prefix><gray>Zum Erhöhen <red>Shift + Klick</red> benutzen."
+  version-bumped: "<prefix><green>Version auf <white><version></white> erhöht. Alle Spieler müssen die Regeln erneut akzeptieren."
+  prompt-title: "<prefix><gray>Gib den neuen <white>Titel</white> im Chat ein. <click:run_command:'/regeladmin cancel'><red>[Abbrechen]</red></click> <dark_gray>(oder <gray>abbrechen</gray> schreiben)"
+  prompt-content: "<prefix><gray>Gib den neuen <white>Inhalt</white> im Chat ein.<newline><dark_gray> - <gray>Klickbarer Befehl: <white>[Alle Regeln](/regeln)</white><newline><dark_gray> - <gray>Zeilenumbruch: <white>\\n</white> <dark_gray>| <gray>Farben: <white>&-Codes</white><newline><click:run_command:'/regeladmin cancel'><red>[Abbrechen]</red></click> <dark_gray>(oder <gray>abbrechen</gray> schreiben)"
+  prompt-append: "<prefix><gray>Gib den <white>anzuhängenden Text</white> im Chat ein. <click:run_command:'/regeladmin cancel'><red>[Abbrechen]</red></click> <dark_gray>(oder <gray>abbrechen</gray> schreiben)"
+  prompt-penalty: "<prefix><gray>Gib die <white>Strafe</white> im Chat ein, z. B. <white>1 Tag Bann</white>, <white>Verwarnung</white> – oder <white>keine</white>. <click:run_command:'/regeladmin cancel'><red>[Abbrechen]</red></click>"
+  saved: "<prefix><green>Gespeichert."
+  cancelled: "<prefix><gray>Eingabe abgebrochen."
+  back-to-editor: " <click:run_command:'/regeladmin edit <id>'><hover:show_text:'<gray>Zurück zum Editor'><dark_gray>[<yellow>« Zurück zum Editor</yellow>]</dark_gray></hover></click>"
+  delete-hint: "<prefix><gray>Zum Löschen <red>Shift + Klick</red> benutzen."
+  deleted: "<prefix><red>Regel ID <id> wurde gelöscht."
+  reminded: "<prefix><green><count></green> <gray>Spieler wurden erinnert."
+# ------------------------------------------------------------
 # Reports (/report <spieler> <grund>, /reports, /clearreports)
 # Zusätzliche Platzhalter: <id>, <target>, <reporter>, <reason>
 # ------------------------------------------------------------

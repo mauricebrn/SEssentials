@@ -397,6 +397,44 @@ news:
   prompt-start: "<prefix><gray>In how much time should the news <white>start</white>? E.g. <white>2h</white>, <white>1 day</white>. <click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click>"
   prompt-end: "<prefix><gray>How long should the news <white>run</white> (from its start)? E.g. <white>7 days</white>. <click:run_command:'/newsadmin cancel'><red>[Cancel]</red></click>"
 # ------------------------------------------------------------
+# Rules (/regeln [nr|akzeptieren], aliases /rules, /regel; management /regeladmin – permission sess.rules.admin)
+# Content written in game: [Text](/command) = clickable command, \n = line break, &-color codes
+# Placeholders: <number>, <title>, <short>, <count>, <penalty>, <version>, <id>; <para> = § sign
+# ------------------------------------------------------------
+rules:
+  line: "<dark_gray><st>                                                   </st>"
+  none: "<prefix><gray>No rules have been added yet."
+  feed-header: " <gold><bold><para> RULES</bold></gold> <dark_gray>»</dark_gray> <gray><count> rule(s) <dark_gray>-</dark_gray> <gray>Click for details"
+  feed-entry: " <click:run_command:'/regeln <number>'><hover:show_text:'<gray>Click for the full rule'><dark_gray>[<gold><para><number></gold>]</dark_gray> <white><bold><title></bold></white> <dark_gray>»</dark_gray> <gray><short></hover></click>"
+  accept-button: " <click:run_command:'/regeln accept'><hover:show_text:'<gray>Confirms that you have read the rules'><green><bold>[✔ Accept rules]</bold></green></hover></click>"
+  rule-header: " <gold><bold><para><number></bold></gold> <dark_gray>|</dark_gray> <white><bold><title>"
+  rule-header-hidden: " <gray><bold>(hidden)</bold></gray> <dark_gray>|</dark_gray> <white><bold><title>"
+  rule-penalty: " <red><bold>⚠ Penalty:</bold></red> <gray><penalty>"
+  nav-all: " <click:run_command:'/regeln'><hover:show_text:'<gray>Back to the overview'><dark_gray>[<gray>« All rules</gray>]</dark_gray></hover></click>"
+  nav-prev: "<click:run_command:'/regeln <number>'><hover:show_text:'<gray>Previous rule'><dark_gray>[<yellow>‹ <para><number></yellow>]</dark_gray></hover></click>"
+  nav-next: "<click:run_command:'/regeln <number>'><hover:show_text:'<gray>Next rule'><dark_gray>[<yellow><para><number> ›</yellow>]</dark_gray></hover></click>"
+  notify-new: " <gold><bold><para> RULES</bold></gold> <dark_gray>»</dark_gray> <yellow>Please read our rules."
+  notify-updated: " <gold><bold><para> RULES</bold></gold> <dark_gray>»</dark_gray> <yellow>The rules have been updated!"
+  notify-buttons: " <click:run_command:'/regeln'><hover:show_text:'<gray>Show the rules'><dark_gray>[<aqua>📖 Read rules</aqua>]</dark_gray></hover></click> <click:run_command:'/regeln accept'><hover:show_text:'<gray>Confirms that you have read the rules'><dark_gray>[<green>✔ Accept</green>]</dark_gray></hover></click>"
+  nothing-to-accept: "<prefix><gray>There are no rules to accept."
+  already-accepted: "<prefix><gray>You have already accepted the rules."
+  accepted: "<prefix><green>Thanks! You have accepted the rules."
+  not-found: "<prefix><red>Rule <para><number> doesn't exist."
+  unknown-id: "<prefix><red>This rule doesn't exist."
+  gone: "<prefix><red>This rule no longer exists."
+  version-hint: "<prefix><gray>Use <red>shift + click</red> to increase it."
+  version-bumped: "<prefix><green>Version increased to <white><version></white>. All players have to accept the rules again."
+  prompt-title: "<prefix><gray>Type the new <white>title</white> in chat. <click:run_command:'/regeladmin cancel'><red>[Cancel]</red></click> <dark_gray>(or type <gray>cancel</gray>)"
+  prompt-content: "<prefix><gray>Type the new <white>content</white> in chat.<newline><dark_gray> - <gray>Clickable command: <white>[All rules](/regeln)</white><newline><dark_gray> - <gray>Line break: <white>\\n</white> <dark_gray>| <gray>Colors: <white>&-codes</white><newline><click:run_command:'/regeladmin cancel'><red>[Cancel]</red></click> <dark_gray>(or type <gray>cancel</gray>)"
+  prompt-append: "<prefix><gray>Type the <white>text to append</white> in chat. <click:run_command:'/regeladmin cancel'><red>[Cancel]</red></click> <dark_gray>(or type <gray>cancel</gray>)"
+  prompt-penalty: "<prefix><gray>Type the <white>penalty</white> in chat, e.g. <white>1 day ban</white>, <white>warning</white> – or <white>none</white>. <click:run_command:'/regeladmin cancel'><red>[Cancel]</red></click>"
+  saved: "<prefix><green>Saved."
+  cancelled: "<prefix><gray>Input cancelled."
+  back-to-editor: " <click:run_command:'/regeladmin edit <id>'><hover:show_text:'<gray>Back to the editor'><dark_gray>[<yellow>« Back to the editor</yellow>]</dark_gray></hover></click>"
+  delete-hint: "<prefix><gray>Use <red>shift + click</red> to delete."
+  deleted: "<prefix><red>Rule ID <id> was deleted."
+  reminded: "<prefix><green><count></green> <gray>players were reminded."
+# ------------------------------------------------------------
 # Reports (/report <player> <reason>, /reports, /clearreports)
 # Placeholders: <id>, <target>, <reporter>, <reason>
 # ------------------------------------------------------------

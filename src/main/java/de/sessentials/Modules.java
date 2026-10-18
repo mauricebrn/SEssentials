@@ -22,7 +22,7 @@ public final class Modules {
             "messages", "mail", "spy",
             "bank", "chestshops", "bounty", "clans", "gambling", "upgrader", "item-tracker",
             "punishments", "fairplay", "reports", "itemguard", "creativelog", "trust", "client-detector",
-            "news", "softrestart", "auto-update", "fake-players", "webpanel");
+            "news", "rules", "softrestart", "auto-update", "fake-players", "webpanel");
 
     /** Modul → Module, ohne die es nicht läuft. */
     private static final Map<String, List<String>> REQUIRES = Map.of(

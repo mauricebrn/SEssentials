@@ -49,6 +49,7 @@ import de.sessentials.punish.PunishCommands;
 import de.sessentials.punish.PunishmentManager;
 import de.sessentials.punish.PunishmentMenu;
 import de.sessentials.report.ReportManager;
+import de.sessentials.rules.RulesManager;
 import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.spawn.SpawnManager;
@@ -140,6 +141,7 @@ public final class SEssentials extends JavaPlugin {
     private MailManager mail;
     private TrackerMenu trackerMenu;
     private NewsManager news;
+    private RulesManager rules;
     private TrustManager trust;
     private DurabilityAlert durability;
     private PersonalEnvironment personalEnvironment;
@@ -215,6 +217,7 @@ public final class SEssentials extends JavaPlugin {
         mail = modules.on("mail") ? new MailManager(this) : null;
         chatPrompt = new ChatPrompt(this);
         news = new NewsManager(this);
+        rules = modules.on("rules") ? new RulesManager(this) : null;
         notifications = new Notifications(this);
         reports = new ReportManager(this);
         detector = modules.on("client-detector") ? new ClientDetector(this) : null;
@@ -258,6 +261,7 @@ public final class SEssentials extends JavaPlugin {
         listen("spawn", spawn);
         listen("tpa", tpa);
         listen("news", news);
+        listen("rules", rules);
         listen("bank", bank);
         listen("item-tracker", tracker);
         listen("chestshops", chestShops);
@@ -608,6 +612,12 @@ public final class SEssentials extends JavaPlugin {
                             Component.text("News erstellen und verwalten", NamedTextColor.GRAY)),
                     p -> news.menu().openPanel(p));
         }
+        if (rules != null) {
+            adminPanel.addApp(Category.SERVER, "sess.rules.admin",
+                    p -> Menu.icon(Material.WRITTEN_BOOK, Component.text("Regeln", NamedTextColor.GOLD),
+                            Component.text("Regeln, Akzeptanz-Version, Rollout", NamedTextColor.GRAY)),
+                    p -> rules.menu().openPanel(p));
+        }
         if (modules.on("softrestart")) {
             adminPanel.addApp(Category.SERVER, "sess.softrestart",
                     p -> Menu.icon(Material.CLOCK, Component.text("Softrestart", NamedTextColor.RED),
@@ -825,6 +835,7 @@ public final class SEssentials extends JavaPlugin {
             if (modules.on("punishments")) punishCommands.register(commands);
             if (fairplay != null) fairplay.register(commands);
             if (modules.on("news")) news.register(commands);
+            if (rules != null) rules.register(commands);
             if (modules.on("bank")) bankCommands.register(commands);
             // Module, die es nur gibt, wenn sie an sind
             if (luckyWheel != null) luckyWheel.register(commands);
