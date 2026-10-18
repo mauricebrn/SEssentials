@@ -142,6 +142,12 @@ permissions:
   sess.itemguard.admin:
     description: ItemGuard im Admin-Panel einstellen
     default: op
+  sess.ptime:
+    description: Erlaubt /ptime (eigene Uhrzeit, nur für dich sichtbar)
+    default: true
+  sess.pweather:
+    description: Erlaubt /pweather (eigenes Wetter, nur für dich sichtbar)
+    default: true
   sess.durability:
     description: Bekommt eine Warnung bei fast kaputter Rüstung/Werkzeug; /durability schaltet sie an/aus
     default: true

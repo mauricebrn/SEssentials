@@ -482,6 +482,17 @@ creativelog:
   none: "<prefix><red>There are no creative logs for <white><target></white>."
   no-page: "<prefix><red>This page doesn't exist (only <pages>)."
 # ------------------------------------------------------------
+# Personal time and weather (/ptime, alias /pzeit; /pweather, alias /pwetter) – only visible to the player
+# /ptime day|noon|night|midnight|<0-23999>|reset   /pweather clear|rain|reset
+# Placeholders: <time>
+# ------------------------------------------------------------
+ptime:
+  time-set: "<prefix><gray>Your time is now <white><time></white> (only for you). <dark_gray>/ptime reset"
+  time-reset: "<prefix><gray>You see the normal time again."
+  weather-clear: "<prefix><gray>Your weather is now <yellow>clear</yellow> (only for you). <dark_gray>/pweather reset"
+  weather-rain: "<prefix><gray>Your weather is now <aqua>rain</aqua> (only for you). <dark_gray>/pweather reset"
+  weather-reset: "<prefix><gray>You see the normal weather again."
+# ------------------------------------------------------------
 # Durability alert (/durability, alias /haltbarkeit)
 # Placeholders: <item>, <remaining>, <max>, <percent>
 # ------------------------------------------------------------

@@ -539,6 +539,17 @@ creativelog:
   none: <prefix><red>Für <white><target></white> gibt es keine Kreativ-Logs.
   no-page: <prefix><red>Diese Seite gibt es nicht (nur <pages>).
 # ------------------------------------------------------------
+# Eigene Uhrzeit und eigenes Wetter (/ptime, Alias /pzeit; /pweather, Alias /pwetter) – nur für den Spieler sichtbar
+# /ptime day|noon|night|midnight|<0-23999>|reset   /pweather clear|rain|reset
+# Platzhalter: <time>
+# ------------------------------------------------------------
+ptime:
+  time-set: "<prefix><gray>Deine Uhrzeit ist jetzt <white><time></white> (nur für dich). <dark_gray>/ptime reset"
+  time-reset: "<prefix><gray>Du siehst wieder die normale Uhrzeit."
+  weather-clear: "<prefix><gray>Dein Wetter ist jetzt <yellow>klar</yellow> (nur für dich). <dark_gray>/pweather reset"
+  weather-rain: "<prefix><gray>Dein Wetter ist jetzt <aqua>Regen</aqua> (nur für dich). <dark_gray>/pweather reset"
+  weather-reset: "<prefix><gray>Du siehst wieder das normale Wetter."
+# ------------------------------------------------------------
 # Haltbarkeits-Warnung (/durability, Alias /haltbarkeit)
 # Platzhalter: <item>, <remaining>, <max>, <percent>
 # ------------------------------------------------------------

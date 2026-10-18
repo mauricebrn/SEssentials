@@ -42,6 +42,7 @@ modules:
   command-aliases: true  # eigene Befehle (command-aliases)
   player-commands: true  # /fly, /god, /heal, /feed
   durability: true       # Warnung bei fast kaputter Ausrüstung (/durability)
+  ptime: true            # eigene Uhrzeit und eigenes Wetter (/ptime, /pweather)
   sudo: true             # /sudo
   enderchest: true       # /enderchest, /ec
   spawn: true            # /spawn, /setspawn
