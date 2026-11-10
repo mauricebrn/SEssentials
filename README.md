@@ -144,6 +144,12 @@ Spieler speichern → alle Spieler mit `kick`-Nachricht kicken → Welten speich
 - `tab.header`, `tab.footer` und `tab.player-format` werden alle `tab.update-interval-ticks` aktualisiert.
 - `nametag` setzt Prefix, Suffix und Namensfarbe über dem Kopf, pro Gruppe mit `priority` für die TAB-Sortierung.
 
+**Eigene Prefixe & Suffixe** (Modul `tags`): `/prefix <text> [spieler] [zeit]`, `/prefix reset [spieler]`, genauso `/suffix`.
+Beispiele: `/prefix &c[Admin]`, `/prefix <gold>[VIP] Steve 30d`, `/suffix " &7✦" 2h` (Text mit Leerzeichen am Rand in Anführungszeichen).
+Der Wert ersetzt den LuckPerms-Prefix/-Suffix – auch ohne LuckPerms – überall, wo `<lp_prefix>`/`<lp_suffix>` steht (Chat, TAB,
+Nametag, Join/Leave). Ohne Zeit unbegrenzt; danach gilt wieder der LuckPerms-Wert. Rechte: `sess.prefix`, `sess.suffix`
+(eigener), `sess.prefix.others`, `sess.suffix.others` (andere, auch offline). Gespeichert in `data/tags.yml`.
+
 ## Join- / Leave-Nachrichten
 In `config/join-quit.yml` (`join`, `quit`). Alle [Platzhalter](#platzhalter) sind nutzbar.
 Leerer Text blendet die Nachricht aus, `enabled: false` lässt die Vanilla-Nachrichten unverändert.

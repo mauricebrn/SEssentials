@@ -215,6 +215,21 @@ spy:
   enabled: "<prefix><gray>Spy <green>enabled</green> – you see private messages and mails."
   disabled: "<prefix><gray>Spy <red>disabled</red>."
 # ------------------------------------------------------------
+# Custom prefixes/suffixes (/prefix, /suffix)
+# Placeholders: <kind> (prefix/suffix), <target>, <value>, <time>, <max>
+# ------------------------------------------------------------
+tags:
+  set: "<prefix><gray>Custom <kind> for <white><target></white>: <value>"
+  set-timed: "<prefix><gray>Custom <kind> for <white><target></white>: <value> <gray>(for <white><time></white>)"
+  reset: "<prefix><gray>Removed the custom <kind> of <white><target></white>."
+  none: "<prefix><red><target> has no custom <kind>."
+  too-long: "<prefix><red>Too long – at most <max> characters."
+  invalid-time: "<prefix><red>Invalid time: <time> (e.g. 30m, 2h, 7d)."
+  unknown-player: "<prefix><red>Player <target> has never been on this server."
+  no-permission-others: "<prefix><red>You may not change other players' <kind>."
+  player-only: "<prefix><red>From the console, please name a player."
+  prompt: "<prefix><gray>Type the <kind> for <white><target></white> in chat: <white><text> [time]</white>, e.g. <white>[Admin] 7d</white>. <dark_gray>cancel = abort"
+# ------------------------------------------------------------
 # Mail (/mail send <player> <message>, /mail [read], /mail delete <nr>, /mail clear)
 # Placeholders: <sender>, <target>, <message> (always plain text), <count>, <number>, <time>, <max>
 # ------------------------------------------------------------

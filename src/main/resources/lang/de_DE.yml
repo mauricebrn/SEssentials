@@ -247,6 +247,21 @@ spy:
   enabled: <prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails.
   disabled: <prefix><gray>Spy <red>ausgeschaltet</red>.
 # ------------------------------------------------------------
+# Eigene Prefixe/Suffixe (/prefix, /suffix)
+# Platzhalter: <kind> (prefix/suffix), <target>, <value>, <time>, <max>
+# ------------------------------------------------------------
+tags:
+  set: "<prefix><gray>Eigener <kind> für <white><target></white>: <value>"
+  set-timed: "<prefix><gray>Eigener <kind> für <white><target></white>: <value> <gray>(für <white><time></white>)"
+  reset: "<prefix><gray>Eigener <kind> von <white><target></white> entfernt."
+  none: "<prefix><red><target> hat keinen eigenen <kind>."
+  too-long: "<prefix><red>Zu lang – höchstens <max> Zeichen."
+  invalid-time: "<prefix><red>Ungültige Zeit: <time> (z.B. 30m, 2h, 7d)."
+  unknown-player: "<prefix><red>Spieler <target> war noch nie auf dem Server."
+  no-permission-others: "<prefix><red>Du darfst den <kind> anderer Spieler nicht ändern."
+  player-only: "<prefix><red>Von der Konsole bitte einen Spieler angeben."
+  prompt: "<prefix><gray>Schreib den <kind> für <white><target></white> in den Chat: <white><text> [zeit]</white>, z.B. <white>[Admin] 7d</white>. <dark_gray>abbrechen = Abbruch"
+# ------------------------------------------------------------
 # Mail (/mail send <spieler> <nachricht>, /mail [read], /mail delete <nr>, /mail clear)
 # Nachrichten an Spieler, die schon einmal auf dem Server waren – auch wenn sie offline sind.
 # Beim Join erfährt der Empfänger von ungelesenen Mails. Gemutete Spieler können keine Mails senden.

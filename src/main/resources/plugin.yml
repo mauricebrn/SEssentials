@@ -148,6 +148,18 @@ permissions:
   sess.rules.admin:
     description: Erlaubt /regeladmin (Regeln verwalten, Akzeptanz-Version, Rollout-Tracker)
     default: op
+  sess.prefix:
+    description: Erlaubt /prefix (eigener Prefix in Chat, TAB und Nametag)
+    default: op
+  sess.prefix.others:
+    description: Erlaubt /prefix für andere Spieler (auch offline)
+    default: op
+  sess.suffix:
+    description: Erlaubt /suffix (eigener Suffix in Chat, TAB und Nametag)
+    default: op
+  sess.suffix.others:
+    description: Erlaubt /suffix für andere Spieler (auch offline)
+    default: op
   sess.ptime:
     description: Erlaubt /ptime (eigene Uhrzeit, nur für dich sichtbar)
     default: true

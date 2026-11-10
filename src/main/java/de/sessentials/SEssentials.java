@@ -43,6 +43,8 @@ import de.sessentials.player.EnderChestCommand;
 import de.sessentials.player.GamemodeInventories;
 import de.sessentials.player.KnownPlayers;
 import de.sessentials.player.PersonalEnvironment;
+import de.sessentials.tag.TagMenu;
+import de.sessentials.tag.TagOverrides;
 import de.sessentials.player.PlayerCommands;
 import de.sessentials.player.SudoCommand;
 import de.sessentials.punish.PunishCommands;
@@ -145,6 +147,7 @@ public final class SEssentials extends JavaPlugin {
     private TrustManager trust;
     private DurabilityAlert durability;
     private PersonalEnvironment personalEnvironment;
+    private TagOverrides tagOverrides;
     private GamemodeInventories gamemodeInventories;
     private TrustMenu trustMenu;
     private SuspicionVote suspicion;
@@ -164,6 +167,9 @@ public final class SEssentials extends JavaPlugin {
         }
         boolean papi = getServer().getPluginManager().isPluginEnabled("PlaceholderAPI");
         if (papi) getLogger().info("PlaceholderAPI gefunden – %platzhalter% und <papi:...> aktiv.");
+
+        // eigene Prefixe/Suffixe (/prefix, /suffix) gelten vor denen aus LuckPerms – auch ohne LuckPerms
+        if (modules.on("tags")) perms = tagOverrides = new TagOverrides(this, perms);
 
         vanish = new VanishManager(this);
         permissions = perms;
@@ -276,6 +282,7 @@ public final class SEssentials extends JavaPlugin {
         listen("upgrader", upgrader);
         if (luckyWheel != null) listen("gambling", luckyWheel.odds());
         if (tab != null) tab.reload();
+        if (tagOverrides != null) tagOverrides.start();
 
         registerCommands();
 
@@ -299,6 +306,7 @@ public final class SEssentials extends JavaPlugin {
         if (mail != null) mail.shutdown();
         if (softRestart != null) softRestart.shutdown();
         if (tab != null) tab.shutdown();
+        if (tagOverrides != null) tagOverrides.shutdown();
         if (vanish != null) vanish.shutdown();
         if (tracker != null) tracker.shutdown();
         if (creativeLog != null) creativeLog.shutdown();
@@ -445,6 +453,11 @@ public final class SEssentials extends JavaPlugin {
     }
 
     /** Alle Spieler, die schon einmal da waren – Tab-Vervollständigung für Befehle, die auch offline Spieler annehmen. */
+    /** TAB-Liste und Nametags, {@code null} wenn das Modul aus ist. */
+    public TabNametagManager tab() {
+        return tab;
+    }
+
     public KnownPlayers knownPlayers() {
         return knownPlayers;
     }
@@ -562,6 +575,15 @@ public final class SEssentials extends JavaPlugin {
                             Component.text("Clans: " + clans.all().size(), NamedTextColor.GRAY),
                             Component.text("Home, Truhe, Konto, Mitglieder", NamedTextColor.GRAY)),
                     clanMenu::openList);
+        }
+
+        if (tagOverrides != null) {
+            TagMenu tagMenu = new TagMenu(this, tagOverrides);
+            adminPanel.addApp(Category.PLAYERS, TagMenu::canUse,
+                    p -> Menu.icon(Material.NAME_TAG, Component.text("Prefix & Suffix", NamedTextColor.GOLD),
+                            Component.text("Eigene Prefixe/Suffixe setzen", NamedTextColor.GRAY),
+                            Component.text("Chat, TAB und Nametag", NamedTextColor.GRAY)),
+                    tagMenu::openList);
         }
 
         // Wirtschaft
@@ -851,6 +873,7 @@ public final class SEssentials extends JavaPlugin {
             if (trust != null) trust.register(commands);
             if (durability != null) durability.register(commands);
             if (personalEnvironment != null) personalEnvironment.register(commands);
+            if (tagOverrides != null) tagOverrides.register(commands);
             if (gamemodeInventories != null) gamemodeInventories.register(commands);
             if (suspicion != null) suspicion.register(commands);
             if (webPanel != null) webPanel.register(commands);

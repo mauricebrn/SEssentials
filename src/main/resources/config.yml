@@ -37,6 +37,7 @@ modules:
   chat: true             # Chatformat
   join-quit: true        # Join-/Quit-Nachrichten
   tab: true              # TAB-Liste und Nametags
+  tags: true             # eigene Prefixe/Suffixe (/prefix, /suffix), auch ohne LuckPerms
   vanish: true           # /vanish
   help: true             # /help als Menü
   command-aliases: true  # eigene Befehle (command-aliases)
@@ -182,6 +183,8 @@ help:
         - {command: "/fairplay", name: "<gold>/fairplay", description: "<gray>Deine Fairplay-Punkte", icon: GOLDEN_HELMET, click: run, permission: sess.fairplay}
         - {command: "/ptime", name: "<gold>/ptime day|night|reset", description: "<gray>Eigene Uhrzeit, nur für dich", icon: CLOCK, permission: sess.ptime}
         - {command: "/pweather", name: "<gold>/pweather clear|rain|reset", description: "<gray>Eigenes Wetter, nur für dich", icon: WATER_BUCKET, permission: sess.pweather}
+        - {command: "/prefix", name: "<gold>/prefix <text> [spieler] [zeit]", description: "<gray>Eigener Prefix in Chat, TAB und Nametag", icon: NAME_TAG, permission: sess.prefix}
+        - {command: "/suffix", name: "<gold>/suffix <text> [spieler] [zeit]", description: "<gray>Eigener Suffix in Chat, TAB und Nametag", icon: NAME_TAG, permission: sess.suffix}
         - {command: "/durability", name: "<gold>/durability", description: "<gray>Warnung bei fast kaputter Ausrüstung an/aus", icon: ANVIL, click: run, permission: sess.durability}
         - {name: "<aqua>Discord", description: "<gray>discord.gg/DEIN-LINK", icon: AMETHYST_SHARD, click: url, url: "https://discord.gg/DEIN-LINK"}
     wirtschaft:
@@ -351,6 +354,16 @@ gambling:
     full-after-spins: 10
     full-after-staked: 1000
     session-timeout-minutes: 30
+
+# ------------------------------------------------------------
+# Eigene Prefixe und Suffixe (/prefix, /suffix – Rechte sess.prefix, sess.suffix, für andere sess.prefix.others)
+#   /prefix <text> [spieler] [zeit]   z.B. /prefix &c[Admin] Steve 7d   – Leerzeichen am Ende: /prefix "&c[Admin] "
+#   /prefix reset [spieler]
+# Gilt statt des LuckPerms-Prefixes (auch ohne LuckPerms) überall, wo <lp_prefix>/<lp_suffix> steht: Chat, TAB, Nametag.
+# Ohne Zeit unbegrenzt. Gespeichert in data/tags.yml.
+# ------------------------------------------------------------
+tags:
+  max-length: 64      # Zeichen inkl. Farbcodes
 
 # ------------------------------------------------------------
 # Mail (/mail send <spieler> <nachricht>, /mail [read], /mail delete <nr>, /mail clear)
