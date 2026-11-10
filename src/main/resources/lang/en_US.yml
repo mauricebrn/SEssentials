@@ -215,6 +215,20 @@ spy:
   enabled: "<prefix><gray>Spy <green>enabled</green> – you see private messages and mails."
   disabled: "<prefix><gray>Spy <red>disabled</red>."
 # ------------------------------------------------------------
+# Floating dragon egg (/dragonegg)
+# Placeholders: <count> (players in range), <range>, <player>
+# leave collected-broadcast empty = only the collector gets "collected"
+# ------------------------------------------------------------
+dragon-egg:
+  counter: "<light_purple>Dragon Egg</light_purple>\n<red><count> players</red> <gray>within <range> blocks\n<dark_gray>Can only be collected alone"
+  counter-alone: "<light_purple>Dragon Egg</light_purple>\n<green><count> player</green> <gray>in range\n<green>Click to collect"
+  not-alone: "<red>You must be alone – <count> players within <range> blocks."
+  collected: "<prefix><light_purple>You collected the dragon egg!"
+  collected-broadcast: "<prefix><light_purple><player></light_purple> <gray>collected the dragon egg!"
+  spawned: "<prefix><gray>Floating dragon egg placed."
+  removed: "<prefix><gray>Floating dragon egg removed."
+  none-nearby: "<prefix><red>No floating dragon egg within 10 blocks."
+# ------------------------------------------------------------
 # Disposable elytras (/elytra)
 # Placeholders: <name>, <coords>, <world>, <from>, <to>, <count>, <seconds>
 # ------------------------------------------------------------

@@ -247,6 +247,20 @@ spy:
   enabled: <prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails.
   disabled: <prefix><gray>Spy <red>ausgeschaltet</red>.
 # ------------------------------------------------------------
+# Schwebendes Drachenei (/dragonegg)
+# Platzhalter: <count> (Spieler im Umkreis), <range>, <player>
+# collected-broadcast leer lassen = nur der Sammler bekommt "collected"
+# ------------------------------------------------------------
+dragon-egg:
+  counter: "<light_purple>Drachenei</light_purple>\n<red><count> Spieler</red> <gray>im Umkreis von <range> Blöcken\n<dark_gray>Nur allein einsammelbar"
+  counter-alone: "<light_purple>Drachenei</light_purple>\n<green><count> Spieler</green> <gray>im Umkreis\n<green>Klicken zum Einsammeln"
+  not-alone: "<red>Du musst allein sein – <count> Spieler im Umkreis von <range> Blöcken."
+  collected: "<prefix><light_purple>Du hast das Drachenei eingesammelt!"
+  collected-broadcast: "<prefix><light_purple><player></light_purple> <gray>hat das Drachenei eingesammelt!"
+  spawned: "<prefix><gray>Schwebendes Drachenei gesetzt."
+  removed: "<prefix><gray>Schwebendes Drachenei entfernt."
+  none-nearby: "<prefix><red>Kein schwebendes Drachenei im Umkreis von 10 Blöcken."
+# ------------------------------------------------------------
 # Einweg-Elytren (/elytra)
 # Platzhalter: <name>, <coords>, <world>, <from>, <to>, <count>, <seconds>
 # ------------------------------------------------------------

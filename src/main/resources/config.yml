@@ -45,6 +45,7 @@ modules:
   durability: true       # Warnung bei fast kaputter Ausrüstung (/durability)
   ptime: true            # eigene Uhrzeit und eigenes Wetter (/ptime, /pweather)
   elytra: true           # Einweg-Elytren in Startbereichen (/elytra)
+  dragon-egg: true       # schwebendes Drachenei, nur allein einsammelbar (/dragonegg)
   gamemode-inventory: true # getrennte Inventare für Kreativ und Survival (/gminv, Admins)
   sudo: true             # /sudo
   enderchest: true       # /enderchest, /ec
@@ -355,6 +356,16 @@ gambling:
     full-after-spins: 10
     full-after-staked: 1000
     session-timeout-minutes: 30
+
+# ------------------------------------------------------------
+# Schwebendes Drachenei (/dragonegg spawn|remove, Alias /drachenei – Recht sess.dragonegg.admin)
+# Das Ei, das nach dem Tod des Enderdrachen auf dem Ausgangsportal erscheint, schwebt stattdessen sich drehend über
+# dem Portal, darüber ein Zähler der Spieler im Umkreis. Einsammeln per Klick geht nur, wenn man allein im Umkreis ist
+# (Zuschauer und Spieler im Vanish zählen nicht). /dragonegg spawn setzt eins an der eigenen Position.
+# ------------------------------------------------------------
+dragon-egg:
+  range: 16            # Umkreis in Blöcken, in dem man allein sein muss
+  hover-height: 1.5    # Blöcke über dem Boden
 
 # ------------------------------------------------------------
 # Einweg-Elytren (/elytra pos1|pos2|create <name>|delete <name>|list – Recht sess.elytra.admin)

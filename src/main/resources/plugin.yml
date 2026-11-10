@@ -148,6 +148,9 @@ permissions:
   sess.rules.admin:
     description: Erlaubt /regeladmin (Regeln verwalten, Akzeptanz-Version, Rollout-Tracker)
     default: op
+  sess.dragonegg.admin:
+    description: Erlaubt /dragonegg (schwebendes Drachenei setzen/entfernen)
+    default: op
   sess.elytra.admin:
     description: Erlaubt /elytra (Startbereiche für Einweg-Elytren verwalten)
     default: op

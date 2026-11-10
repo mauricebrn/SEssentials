@@ -11,6 +11,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - `/fly`, `/heal`, `/feed`, `/god`
 - Eigene Prefixe und Suffixe (`/prefix`, `/suffix`) für Chat, TAB und Nametags – zeitlich begrenzt möglich, auch ohne LuckPerms
 - Eigene Uhrzeit und eigenes Wetter (`/ptime`, `/pweather`), getrennte Inventare für Kreativ und Survival (`/gminv`)
+- Schwebendes Drachenei nach dem Drachenkampf mit Spielerzähler – nur allein einsammelbar
 - Einweg-Elytren: in Startbereichen beim Absprung eine Elytra, die beim Landen verschwindet – mit Schub per F
 - `/nether` und `/end` zum Wechseln zwischen den Dimensionen
 - Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst vom Konto oder gegen Items)
@@ -99,6 +100,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/ptime day\|noon\|night\|midnight\|<ticks>\|reset` | `sess.ptime` | Eigene Uhrzeit, nur für dich sichtbar (Alias `/pzeit`) |
 | `/pweather clear\|rain\|reset` | `sess.pweather` | Eigenes Wetter, nur für dich sichtbar (Alias `/pwetter`) |
 | `/gminv` | `sess.gamemodeinv` | Getrennte Inventare für Kreativ und Survival an/aus (Alias `/gamemodeinv`) |
+| `/dragonegg spawn\|remove` | `sess.dragonegg.admin` | Schwebendes Drachenei an deiner Position setzen bzw. das nächste entfernen (Alias `/drachenei`) |
 | `/elytra pos1\|pos2` | `sess.elytra.admin` | Ecke eines Startbereichs für Einweg-Elytren an deiner Position setzen |
 | `/elytra create <name>` | `sess.elytra.admin` | Startbereich aus den beiden Ecken erstellen |
 | `/elytra delete <name>` / `/elytra list` | `sess.elytra.admin` | Startbereich löschen bzw. alle anzeigen |
@@ -310,6 +312,12 @@ und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den S
 (Standard 500 Taler vom Konto). Die Kosten werden nach der [Wartezeit](#teleport-wartezeit) direkt vor dem Teleport abgezogen und bei einem fehlgeschlagenen Teleport erstattet.
 
 Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
+
+## Schwebendes Drachenei
+Stirbt der Enderdrache, wird das Ei auf dem Ausgangsportal durch ein sich drehendes, schwebendes Ei ersetzt
+(`dragon-egg.hover-height`). Darüber zeigt ein Zähler, wie viele Spieler im Umkreis von `dragon-egg.range` Blöcken sind.
+Per Klick einsammeln kann es nur, wer **allein** im Umkreis ist; Zuschauer und Spieler im Vanish zählen nicht. Das Ei
+übersteht Neustarts. Admins setzen mit `/dragonegg spawn` eins an ihrer Position und entfernen mit `/dragonegg remove` das nächste.
 
 ## Einweg-Elytren
 Startbereiche mit `/elytra pos1`, `/elytra pos2` (an der eigenen Position) und `/elytra create <name>` anlegen, dazu

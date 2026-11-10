@@ -43,6 +43,7 @@ import de.sessentials.player.EnderChestCommand;
 import de.sessentials.player.GamemodeInventories;
 import de.sessentials.player.KnownPlayers;
 import de.sessentials.player.PersonalEnvironment;
+import de.sessentials.dragonegg.DragonEggManager;
 import de.sessentials.elytra.DisposableElytra;
 import de.sessentials.tag.TagMenu;
 import de.sessentials.tag.TagOverrides;
@@ -150,6 +151,7 @@ public final class SEssentials extends JavaPlugin {
     private PersonalEnvironment personalEnvironment;
     private TagOverrides tagOverrides;
     private DisposableElytra elytra;
+    private DragonEggManager dragonEgg;
     private GamemodeInventories gamemodeInventories;
     private TrustMenu trustMenu;
     private SuspicionVote suspicion;
@@ -242,6 +244,7 @@ public final class SEssentials extends JavaPlugin {
         durability = modules.on("durability") ? new DurabilityAlert(this) : null;
         personalEnvironment = modules.on("ptime") ? new PersonalEnvironment(this) : null;
         elytra = modules.on("elytra") ? new DisposableElytra(this) : null;
+        dragonEgg = modules.on("dragon-egg") ? new DragonEggManager(this) : null;
         gamemodeInventories = modules.on("gamemode-inventory") ? new GamemodeInventories(this) : null;
         suspicion = trust != null ? new SuspicionVote(this, trust) : null;
         trustMenu = trust != null ? new TrustMenu(this, trust, suspicion) : null;
@@ -265,6 +268,7 @@ public final class SEssentials extends JavaPlugin {
         listen("durability", durability);
         listen("ptime", personalEnvironment);
         listen("elytra", elytra);
+        listen("dragon-egg", dragonEgg);
         listen("gamemode-inventory", gamemodeInventories);
         listen("punishments", punishments);
         if (fairplay != null) listen("fairplay", new FairplayListener(this, fairplay));
@@ -288,6 +292,7 @@ public final class SEssentials extends JavaPlugin {
         if (tab != null) tab.reload();
         if (tagOverrides != null) tagOverrides.start();
         if (elytra != null) elytra.start();
+        if (dragonEgg != null) dragonEgg.start();
 
         registerCommands();
 
@@ -313,6 +318,7 @@ public final class SEssentials extends JavaPlugin {
         if (tab != null) tab.shutdown();
         if (tagOverrides != null) tagOverrides.shutdown();
         if (elytra != null) elytra.shutdown();
+        if (dragonEgg != null) dragonEgg.shutdown();
         if (vanish != null) vanish.shutdown();
         if (tracker != null) tracker.shutdown();
         if (creativeLog != null) creativeLog.shutdown();
@@ -881,6 +887,7 @@ public final class SEssentials extends JavaPlugin {
             if (personalEnvironment != null) personalEnvironment.register(commands);
             if (tagOverrides != null) tagOverrides.register(commands);
             if (elytra != null) elytra.register(commands);
+            if (dragonEgg != null) dragonEgg.register(commands);
             if (gamemodeInventories != null) gamemodeInventories.register(commands);
             if (suspicion != null) suspicion.register(commands);
             if (webPanel != null) webPanel.register(commands);

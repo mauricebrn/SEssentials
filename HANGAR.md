@@ -18,6 +18,7 @@
 - `/tpa` teleport requests, `/spawn` and `/setspawn`, `/nether` and `/end` — with optional costs (money or items) and teleport delays
 - Per-player time and weather: `/ptime`, `/pweather`
 - Custom prefixes and suffixes: `/prefix <text> [player] [time]`, `/suffix …` — shown in chat, TAB and nametags, optionally temporary, **works without LuckPerms**
+- Floating dragon egg: after the dragon fight the egg hovers over the portal with a live player counter — it can only be collected by a player who is **alone** in a configurable range
 - Disposable elytras: jump off a cliff inside a launch area and get a temporary elytra that disappears on landing — locked in the chest slot, with a **boost on F**
 - Separate inventories for Creative and Survival: `/gminv`
 
@@ -68,6 +69,7 @@ New in 1.3.0:
 |---|---|---|
 | `sess.prefix` / `sess.suffix` | OP | Set your own prefix / suffix |
 | `sess.prefix.others` / `sess.suffix.others` | OP | Set them for other players, also offline |
+| `sess.dragonegg.admin` | OP | Place or remove a floating dragon egg (`/dragonegg spawn`, `remove`) |
 | `sess.elytra.admin` | OP | Manage launch areas (`/elytra pos1`, `pos2`, `create`, `delete`, `list`) |
 | `sess.elytra.use` | everyone | Receive a disposable elytra in launch areas |
 
