@@ -17,6 +17,8 @@
 - `/msg` and `/r` private messages
 - `/tpa` teleport requests, `/spawn` and `/setspawn`, `/nether` and `/end` — with optional costs (money or items) and teleport delays
 - Per-player time and weather: `/ptime`, `/pweather`
+- Custom prefixes and suffixes: `/prefix <text> [player] [time]`, `/suffix …` — shown in chat, TAB and nametags, optionally temporary, **works without LuckPerms**
+- Disposable elytras: jump off a cliff inside a launch area and get a temporary elytra that disappears on landing — locked in the chest slot, with a **boost on F**
 - Separate inventories for Creative and Survival: `/gminv`
 
 **Economy**
@@ -48,7 +50,7 @@
 
 ## Requirements
 - Paper **26.2 or 26.3**, Java **25**
-- Optional: **LuckPerms** (prefixes, suffixes, groups), **PlaceholderAPI**, **Vault**
+- Optional: **LuckPerms** (prefixes, suffixes, groups — custom prefixes/suffixes also work without it), **PlaceholderAPI**, **Vault**
 
 ## Installation
 1. Put `SEssentials-<version>.jar` into your `plugins/` folder and start the server.
@@ -56,6 +58,18 @@
 3. Languages: English (`en_US`) and German (`de_DE`) are included — set `language: en_US` and run `/sess reload`. Admin menu labels are currently German only.
 
 New options from updates are added to your files automatically; existing values are kept.
+
+## Permissions
+All permissions default to OP, except these, which everyone has: `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan`, `sess.fairplay`, `sess.chestshop.create`, `sess.ptime`, `sess.pweather`, `sess.durability` and `sess.elytra.use`. The full list of commands and permissions is in the [README](https://github.com/mauricebrn/SEssentials#befehle--rechte) (German).
+
+New in 1.3.0:
+
+| Permission | Default | Allows |
+|---|---|---|
+| `sess.prefix` / `sess.suffix` | OP | Set your own prefix / suffix |
+| `sess.prefix.others` / `sess.suffix.others` | OP | Set them for other players, also offline |
+| `sess.elytra.admin` | OP | Manage launch areas (`/elytra pos1`, `pos2`, `create`, `delete`, `list`) |
+| `sess.elytra.use` | everyone | Receive a disposable elytra in launch areas |
 
 ## Good to know
 - **Web panel:** disabled by default and bound to `127.0.0.1`. It speaks plain HTTP — put a reverse proxy with HTTPS (e.g. Caddy, nginx) in front of it before exposing it to the internet. It loads player avatars from mc-heads.net.

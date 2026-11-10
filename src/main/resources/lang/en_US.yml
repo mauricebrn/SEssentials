@@ -219,6 +219,8 @@ spy:
 # Placeholders: <name>, <coords>, <world>, <from>, <to>, <count>, <seconds>
 # ------------------------------------------------------------
 elytra:
+  item-name: "<aqua>Disposable Elytra"
+  item-lore: "<gray>Disappears on landing · F = boost"
   equipped: "<aqua>Elytra active! <gray>F = boost"
   removed: "<gray>Landed – elytra removed."
   boost-cooldown: "<red>Boost ready in <seconds> s"

@@ -251,6 +251,8 @@ spy:
 # Platzhalter: <name>, <coords>, <world>, <from>, <to>, <count>, <seconds>
 # ------------------------------------------------------------
 elytra:
+  item-name: "<aqua>Einweg-Elytra"
+  item-lore: "<gray>Verschwindet beim Landen · F = Schub"
   equipped: "<aqua>Elytra aktiv! <gray>F = Schub"
   removed: "<gray>Gelandet – Elytra entfernt."
   boost-cooldown: "<red>Schub wieder in <seconds> s"

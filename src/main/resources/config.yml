@@ -12,8 +12,8 @@
 #    <world>           Welt des Spielers
 #    <online>          Spieler online
 #    <max_players>     Maximale Spieler
-#    <lp_prefix>       LuckPerms-Prefix
-#    <lp_suffix>       LuckPerms-Suffix
+#    <lp_prefix>       Prefix: eigener (/prefix) oder aus LuckPerms
+#    <lp_suffix>       Suffix: eigener (/suffix) oder aus LuckPerms
 #    <lp_group>        LuckPerms-Primärgruppe
 #    <lp_meta:KEY>     LuckPerms-Meta-Wert (z.B. <lp_meta:color>)
 #    <papi:NAME>       PlaceholderAPI-Platzhalter, z.B. <papi:luckperms_prefix>

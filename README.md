@@ -9,6 +9,9 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Konfigurierbare Join- / Leave-Nachrichten
 - Vanish mit Schutzregeln, Fake-Nachrichten und gefälschter Serverliste
 - `/fly`, `/heal`, `/feed`, `/god`
+- Eigene Prefixe und Suffixe (`/prefix`, `/suffix`) für Chat, TAB und Nametags – zeitlich begrenzt möglich, auch ohne LuckPerms
+- Eigene Uhrzeit und eigenes Wetter (`/ptime`, `/pweather`), getrennte Inventare für Kreativ und Survival (`/gminv`)
+- Einweg-Elytren: in Startbereichen beim Absprung eine Elytra, die beim Landen verschwindet – mit Schub per F
 - `/nether` und `/end` zum Wechseln zwischen den Dimensionen
 - Spawn-System: `/setspawn`, `/spawn` (kostenlos mit Recht, sonst vom Konto oder gegen Items)
 - Konfigurierbare `/help`-Seiten mit klickbaren Befehlen
@@ -31,7 +34,7 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
 Alle Texte unterstützen MiniMessage und &-Farbcodes.
-Optional: **LuckPerms** (Prefix/Suffix/Gruppen) und **PlaceholderAPI**.
+Optional: **LuckPerms** (Prefix/Suffix/Gruppen – eigene Prefixe/Suffixe gehen auch ohne) und **PlaceholderAPI**.
 
 ## Installation
 
@@ -55,7 +58,7 @@ Alle Standardwerte: [Einstellungen](src/main/resources/config.yml), [Texte DE](s
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan`, `sess.fairplay` und `sess.chestshop.create` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan`, `sess.fairplay` und `sess.chestshop.create`, `sess.ptime`, `sess.pweather`, `sess.durability` und `sess.elytra.use` (alle) sowie `sess.vanish.auto` (niemand).
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -89,6 +92,17 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/heal [spieler]` | `sess.heal` / `sess.heal.others` | Volle Gesundheit, Feuer aus |
 | `/feed [spieler]` | `sess.feed` / `sess.feed.others` | Hunger und Sättigung auffüllen |
 | `/god [spieler]` | `sess.god` / `sess.god.others` | Unverwundbar ein/aus (bis zum Verlassen) |
+| `/prefix <text> [spieler] [zeit]` | `sess.prefix` / `sess.prefix.others` | Eigener Prefix in Chat, TAB und Nametag – ersetzt den LuckPerms-Prefix, auch ohne LuckPerms |
+| `/prefix reset [spieler]` | `sess.prefix` / `sess.prefix.others` | Eigenen Prefix entfernen |
+| `/suffix <text> [spieler] [zeit]` | `sess.suffix` / `sess.suffix.others` | Eigener Suffix, wie `/prefix` |
+| `/suffix reset [spieler]` | `sess.suffix` / `sess.suffix.others` | Eigenen Suffix entfernen |
+| `/ptime day\|noon\|night\|midnight\|<ticks>\|reset` | `sess.ptime` | Eigene Uhrzeit, nur für dich sichtbar (Alias `/pzeit`) |
+| `/pweather clear\|rain\|reset` | `sess.pweather` | Eigenes Wetter, nur für dich sichtbar (Alias `/pwetter`) |
+| `/gminv` | `sess.gamemodeinv` | Getrennte Inventare für Kreativ und Survival an/aus (Alias `/gamemodeinv`) |
+| `/elytra pos1\|pos2` | `sess.elytra.admin` | Ecke eines Startbereichs für Einweg-Elytren an deiner Position setzen |
+| `/elytra create <name>` | `sess.elytra.admin` | Startbereich aus den beiden Ecken erstellen |
+| `/elytra delete <name>` / `/elytra list` | `sess.elytra.admin` | Startbereich löschen bzw. alle anzeigen |
+| – | `sess.elytra.use` | Bekommt in Startbereichen eine Einweg-Elytra |
 | `/spawn` | – / `sess.spawn` | Zum Spawn. Ohne `sess.spawn` kostenpflichtig (Standard 500 Taler vom Konto) |
 | `/tpa <spieler>` | `sess.tpa` / `sess.tpa.free` | Teleport-Anfrage. Ohne `sess.tpa.free` kostenpflichtig (Standard 500 Taler) |
 | `/msg <spieler> <text>` | `sess.msg` | Private Nachricht (auch `/tell`, `/w`, `/whisper`); ersetzt Vanilla-`/msg` |
@@ -303,6 +317,7 @@ Startbereiche mit `/elytra pos1`, `/elytra pos2` (an der eigenen Position) und `
 Blöcke fällt (Survival/Adventure, Recht `sess.elytra.use`), bekommt eine Elytra und gleitet sofort los. **F** gibt im Flug einen
 Schub in Blickrichtung (`elytra.boost`). Beim Landen auf dem Boden oder im Wasser – und bei Tod, Quit, Welt- oder Moduswechsel und
 Teleport – verschwindet sie; eine getragene Brustplatte kommt zurück (auch nach einem Absturz, sie wird am Spieler gespeichert).
+Name und Beschreibung des Items stehen in der Sprachdatei (`elytra.item-name`, `elytra.item-lore`).
 Die Elytra lässt sich nicht verschieben, droppen, in Kisten legen oder an Rüstungsständer hängen. Fallschaden beim Landen entfällt
 (`elytra.no-fall-damage`).
 

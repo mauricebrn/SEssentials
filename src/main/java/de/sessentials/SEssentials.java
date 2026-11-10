@@ -165,7 +165,7 @@ public final class SEssentials extends JavaPlugin {
             perms = new LuckPermsHook(getLogger());
             getLogger().info("LuckPerms gefunden – Prefix/Suffix/Gruppen aktiv.");
         } else {
-            getLogger().warning("LuckPerms nicht gefunden – <lp_*>-Platzhalter bleiben leer.");
+            getLogger().warning("LuckPerms nicht gefunden – <lp_*>-Platzhalter bleiben leer (außer eigene Prefixe/Suffixe per /prefix, /suffix).");
         }
         boolean papi = getServer().getPluginManager().isPluginEnabled("PlaceholderAPI");
         if (papi) getLogger().info("PlaceholderAPI gefunden – %platzhalter% und <papi:...> aktiv.");

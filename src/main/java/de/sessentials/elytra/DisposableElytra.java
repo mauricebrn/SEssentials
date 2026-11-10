@@ -7,7 +7,6 @@ import de.sessentials.storage.AsyncFileWriter;
 import de.sessentials.text.TextService;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
@@ -119,8 +118,8 @@ public final class DisposableElytra implements Listener {
     private ItemStack createElytra() {
         ItemStack item = new ItemStack(Material.ELYTRA);
         item.editMeta(meta -> {
-            meta.displayName(Component.text("Einweg-Elytra", NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
-            meta.lore(List.of(Component.text("Verschwindet beim Landen · F = Schub", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)));
+            meta.displayName(msg("item-name", null).decoration(TextDecoration.ITALIC, false));
+            meta.lore(List.of(msg("item-lore", null).decoration(TextDecoration.ITALIC, false)));
             meta.setUnbreakable(true);
             meta.getPersistentDataContainer().set(itemKey, PersistentDataType.BYTE, (byte) 1);
         });
