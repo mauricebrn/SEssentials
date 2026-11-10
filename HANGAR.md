@@ -1,4 +1,5 @@
-# SEssentials
+![SEssentials logo](https://raw.githubusercontent.com/mauricebrn/SEssentials/main/assets/Logo%20mit%20Schriftzug@1x.png)
+
 
 **An all-in-one server toolkit for Paper 26.2 / 26.3** — chat, TAB, moderation, economy, clans, an admin panel and much more in a single plugin. Every module can be turned on or off, and every message supports MiniMessage and `&` color codes.
 

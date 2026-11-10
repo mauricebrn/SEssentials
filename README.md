@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/Logo%20mit%20Schriftzug@1x.png" alt="SEssentials-Logo" width="600"></p>
+
 # SEssentials
 
 Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
