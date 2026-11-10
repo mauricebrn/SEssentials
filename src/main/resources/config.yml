@@ -358,6 +358,81 @@ gambling:
     session-timeout-minutes: 30
 
 # ------------------------------------------------------------
+# LuckPerms-Einrichtung (/sessentials lpsetup = Vorschau, /sessentials lpsetup confirm = anlegen – Recht sess.lpsetup)
+# Legt die Gruppen unten in LuckPerms an: Gewicht, Prefix (Priorität = Gewicht), Elterngruppe und Rechte.
+# Nur ergänzend: vorhandene Gruppen, Rechte und Prefixe anderer Priorität bleiben erhalten. Mehrfach ausführen ist ok.
+# Reihenfolge = Anlege-Reihenfolge (Elterngruppen zuerst). "-recht" = ausdrücklich verboten.
+# Prefixe mit &-Farbcodes, damit sie auch in anderen Plugins richtig aussehen. Spieler einer Gruppe zuweisen:
+#   /lp user <name> parent set <gruppe>
+# ------------------------------------------------------------
+luckperms-setup:
+  groups:
+    default:
+      weight: 0
+      prefix: "&7[Spieler] "
+      parent: ""
+      permissions: []        # alle Spieler-Rechte sind ohnehin für jeden an (siehe README)
+    vip:
+      weight: 10
+      prefix: "&6[VIP] "
+      parent: default
+      permissions:
+        - sess.chat.color
+        - sess.enderchest.free
+        - sess.tpa.free
+        - sess.prefix
+        - sess.gamemodeinv
+    supporter:
+      weight: 50
+      prefix: "&a[Supporter] "
+      parent: vip
+      permissions:
+        - sess.report.notify
+        - sess.reports.admin
+        - sess.punish.mute
+        - sess.punish.history
+        - sess.punish.notify
+        - sess.fairplay.notify
+        - sess.detector.notify
+        - sess.creativelog.view
+        - sess.itemguard.scan
+        - sess.vanish.see
+        - sess.trust.vote
+        - sess.admin
+    moderator:
+      weight: 80
+      prefix: "&9[Moderator] "
+      parent: supporter
+      permissions:
+        - sess.punish.ban
+        - sess.punish.ipban
+        - sess.punish.exempt
+        - sess.vanish
+        - sess.fly
+        - sess.heal
+        - sess.feed
+        - sess.spawn
+        - sess.teleport.nowarmup
+        - sess.trust.admin
+        - sess.trust.bypass
+        - sess.fairplay.admin
+        - sess.itemguard.admin
+        - sess.report.bypasscooldown
+        - sess.spy
+        - sess.webpanel
+        - sess.sudo.exempt
+    admin:
+      weight: 100
+      prefix: "&c[Admin] "
+      parent: moderator
+      permissions:
+        - sess.*                     # alle Rechte des Plugins …
+        - -sess.vanish.auto          # … außer diesen, die man nur gezielt vergibt
+        - -sess.creativelog.bypass
+        - -sess.fairplay.exempt
+        - -sess.fakeplayer.ignore
+
+# ------------------------------------------------------------
 # Schwebendes Drachenei (/dragonegg spawn|remove, Alias /drachenei – Recht sess.dragonegg.admin)
 # Das Ei, das nach dem Tod des Enderdrachen auf dem Ausgangsportal erscheint, schwebt stattdessen sich drehend über
 # dem Portal, darüber ein Zähler der Spieler im Umkreis. Einsammeln per Klick geht nur, wenn man allein im Umkreis ist

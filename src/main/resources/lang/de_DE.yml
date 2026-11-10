@@ -247,6 +247,20 @@ spy:
   enabled: <prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails.
   disabled: <prefix><gray>Spy <red>ausgeschaltet</red>.
 # ------------------------------------------------------------
+# LuckPerms-Einrichtung (/sessentials lpsetup [confirm])
+# Platzhalter: <count>, <group>, <weight>, <parent>, <permissions>, <group_prefix>, <created>, <updated>, <error>
+# ------------------------------------------------------------
+luckperms-setup:
+  no-luckperms: "<prefix><red>LuckPerms ist nicht installiert."
+  empty: "<prefix><red>Keine Gruppen unter luckperms-setup.groups eingetragen."
+  preview-header: "<prefix><gray>Diese <white><count></white> Gruppen werden in LuckPerms angelegt bzw. ergänzt:"
+  preview-new: "<dark_gray> + <green>neu</green> <white><group></white> <gray>Gewicht <weight>, erbt von <parent>, <permissions> Rechte:</gray> <group_prefix>"
+  preview-existing: "<dark_gray> ~ <yellow>ergänzen</yellow> <white><group></white> <gray>Gewicht <weight>, erbt von <parent>, <permissions> Rechte:</gray> <group_prefix>"
+  preview-footer: "<prefix><gray>Nichts wird gelöscht. <click:run_command:'/sessentials lpsetup confirm'><hover:show_text:'<gray>Jetzt anlegen'><green>[Anlegen]</green></hover></click> <dark_gray>oder /sessentials lpsetup confirm"
+  applying: "<prefix><gray>Richte LuckPerms-Gruppen ein …"
+  done: "<prefix><green>Fertig: <white><created></white> Gruppen neu, <white><updated></white> ergänzt. <gray>Spieler zuweisen: /lp user <name> parent set <gruppe>"
+  failed: "<prefix><red>Fehler bei der Einrichtung: <error> (Details im Server-Log)"
+# ------------------------------------------------------------
 # Schwebendes Drachenei (/dragonegg)
 # Platzhalter: <count> (Spieler im Umkreis), <range>, <player>
 # collected-broadcast leer lassen = nur der Sammler bekommt "collected"

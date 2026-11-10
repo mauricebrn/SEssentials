@@ -10,6 +10,9 @@ permissions:
   sess.softrestart:
     description: Erlaubt /softrestart
     default: op
+  sess.lpsetup:
+    description: Erlaubt /sessentials lpsetup (Gruppen mit Prefixen und Rechten in LuckPerms anlegen)
+    default: op
   sess.reload:
     description: Erlaubt /sessentials reload
     default: op

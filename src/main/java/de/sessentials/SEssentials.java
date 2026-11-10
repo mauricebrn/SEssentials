@@ -54,6 +54,7 @@ import de.sessentials.punish.PunishmentManager;
 import de.sessentials.punish.PunishmentMenu;
 import de.sessentials.report.ReportManager;
 import de.sessentials.rules.RulesManager;
+import de.sessentials.hook.LuckPermsSetup;
 import de.sessentials.hook.PermissionInfo;
 import de.sessentials.softrestart.SoftRestartManager;
 import de.sessentials.spawn.SpawnManager;
@@ -152,6 +153,7 @@ public final class SEssentials extends JavaPlugin {
     private TagOverrides tagOverrides;
     private DisposableElytra elytra;
     private DragonEggManager dragonEgg;
+    private LuckPermsSetup lpSetup;
     private GamemodeInventories gamemodeInventories;
     private TrustMenu trustMenu;
     private SuspicionVote suspicion;
@@ -165,6 +167,7 @@ public final class SEssentials extends JavaPlugin {
         PermissionInfo perms = PermissionInfo.NONE;
         if (getServer().getPluginManager().isPluginEnabled("LuckPerms")) {
             perms = new LuckPermsHook(getLogger());
+            lpSetup = new LuckPermsSetup(this);
             getLogger().info("LuckPerms gefunden – Prefix/Suffix/Gruppen aktiv.");
         } else {
             getLogger().warning("LuckPerms nicht gefunden – <lp_*>-Platzhalter bleiben leer (außer eigene Prefixe/Suffixe per /prefix, /suffix).");
@@ -465,6 +468,11 @@ public final class SEssentials extends JavaPlugin {
     }
 
     /** Alle Spieler, die schon einmal da waren – Tab-Vervollständigung für Befehle, die auch offline Spieler annehmen. */
+    /** LuckPerms-Einrichtung (/sess lpsetup), {@code null} ohne LuckPerms. */
+    private LuckPermsSetup lpSetup() {
+        return lpSetup;
+    }
+
     /** TAB-Liste und Nametags, {@code null} wenn das Modul aus ist. */
     public TabNametagManager tab() {
         return tab;
@@ -821,8 +829,21 @@ public final class SEssentials extends JavaPlugin {
 
             commands.register(
                     Commands.literal("sessentials")
-                            .requires(src -> src.getSender().hasPermission("sess.reload"))
+                            .requires(src -> src.getSender().hasPermission("sess.reload") || src.getSender().hasPermission(LuckPermsSetup.PERM))
+                            .then(Commands.literal("lpsetup")
+                                    .requires(src -> src.getSender().hasPermission(LuckPermsSetup.PERM))
+                                    .executes(ctx -> {
+                                        if (lpSetup() != null) lpSetup().preview(ctx.getSource().getSender());
+                                        else ctx.getSource().getSender().sendMessage(text.render(getConfig().getString("luckperms-setup.messages.no-luckperms", "")));
+                                        return Command.SINGLE_SUCCESS;
+                                    })
+                                    .then(Commands.literal("confirm").executes(ctx -> {
+                                        if (lpSetup() != null) lpSetup().apply(ctx.getSource().getSender());
+                                        else ctx.getSource().getSender().sendMessage(text.render(getConfig().getString("luckperms-setup.messages.no-luckperms", "")));
+                                        return Command.SINGLE_SUCCESS;
+                                    })))
                             .then(Commands.literal("reload")
+                                    .requires(src -> src.getSender().hasPermission("sess.reload"))
                                     .executes(ctx -> {
                                         reloadAll();
                                         ctx.getSource().getSender().sendMessage(text.render(

@@ -34,6 +34,13 @@ Paper-Plugin für Minecraft **26.2 / 26.3** (Java 25).
 - CreativeLog: protokolliert Aktionen im Kreativmodus
 - Client-Detector: erkennt Vanilla-, Mod- und bekannte Hack-Clients beim Join
 - Webpanel: Statistiken aus dem Admin-Panel im Browser
+- Mail an offline Spieler, Social-Spy, `/sudo` und eigene Befehls-Aliase
+- Glücksrad und Item-Upgrader mit Bank-Währung
+- Trust: neue Spieler erst nach Abstimmung freischalten, Verdachts-Abstimmung gegen Cheater
+- Regeln mit Akzeptanz-Pflicht und Versionen
+- Haltbarkeits-Warnung für Rüstung, Werkzeug und Waffen
+- Fake-Spieler: Spieler ohne Client, die Chunks laden, herumlaufen, kämpfen oder abbauen – auch selbst steuerbar
+- Auto-Update aus GitHub-Releases (standardmäßig aus)
 - Admin-Panel (`/admin`) als zentrales Menü für alle Anwendungen
 
 Alle Texte unterstützen MiniMessage und &-Farbcodes.
@@ -61,7 +68,9 @@ Alle Standardwerte: [Einstellungen](src/main/resources/config.yml), [Texte DE](s
 
 ## Befehle & Rechte
 
-Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand), `sess.msg`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan`, `sess.fairplay` und `sess.chestshop.create`, `sess.ptime`, `sess.pweather`, `sess.durability` und `sess.elytra.use` (alle) sowie `sess.vanish.auto` (niemand).
+Alle Rechte sind standardmäßig `op`, außer:
+- **für alle:** `sess.msg`, `sess.mail`, `sess.report`, `sess.tpa`, `sess.enderchest`, `sess.bank`, `sess.bank.pay`, `sess.bounty`, `sess.clan`, `sess.gamble`, `sess.upgrader`, `sess.chestshop.create`, `sess.trust`, `sess.fairplay`, `sess.ptime`, `sess.pweather`, `sess.durability`, `sess.elytra.use`
+- **für niemanden** (nur gezielt vergeben): `sess.vanish.auto`, `sess.creativelog.bypass`, `sess.fairplay.exempt`, `sess.fakeplayer.ignore`
 
 | Befehl | Recht | Beschreibung |
 |---|---|---|
@@ -71,6 +80,7 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/help [seite]` | – | Hilfeseiten aus der Config (Alias `/?`) |
 | `/admin` | `sess.admin` | Admin-Panel öffnen |
 | `/webpanel [logout]` | `sess.webpanel` | Login-Link fürs Webpanel bzw. alle eigenen Sitzungen beenden |
+| `/sessentials lpsetup [confirm]` | `sess.lpsetup` | LuckPerms-Gruppen mit farbigen Prefixen und Plugin-Rechten anlegen (ohne `confirm` nur Vorschau) |
 | `/sessentials reload` | `sess.reload` | Config neu laden (Alias `/sess`) |
 | `/softrestart <minuten>` | `sess.softrestart` | Neustart nach X Minuten planen (Alias `/srestart`) |
 | `/softrestart cancel` | `sess.softrestart` | Geplanten Neustart abbrechen |
@@ -102,6 +112,21 @@ Alle Rechte sind standardmäßig `op`, außer `sess.creativelog.bypass` (niemand
 | `/ptime day\|noon\|night\|midnight\|<ticks>\|reset` | `sess.ptime` | Eigene Uhrzeit, nur für dich sichtbar (Alias `/pzeit`) |
 | `/pweather clear\|rain\|reset` | `sess.pweather` | Eigenes Wetter, nur für dich sichtbar (Alias `/pwetter`) |
 | `/gminv` | `sess.gamemodeinv` | Getrennte Inventare für Kreativ und Survival an/aus (Alias `/gamemodeinv`) |
+| `/mail send <spieler> <text>` | `sess.mail` | Nachricht an einen (auch offline) Spieler |
+| `/mail [read]` / `/mail delete <nr>` / `/mail clear` | `sess.mail` | Mails lesen bzw. löschen |
+| `/socialspy` | `sess.spy` | Private Nachrichten (`/msg`, `/r`, `/mail`) mitlesen an/aus |
+| `/sudo <spieler> <befehl>` / `/sudo <spieler> c:<text>` | `sess.sudo` | Spieler einen Befehl ausführen bzw. chatten lassen. Geschützt: `sess.sudo.exempt` |
+| `/gluecksrad` | `sess.gamble` | Glücksrad drehen (Alias `/gamble`) |
+| `/gluecksrad topf [setzen <betrag>]` | `sess.gamble.admin` | Topf ansehen bzw. setzen |
+| `/upgrader` | `sess.upgrader` | Item-Upgrader öffnen (Alias `/upgrade`); Verwaltung `/upgrader admin` mit `sess.upgrader.admin` |
+| `/trust [spieler]` | `sess.trust` | Eigenen Vertrauens-Status sehen bzw. für einen neuen Spieler stimmen |
+| `/trust add\|remove <spieler>` | `sess.trust.admin` | Vertrauen direkt setzen oder entziehen. Immer vertraut: `sess.trust.bypass` |
+| `/suspect <spieler>` | `sess.trust` | Verdachts-Abstimmung gegen einen Online-Spieler (Alias `/verdacht`) |
+| `/regeln [nr\|akzeptieren]` | – | Serverregeln lesen bzw. akzeptieren (Aliase `/rules`, `/regel`) |
+| `/regeladmin` | `sess.rules.admin` | Regeln verwalten, Akzeptanz-Version, Rollout (`edit <id>`, `rollout`, `cancel`) |
+| `/durability` | `sess.durability` | Haltbarkeits-Warnung an/aus |
+| `/autoupdate [check\|an\|aus]` | `sess.update` | Auto-Update-Status, sofort prüfen bzw. ein-/ausschalten; `sess.update` bekommt auch Update-Meldungen |
+| `/fakeplayer …` | `sess.fakeplayer` | Fake-Spieler erstellen und steuern (Aliase `/fp`, `/bot`), siehe [Fake-Spieler](#fake-spieler) |
 | `/dragonegg spawn\|remove` | `sess.dragonegg.admin` | Schwebendes Drachenei an deiner Position setzen bzw. das nächste entfernen (Alias `/drachenei`) |
 | `/elytra pos1\|pos2` | `sess.elytra.admin` | Ecke eines Startbereichs für Einweg-Elytren an deiner Position setzen |
 | `/elytra create <name>` | `sess.elytra.admin` | Startbereich aus den beiden Ecken erstellen |
@@ -162,6 +187,12 @@ Spieler speichern → alle Spieler mit `kick`-Nachricht kicken → Welten speich
 - `tab.header`, `tab.footer` und `tab.player-format` werden alle `tab.update-interval-ticks` aktualisiert.
 - `nametag` setzt Prefix, Suffix und Namensfarbe über dem Kopf, pro Gruppe mit `priority` für die TAB-Sortierung.
 
+**LuckPerms-Einrichtung:** `/sessentials lpsetup` zeigt, welche Gruppen aus `luckperms-setup.groups` angelegt würden,
+`/sessentials lpsetup confirm` legt sie an. Standard: `default` → `vip` → `supporter` → `moderator` → `admin`, je mit Gewicht,
+farbigem Prefix (`&`-Codes, Priorität = Gewicht), Elterngruppe und passenden `sess.*`-Rechten; `admin` bekommt `sess.*` ohne die
+Rechte, die man nur gezielt vergibt. Es wird nichts gelöscht – vorhandene Gruppen werden nur ergänzt, mehrfach ausführen ist ok.
+Spieler danach mit `/lp user <name> parent set <gruppe>` zuweisen.
+
 **Eigene Prefixe & Suffixe** (Modul `tags`): `/prefix <text> [spieler] [zeit]`, `/prefix reset [spieler]`, genauso `/suffix`.
 Beispiele: `/prefix &c[Admin]`, `/prefix <gold>[VIP] Steve 30d`, `/suffix " &7✦" 2h` (Text mit Leerzeichen am Rand in Anführungszeichen).
 Der Wert ersetzt den LuckPerms-Prefix/-Suffix – auch ohne LuckPerms – überall, wo `<lp_prefix>`/`<lp_suffix>` steht (Chat, TAB,
@@ -208,6 +239,8 @@ Verstöße kosten Punkte (`fairplay.violations`, `points: 0` schaltet einen Vers
 - **Combat-Log** – Server verlassen bis `combat-tag-seconds` nach einem PvP-Treffer. Mit `combat-log-kill` stirbt der Spieler dabei (Items fallen). Kicks zählen nie, Timeouts nur mit `count-timeouts`.
 - **Spawn-Kill** – einen Spieler bis `spawn-kill.seconds` nach seinem Respawn töten.
 - **Kill-Farming** – denselben Spieler `kill-farming.kills`-mal in `kill-farming.minutes` töten.
+
+Meldungen über Verstöße und Strikes bekommt, wer `sess.fairplay.notify` hat; `sess.fairplay.exempt` (standardmäßig niemand) bekommt keine Verstöße.
 
 Bei `strike-threshold` Punkten oder weniger gibt es einen Strike, danach beginnt der Stand wieder beim Startwert.
 Ab `strikes-for-punishment` aktiven Strikes (sie verfallen nach `strike-expire-days`) wird automatisch die Strafvorlage
@@ -473,6 +506,87 @@ Sitzungen enden auch bei einem Server-Neustart.
 Internet einen Reverse-Proxy mit HTTPS davorsetzen (z.B. Caddy, nginx) und `webpanel.public-url` auf dessen Adresse setzen;
 dann wird das Cookie zusätzlich als `Secure` markiert. `bind: 127.0.0.1` macht das Panel nur lokal erreichbar.
 Spielerköpfe werden von `mc-heads.net` geladen.
+
+## Mail, Social-Spy & Sudo
+- **Mail:** `/mail send <spieler> <text>` erreicht jeden, der schon einmal auf dem Server war; ungelesene Mails werden beim Join
+  angezeigt. Gemutete Spieler können keine Mails senden. Grenzen: `mail.max-length`, `mail.max-per-inbox`. Gespeichert in `data/mail.yml`.
+- **Social-Spy:** `/socialspy` (Recht `sess.spy`) zeigt private Nachrichten und Mails anderer Spieler.
+- **Sudo:** `/sudo <spieler> <befehl>` führt einen Befehl als der Spieler aus, `/sudo <spieler> c:<text>` lässt ihn chatten.
+  Spieler mit `sess.sudo.exempt` lassen sich nur von der Konsole steuern.
+
+## Befehls-Aliase
+Unter `command-aliases` eigene Befehle anlegen, die einen oder mehrere andere Befehle ausführen – optional mit Recht und
+Beschreibung für `/help`. `$1`, `$2`, … sind Argumente, `$1-` alles ab dem 1. Argument, `<player>` der Nutzer. Ein Alias darf
+keinen anderen Alias aufrufen. Neue Aliase gelten nach einem Neustart, geänderte schon nach `/sessentials reload`.
+
+## Clans
+`/clan` öffnet das Clan-Menü. Clans werden mit Farbe gegründet; dazu Einladungen, ein Clan-Home per Abstimmung der Mitglieder,
+eine gemeinsame Truhe (kaufbar), ein Clan-Konto (`einzahlen`/`auszahlen`) und Friendly-Fire an/aus. Kosten im Format von
+`spawn.cost`. Der Platzhalter `<clan>` zeigt den Clan-Tag in Chat, TAB und Nametags; optional landet er als LuckPerms-Prefix/-Suffix
+(`clans.luckperms-tag`). Admins lösen Clans mit `/clan admin aufloesen <clan>` auf (`sess.clan.admin`). Gespeichert in `data/clans.yml`.
+
+## Kopfgeld
+`/kopfgeld <spieler> <betrag>` (Alias `/bounty`) setzt Taler auf einen Spieler – sofort vom Konto abgebucht. Wer das Ziel tötet,
+bekommt alle Kopfgelder, die er nicht selbst ausgesetzt hat, und das Inventar des Opfers. `/kopfgeld` zeigt die höchsten.
+Admins (`sess.bounty.admin`) entfernen Kopfgelder im Admin-Panel oder mit `/kopfgeld entfernen <spieler>`; entfernte und
+abgelaufene Kopfgelder gehen zurück.
+
+## Glücksrad
+`/gluecksrad` (Alias `/gamble`, Recht `sess.gamble`): Einsatz wählen und drehen – nur mit Bank-Währung, kein Echtgeld.
+Einsätze, die Gebühr (`gambling.fee`) und alle Zahlungen an den Server (Kosten von `/tpa`, `/spawn`, `/ec`, Admin-Shops) fließen
+in einen Topf, aus dem Gewinne bezahlt werden; gedreht werden kann nur, wenn der Topf den höchsten Gewinn deckt. Felder und
+Gewichte in `gambling.segments`. Topf: `/gluecksrad topf [setzen <betrag>]` oder Admin-Panel (`sess.gamble.admin`).
+Chancen pro Spieler lassen sich im Webpanel ändern (siehe [Webpanel](#webpanel)).
+
+## Trust & Verdacht
+Neue Spieler können nicht mit der Welt interagieren (Blöcke, Container, Türen, Entities, Eimer), bis genug Spieler mit
+`/trust <spieler>` für sie gestimmt haben (`trust.votes-needed`) oder sie genug Spielzeit haben (`trust.auto-trust-playtime`).
+Beim ersten Start gelten alle bisherigen Spieler als vertraut. Admins: `/trust add|remove <spieler>` (`sess.trust.admin`);
+immer vertraut: `sess.trust.bypass`. Wer abstimmen darf, legt `trust.voters` fest (z.B. nur mit `sess.trust.vote`).
+
+**Verdachts-Abstimmung** (`trust.suspicion`, standardmäßig aus): `/suspect <spieler>` (Alias `/verdacht`). Bei genug Stimmen
+innerhalb von `votes-expire` wird der Spieler über das Strafen-System gebannt. Nie betroffen: `sess.punish.exempt` und `sess.trust.bypass`.
+
+## Regeln
+`/regeln` (Aliase `/rules`, `/regel`) zeigt die Serverregeln, `/regeln <nr>` eine einzelne, `/regeln akzeptieren` bestätigt sie.
+Verwaltet werden sie im Spiel mit `/regeladmin` (`sess.rules.admin`): Regeln bearbeiten (Text mit `[Text](/befehl)` als
+klickbarem Befehl), eine neue Akzeptanz-Version ausrollen und verfolgen, wer sie schon akzeptiert hat.
+
+## Haltbarkeits-Warnung
+Spieler mit `sess.durability` bekommen eine Nachricht samt Ton, wenn Rüstung, Werkzeug oder Waffe eine der Stufen aus
+`durability` unterschreitet (je Stufe einmal). `/durability` schaltet das pro Spieler an/aus.
+
+## Eigene Uhrzeit, Wetter & Inventare
+- `/ptime day|noon|night|midnight|<ticks>|reset` und `/pweather clear|rain|reset` ändern Uhrzeit bzw. Wetter nur für dich;
+  die Wahl bleibt nach einem Rejoin erhalten.
+- `/gminv` (`sess.gamemodeinv`) trennt das Inventar zwischen Kreativ und Survival – beim Moduswechsel wird getauscht.
+
+## Fake-Spieler
+`/fakeplayer` (Aliase `/fp`, `/bot`, Recht `sess.fakeplayer`): echte Spieler ohne Client. Sie stehen im TAB und in `/list`,
+laden Chunks wie ein Spieler und sind Ziel aller Befehle (`/msg`, `/ban`, `/tp`, …).
+
+| Befehl | Beschreibung |
+|---|---|
+| `/fp create <name> [skin]` | An deiner Position erstellen |
+| `/fp join\|leave <name>` / `/fp remove <name>` | Beitreten/verlassen bzw. endgültig entfernen |
+| `/fp tp\|tphere\|equip\|inv <name>` | Hinreisen, herholen (setzt den Heimatpunkt), Ausrüstung kopieren, Inventar öffnen |
+| `/fp ai <name> on\|off` | KI ein/aus |
+| `/fp goal <name> wander\|mobs\|players\|all` | Herumlaufen bzw. Mobs/Spieler von sich aus bekämpfen |
+| `/fp goal <name> mine <block>` | Einen Blocktyp um den Heimatpunkt abbauen und die Drops einsammeln |
+| `/fp defense <name> flee\|fight\|ignore` | Verhalten, wenn er getroffen wird |
+| `/fp skin <name> <skin>` / `/fp list` | Skin ändern bzw. alle anzeigen |
+| `/fp animate <name>` | Den Fake-Spieler selbst steuern: er übernimmt Bewegung, Chat und Befehle – **mit deinen Rechten, bei OP vorübergehend OP** |
+
+Kämpfende Fake-Spieler greifen nur echte Spieler im Überlebens-/Abenteuermodus an, nicht im Vanish und nicht mit
+`sess.fakeplayer.ignore`. Höchstzahl und Verhalten unter `fakeplayers`. Tritt ein echter Spieler mit demselben Namen bei,
+verlässt der Fake-Spieler den Server. Hinweis: Fake-Spieler zählen in der Spielerzahl der Serverliste mit.
+
+## Auto-Update
+Standardmäßig **aus**. Mit `/autoupdate an` (oder Admin-Panel → Server → Auto-Update, Recht `sess.update`) prüft das Plugin
+täglich zur Uhrzeit `auto-update.time` die GitHub-Releases von `auto-update.repository`. Ein neueres Jar wird geladen, per
+SHA-256 und `plugin.yml` geprüft und in `plugins/update` gelegt – aktiv nach dem nächsten Neustart (optional automatischer
+Softrestart nach `auto-update.restart-minutes`). Beta-Versionen (Pre-Releases) werden nie automatisch installiert.
+`/autoupdate check` prüft sofort.
 
 ## Platzhalter
 `<player>`, `<displayname>`, `<world>`, `<online>`, `<max_players>`, `<prefix>`,

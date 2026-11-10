@@ -215,6 +215,20 @@ spy:
   enabled: "<prefix><gray>Spy <green>enabled</green> – you see private messages and mails."
   disabled: "<prefix><gray>Spy <red>disabled</red>."
 # ------------------------------------------------------------
+# LuckPerms setup (/sessentials lpsetup [confirm])
+# Placeholders: <count>, <group>, <weight>, <parent>, <permissions>, <group_prefix>, <created>, <updated>, <error>
+# ------------------------------------------------------------
+luckperms-setup:
+  no-luckperms: "<prefix><red>LuckPerms is not installed."
+  empty: "<prefix><red>No groups configured under luckperms-setup.groups."
+  preview-header: "<prefix><gray>These <white><count></white> groups will be created or extended in LuckPerms:"
+  preview-new: "<dark_gray> + <green>new</green> <white><group></white> <gray>weight <weight>, inherits <parent>, <permissions> permissions:</gray> <group_prefix>"
+  preview-existing: "<dark_gray> ~ <yellow>extend</yellow> <white><group></white> <gray>weight <weight>, inherits <parent>, <permissions> permissions:</gray> <group_prefix>"
+  preview-footer: "<prefix><gray>Nothing is deleted. <click:run_command:'/sessentials lpsetup confirm'><hover:show_text:'<gray>Apply now'><green>[Apply]</green></hover></click> <dark_gray>or /sessentials lpsetup confirm"
+  applying: "<prefix><gray>Setting up LuckPerms groups …"
+  done: "<prefix><green>Done: <white><created></white> groups created, <white><updated></white> extended. <gray>Assign players: /lp user <name> parent set <group>"
+  failed: "<prefix><red>Setup failed: <error> (details in the server log)"
+# ------------------------------------------------------------
 # Floating dragon egg (/dragonegg)
 # Placeholders: <count> (players in range), <range>, <player>
 # leave collected-broadcast empty = only the collector gets "collected"
