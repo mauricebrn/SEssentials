@@ -1,0 +1,158 @@
+name: Bug report
+description: Something in SEssentials doesn't work as it should
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! A good report lets us reproduce the problem quickly.
+
+        **Before you start:**
+        1. Update to the [latest release](https://github.com/mauricebrn/SEssentials/releases) — the bug may already be fixed.
+        2. [Search existing issues](https://github.com/mauricebrn/SEssentials/issues?q=is%3Aissue) — if it's already reported, add a 👍 or a comment there instead.
+        3. Run `/sessentials reload` or restart once to rule out a stale config.
+
+        ⚠️ **Never post secrets:** remove tokens (`auto-update.token`), database passwords, web panel login links and IP addresses from logs and configs.
+  - type: input
+    id: version
+    attributes:
+      label: SEssentials version
+      description: Shown by `/version SEssentials` or in the jar name.
+      placeholder: "1.3.0-beta.2"
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Server software and version
+      description: Output of `/version`.
+      placeholder: "Paper 26.3 build 45"
+    validations:
+      required: true
+  - type: input
+    id: java
+    attributes:
+      label: Java version
+      description: First line of `java -version` on the server, or from the startup log.
+      placeholder: "Java 25"
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected module
+      description: Which feature is broken? Pick the closest one.
+      options:
+        - admin-panel
+        - chat
+        - join-quit
+        - tab
+        - tags (/prefix, /suffix)
+        - vanish
+        - help
+        - command-aliases
+        - player-commands
+        - durability
+        - ptime
+        - elytra
+        - dragon-egg
+        - gamemode-inventory
+        - sudo
+        - enderchest
+        - spawn
+        - dimensions
+        - tpa
+        - messages
+        - mail
+        - spy
+        - bank
+        - chestshops
+        - bounty
+        - clans
+        - gambling
+        - upgrader
+        - item-tracker
+        - punishments
+        - fairplay
+        - reports
+        - itemguard
+        - creativelog
+        - trust
+        - client-detector
+        - news
+        - rules
+        - softrestart
+        - auto-update
+        - fake-players
+        - webpanel
+        - luckperms-setup (/sess lpsetup)
+        - config / language files
+        - other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: plugins
+    attributes:
+      label: Other plugins
+      description: Output of `/plugins`. Especially important if you use LuckPerms, PlaceholderAPI, Vault or protection plugins.
+      placeholder: "LuckPerms, PlaceholderAPI, Vault, WorldGuard, ..."
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the problem in one or two sentences.
+      placeholder: "The disposable elytra stays in my chest slot after landing in water."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: "The elytra should be removed and my chestplate given back."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Numbered steps, starting from a fresh join. Include the exact commands you typed and your game mode.
+        If it only happens sometimes, say how often.
+      placeholder: |
+        1. Join in Survival with an iron chestplate on
+        2. Create an area with /elytra pos1, /elytra pos2, /elytra create test
+        3. Jump off the cliff inside the area
+        4. Glide into the lake below
+        5. The elytra is still equipped
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log / error
+      description: |
+        Copy the error from `logs/latest.log`, starting at the line with `[SEssentials]` or the first `Exception` and including the full stack trace.
+        For long logs, upload to https://mclo.gs and paste the link instead.
+      render: shell
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant configuration
+      description: |
+        Only the section that matters, e.g. `config/elytra.yml` or the `elytra:` part. Leave out unrelated settings and remove secrets.
+      render: yaml
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, videos or anything else
+      description: Drag images or videos in here. For visual bugs (TAB, nametags, menus, the dragon egg) a screenshot helps a lot.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I'm using the latest SEssentials version.
+          required: true
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true
+        - label: I removed tokens, passwords, login links and IPs from everything I posted.
+          required: true

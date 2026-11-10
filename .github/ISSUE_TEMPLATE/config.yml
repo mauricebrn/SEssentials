@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation (README)
+    url: https://github.com/mauricebrn/SEssentials#readme
+    about: Commands, permissions and every config option are explained here.
+  - name: Releases & changelog
+    url: https://github.com/mauricebrn/SEssentials/releases
+    about: Check whether your problem is already fixed in a newer version.

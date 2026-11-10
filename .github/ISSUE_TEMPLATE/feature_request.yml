@@ -1,0 +1,93 @@
+name: Feature request
+description: Suggest a new feature or an improvement to an existing one
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? Great! Please check the [README](https://github.com/mauricebrn/SEssentials#readme) first — many things are already configurable (every module can be switched off, all messages are in `lang/*.yml`).
+
+        One idea per issue makes it much easier to discuss and track.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Related module
+      description: Which existing feature does this belong to? Choose "other" for something completely new.
+      options:
+        - admin-panel
+        - chat
+        - join-quit
+        - tab
+        - tags (/prefix, /suffix)
+        - vanish
+        - help
+        - command-aliases
+        - player-commands
+        - durability
+        - ptime
+        - elytra
+        - dragon-egg
+        - gamemode-inventory
+        - sudo
+        - enderchest
+        - spawn
+        - dimensions
+        - tpa
+        - messages
+        - mail
+        - spy
+        - bank
+        - chestshops
+        - bounty
+        - clans
+        - gambling
+        - upgrader
+        - item-tracker
+        - punishments
+        - fairplay
+        - reports
+        - itemguard
+        - creativelog
+        - trust
+        - client-detector
+        - news
+        - rules
+        - softrestart
+        - auto-update
+        - fake-players
+        - webpanel
+        - luckperms-setup (/sess lpsetup)
+        - config / language files
+        - other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation on your server, not the solution yet. "As an admin I want to ... because ..."
+      placeholder: "As an admin I want new players to see the rules before they can chat, because spammers join and advertise immediately."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: How should it work?
+      description: Commands, permissions, config options, messages — as concrete as you like.
+      placeholder: |
+        - New option `rules.block-chat-until-accepted: true`
+        - Players get the message "Please accept the rules with /rules accept first."
+        - Bypass permission: `sess.rules.bypass`
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Other plugins, workarounds or configs you tried, and why they don't fit.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Mockups, examples or anything else
+      description: Screenshots of similar features elsewhere, sketches of menus, etc.
