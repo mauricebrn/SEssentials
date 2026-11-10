@@ -5,3 +5,6 @@ legacy/
 build/
 .gradle/
 .kotlin/
+
+.idea/
+*.iml
