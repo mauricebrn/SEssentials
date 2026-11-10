@@ -429,7 +429,7 @@ wenig Einsatz: anfangs `min-factor` ihrer Gewichtung, voll erst nach `full-after
 verwendbar. Auch in der Server-Konsole möglich; der Link erscheint dann dort. Danach bleibt man `session-hours` angemeldet (HttpOnly-Cookie). `/webpanel logout` beendet alle eigenen Sitzungen;
 Sitzungen enden auch bei einem Server-Neustart.
 
-**Erreichbarkeit:** Standard `0.0.0.0:8085` (Port beim Hoster freigeben). Das Panel spricht nur HTTP – für Zugriff über das
+**Erreichbarkeit:** Standard aus (`webpanel.enabled: false`) und nur lokal (`127.0.0.1:8085`). Für Zugriff von außen `bind: "0.0.0.0"` setzen und den Port beim Hoster freigeben. Das Panel spricht nur HTTP – für Zugriff über das
 Internet einen Reverse-Proxy mit HTTPS davorsetzen (z.B. Caddy, nginx) und `webpanel.public-url` auf dessen Adresse setzen;
 dann wird das Cookie zusätzlich als `Secure` markiert. `bind: 127.0.0.1` macht das Panel nur lokal erreichbar.
 Spielerköpfe werden von `mc-heads.net` geladen.

@@ -78,7 +78,7 @@ public final class WebPanel {
 
     public void start() {
         if (!plugin.getConfig().getBoolean("webpanel.enabled")) return;
-        String bind = plugin.getConfig().getString("webpanel.bind", "0.0.0.0");
+        String bind = plugin.getConfig().getString("webpanel.bind", "127.0.0.1");
         int port = plugin.getConfig().getInt("webpanel.port");
         try {
             server = HttpServer.create(new InetSocketAddress(bind, port), 0);

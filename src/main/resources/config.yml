@@ -470,8 +470,8 @@ reports:
 # (z.B. Caddy/nginx) stellen und public-url auf dessen Adresse setzen.
 # ------------------------------------------------------------
 webpanel:
-  enabled: true
-  bind: "0.0.0.0"          # 127.0.0.1 = nur lokal erreichbar
+  enabled: false
+  bind: "127.0.0.1"        # 0.0.0.0 = von außen erreichbar (Port freigeben)
   port: 8085               # muss beim Hoster freigegeben sein
   public-url: ""           # Adresse in Login-Links, z.B. https://panel.meinserver.de (leer = http://<server-ip>:<port>)
   session-hours: 12
