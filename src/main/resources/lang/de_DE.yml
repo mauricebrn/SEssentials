@@ -247,6 +247,25 @@ spy:
   enabled: <prefix><gray>Spy <green>eingeschaltet</green> – du siehst private Nachrichten und Mails.
   disabled: <prefix><gray>Spy <red>ausgeschaltet</red>.
 # ------------------------------------------------------------
+# Einweg-Elytren (/elytra)
+# Platzhalter: <name>, <coords>, <world>, <from>, <to>, <count>, <seconds>
+# ------------------------------------------------------------
+elytra:
+  equipped: "<aqua>Elytra aktiv! <gray>F = Schub"
+  removed: "<gray>Gelandet – Elytra entfernt."
+  boost-cooldown: "<red>Schub wieder in <seconds> s"
+  pos1: "<prefix><gray>Ecke 1 gesetzt: <white><coords>"
+  pos2: "<prefix><gray>Ecke 2 gesetzt: <white><coords>"
+  no-selection: "<prefix><red>Erst beide Ecken mit /elytra pos1 und /elytra pos2 setzen."
+  different-worlds: "<prefix><red>Beide Ecken müssen in derselben Welt liegen."
+  exists: "<prefix><red>Den Bereich <name> gibt es schon."
+  created: "<prefix><green>Startbereich <white><name></white> erstellt."
+  unknown: "<prefix><red>Keinen Bereich <name> gefunden."
+  deleted: "<prefix><gray>Startbereich <white><name></white> gelöscht."
+  list-empty: "<prefix><gray>Noch keine Startbereiche."
+  list-header: "<prefix><gray>Startbereiche (<count>):"
+  list-entry: "<dark_gray> - <white><name></white> <gray><world>: <from> → <to>"
+# ------------------------------------------------------------
 # Eigene Prefixe/Suffixe (/prefix, /suffix)
 # Platzhalter: <kind> (prefix/suffix), <target>, <value>, <time>, <max>
 # ------------------------------------------------------------

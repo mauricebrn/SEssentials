@@ -297,6 +297,15 @@ und setzt sie zugleich als Welt-Spawn. Ohne gesetzten Spawn nutzt `/spawn` den S
 
 Neue Spieler landen beim ersten Join am Spawn, Respawns ohne Bett/Anker exakt dort (ohne Vanilla-Streuradius).
 
+## Einweg-Elytren
+Startbereiche mit `/elytra pos1`, `/elytra pos2` (an der eigenen Position) und `/elytra create <name>` anlegen, dazu
+`/elytra delete <name>` und `/elytra list` (Recht `sess.elytra.admin`). Wer in einem Bereich mindestens `elytra.min-fall-distance`
+Blöcke fällt (Survival/Adventure, Recht `sess.elytra.use`), bekommt eine Elytra und gleitet sofort los. **F** gibt im Flug einen
+Schub in Blickrichtung (`elytra.boost`). Beim Landen auf dem Boden oder im Wasser – und bei Tod, Quit, Welt- oder Moduswechsel und
+Teleport – verschwindet sie; eine getragene Brustplatte kommt zurück (auch nach einem Absturz, sie wird am Spieler gespeichert).
+Die Elytra lässt sich nicht verschieben, droppen, in Kisten legen oder an Rüstungsständer hängen. Fallschaden beim Landen entfällt
+(`elytra.no-fall-damage`).
+
 ## Teleport-Wartezeit
 `/spawn`, `/tpa` (nach der Annahme), `/nether`, `/end` und `/clan home` teleportieren erst nach `teleport-warmup.seconds`
 (pro Teleport änderbar unter `teleport-warmup.per-teleport`). Wer in der Zeit den Block verlässt (`cancel-on-move`,

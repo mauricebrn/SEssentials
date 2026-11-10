@@ -18,7 +18,7 @@ public final class Modules {
     /** Alle Module in Anzeigereihenfolge. */
     public static final List<String> ALL = List.of(
             "admin-panel", "chat", "join-quit", "tab", "tags", "vanish", "help", "command-aliases",
-            "player-commands", "durability", "ptime", "gamemode-inventory", "sudo", "enderchest", "spawn", "dimensions", "tpa",
+            "player-commands", "durability", "ptime", "elytra", "gamemode-inventory", "sudo", "enderchest", "spawn", "dimensions", "tpa",
             "messages", "mail", "spy",
             "bank", "chestshops", "bounty", "clans", "gambling", "upgrader", "item-tracker",
             "punishments", "fairplay", "reports", "itemguard", "creativelog", "trust", "client-detector",

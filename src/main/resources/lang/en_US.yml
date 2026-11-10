@@ -215,6 +215,25 @@ spy:
   enabled: "<prefix><gray>Spy <green>enabled</green> – you see private messages and mails."
   disabled: "<prefix><gray>Spy <red>disabled</red>."
 # ------------------------------------------------------------
+# Disposable elytras (/elytra)
+# Placeholders: <name>, <coords>, <world>, <from>, <to>, <count>, <seconds>
+# ------------------------------------------------------------
+elytra:
+  equipped: "<aqua>Elytra active! <gray>F = boost"
+  removed: "<gray>Landed – elytra removed."
+  boost-cooldown: "<red>Boost ready in <seconds> s"
+  pos1: "<prefix><gray>Corner 1 set: <white><coords>"
+  pos2: "<prefix><gray>Corner 2 set: <white><coords>"
+  no-selection: "<prefix><red>Set both corners with /elytra pos1 and /elytra pos2 first."
+  different-worlds: "<prefix><red>Both corners must be in the same world."
+  exists: "<prefix><red>An area named <name> already exists."
+  created: "<prefix><green>Launch area <white><name></white> created."
+  unknown: "<prefix><red>No area named <name>."
+  deleted: "<prefix><gray>Launch area <white><name></white> deleted."
+  list-empty: "<prefix><gray>No launch areas yet."
+  list-header: "<prefix><gray>Launch areas (<count>):"
+  list-entry: "<dark_gray> - <white><name></white> <gray><world>: <from> → <to>"
+# ------------------------------------------------------------
 # Custom prefixes/suffixes (/prefix, /suffix)
 # Placeholders: <kind> (prefix/suffix), <target>, <value>, <time>, <max>
 # ------------------------------------------------------------

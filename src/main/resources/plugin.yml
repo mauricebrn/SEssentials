@@ -148,6 +148,12 @@ permissions:
   sess.rules.admin:
     description: Erlaubt /regeladmin (Regeln verwalten, Akzeptanz-Version, Rollout-Tracker)
     default: op
+  sess.elytra.admin:
+    description: Erlaubt /elytra (Startbereiche für Einweg-Elytren verwalten)
+    default: op
+  sess.elytra.use:
+    description: Bekommt in Startbereichen eine Einweg-Elytra
+    default: true
   sess.prefix:
     description: Erlaubt /prefix (eigener Prefix in Chat, TAB und Nametag)
     default: op

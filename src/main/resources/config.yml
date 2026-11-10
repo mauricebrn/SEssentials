@@ -44,6 +44,7 @@ modules:
   player-commands: true  # /fly, /god, /heal, /feed
   durability: true       # Warnung bei fast kaputter Ausrüstung (/durability)
   ptime: true            # eigene Uhrzeit und eigenes Wetter (/ptime, /pweather)
+  elytra: true           # Einweg-Elytren in Startbereichen (/elytra)
   gamemode-inventory: true # getrennte Inventare für Kreativ und Survival (/gminv, Admins)
   sudo: true             # /sudo
   enderchest: true       # /enderchest, /ec
@@ -354,6 +355,20 @@ gambling:
     full-after-spins: 10
     full-after-staked: 1000
     session-timeout-minutes: 30
+
+# ------------------------------------------------------------
+# Einweg-Elytren (/elytra pos1|pos2|create <name>|delete <name>|list – Recht sess.elytra.admin)
+# Wer in einem Startbereich mindestens min-fall-distance Blöcke fällt (Survival/Adventure, Recht sess.elytra.use),
+# bekommt eine Elytra und gleitet sofort. Beim Landen (Boden, Wasser) verschwindet sie wieder; eine getragene
+# Brustplatte kommt zurück. Die Elytra lässt sich nicht bewegen, droppen oder ablegen. F im Flug = Schub.
+# Bereiche: data/elytra-areas.yml
+# ------------------------------------------------------------
+elytra:
+  min-fall-distance: 3     # Blöcke freier Fall, bevor die Elytra kommt
+  no-fall-damage: true     # kein Fallschaden beim Landen mit Einweg-Elytra
+  boost:
+    strength: 1.5          # Schub in Blickrichtung
+    cooldown-seconds: 3
 
 # ------------------------------------------------------------
 # Eigene Prefixe und Suffixe (/prefix, /suffix – Rechte sess.prefix, sess.suffix, für andere sess.prefix.others)
